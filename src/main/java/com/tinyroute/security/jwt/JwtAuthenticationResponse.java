@@ -1,4 +1,4 @@
-package com.tinyroute.security;
+package com.tinyroute.security.jwt;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

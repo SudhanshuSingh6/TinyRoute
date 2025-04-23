@@ -1,5 +1,6 @@
 package com.tinyroute.controller;
 
+import com.tinyroute.dtos.LoginRequest;
 import com.tinyroute.models.User;
 import com.tinyroute.repository.UserRepository;
 import com.tinyroute.dtos.RegisterRequest;

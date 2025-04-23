@@ -1,6 +1,5 @@
-package com.tinyroute.security;
+package com.tinyroute.security.jwt;
 
-import com.tinyroute.models.User;
 import com.tinyroute.service.UserDetailsImpl;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -17,8 +16,9 @@ import java.util.stream.Collectors;
 
 @Component
 public class JwtUtils {
-    @Value("{jwt.Secret")
+    @Value("${jwt.Secret")
     private String jwtSecret;
+    @Value("${jwt.expiration}")
     private int jwtExpirationInMs;
     public String getJwtFromHeader(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
@@ -48,9 +48,19 @@ public class JwtUtils {
                 .getPayload().getSubject();
     }
 
-    private Key key(){
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+    private Key key() {
+        try {
+            // Try to decode the Base64 string for jwtSecret
+            return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+        } catch (IllegalArgumentException e) {
+            // Handle the case when the jwtSecret is not a valid Base64 string
+            throw new IllegalArgumentException("Invalid Base64 encoding for jwtSecret", e);
+        } catch (Exception e) {
+            // Handle any other unexpected exceptions
+            throw new RuntimeException("Error occurred while generating the signing key", e);
+        }
     }
+
     public boolean validateToken(String authToken) {
         try {
             Jwts.parser().verifyWith((SecretKey) key())
