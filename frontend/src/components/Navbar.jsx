@@ -7,8 +7,6 @@ const Navbar = () => {
   const path = useLocation().pathname;
   const [navbarOpen, setNavbarOpen] = useState(false);
 
-  
-
   return (
     <div className="h-16 bg-custom-gradient  z-50 flex items-center sticky top-0 ">
       <div className="lg:px-14 sm:px-8 px-4 w-full flex justify-between">
