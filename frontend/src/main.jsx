@@ -1,13 +1,18 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App.jsx";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 import "./App.css";
+import App from "./App.jsx";
 import { ContextProvider } from "./contextApi/ContextApi.jsx";
+import { QueryClient, QueryClientProvider } from "react-query";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+const queryClient = new QueryClient();
+
+createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <ContextProvider>
-      <App />
-    </ContextProvider>
+    <QueryClientProvider client={queryClient}>
+      <ContextProvider>
+        <App />
+      </ContextProvider>
+    </QueryClientProvider>
   </StrictMode>
 );
