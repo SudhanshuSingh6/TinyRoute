@@ -1,8 +1,7 @@
-package com.tinyroute.security;
+package com.url.shortener.security;
 
-
-import com.tinyroute.security.jwt.JwtAuthenticationFilter;
-import com.tinyroute.service.UserDetailsServiceImpl;
+import com.url.shortener.security.jwt.JwtAuthenticationFilter;
+import com.url.shortener.service.UserDetailsServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,7 +55,7 @@ public class WebSecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        //.requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/urls/**").authenticated()
                         .requestMatchers("/{shortUrl}").permitAll()
                         .anyRequest().authenticated()
