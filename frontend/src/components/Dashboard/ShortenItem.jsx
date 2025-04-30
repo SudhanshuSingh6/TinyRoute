@@ -7,6 +7,7 @@ import { MdAnalytics, MdOutlineAdsClick } from "react-icons/md";
 import api from "../../api/api";
 import { useNavigate } from "react-router-dom";
 import { useStoreContext } from "../../contextApi/ContextApi";
+import Graph from "./Graph";
 
 const ShortenItem = ({ originalUrl, shortUrl, clickCount, createdDate }) => {
   const { token } = useStoreContext();
@@ -30,7 +31,7 @@ const ShortenItem = ({ originalUrl, shortUrl, clickCount, createdDate }) => {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 1500);
     } catch (err) {
-      console.error("Copy failed:", err);
+      console.error("Clipboard copy failed:", err);
     }
   };
 
@@ -133,19 +134,34 @@ const ShortenItem = ({ originalUrl, shortUrl, clickCount, createdDate }) => {
         </div>
       </div>
 
-      <React.Fragment>
-        <div
-          className={`${
-            analyticToggle ? "flex" : "hidden"
-          } max-h-96 sm:mt-0 mt-5 min-h-96 relative border-t-2 w-full overflow-hidden`}
-        >
-          {loader ? (
-            <div>Loading analytics...</div>
-          ) : (
-            <div>{/* Your analytics data here */}</div>
-          )}
-        </div>
-      </React.Fragment>
+      <div
+        className={`${
+          analyticToggle ? "flex" : "hidden"
+        } max-h-96 sm:mt-0 mt-5 min-h-96 relative border-t-2 w-full overflow-hidden`}
+      >
+        {loader ? (
+          <div className="min-h-[calc(450px-140px)] flex justify-center items-center w-full">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+            <p className="ml-3 text-slate-700">Please Wait...</p>
+          </div>
+        ) : (
+          <>
+            {analyticsData.length === 0 ? (
+              <div className="absolute flex flex-col justify-center sm:items-center items-end w-full left-0 top-0 bottom-0 right-0 m-auto">
+                <h1 className="text-slate-800 font-serif sm:text-2xl text-[15px] font-bold mb-1">
+                  No Data For This Time Period
+                </h1>
+                <h3 className="sm:w-96 w-[90%] sm:ml-0 pl-6 text-center sm:text-lg text-[12px] text-slate-600">
+                  Share your short link to view where your engagements are
+                  coming from
+                </h3>
+              </div>
+            ) : (
+              <Graph graphData={analyticsData} />
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };
