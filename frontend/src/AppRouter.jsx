@@ -1,5 +1,5 @@
 import { Route, Routes } from "react-router-dom";
-import Navbar from "./components/Navbar";
+import Navbar from "./components/NavBar";
 import ShortenUrlPage from "./components/ShortenUrlPage";
 import { Toaster } from "react-hot-toast";
 import Footer from "./components/Footer";
@@ -9,10 +9,7 @@ import RegisterPage from "./components/RegisterPage";
 import LoginPage from "./components/LoginPage";
 import DashboardLayout from "./components/Dashboard/DashboardLayout";
 import PrivateRoute from "./PrivateRoute";
-
-// <PrivateRoute publicPage={true}>
-//      <RegisterPage />
-// </PrivateRoute>
+import ErrorPage from "./components/ErrorPage";
 
 const AppRouter = () => {
   return (
@@ -46,6 +43,13 @@ const AppRouter = () => {
             <PrivateRoute publicPage={false}>
               <DashboardLayout />
             </PrivateRoute>
+          }
+        />
+        <Route path="/error" element={<ErrorPage />} />
+        <Route
+          path="*"
+          element={
+            <ErrorPage message="We can't seem to find the page you're looking for" />
           }
         />
       </Routes>
