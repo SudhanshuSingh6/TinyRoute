@@ -6,7 +6,6 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
-
 @Entity
 @Data
 public class UrlMapping {
@@ -15,7 +14,8 @@ public class UrlMapping {
     private Long id;
     private String originalUrl;
     private String shortUrl;
-    private int clickCount=0;
+    private String customAlias;       //new
+    private int clickCount = 0;
     private LocalDateTime createdDate;
 
     @ManyToOne
