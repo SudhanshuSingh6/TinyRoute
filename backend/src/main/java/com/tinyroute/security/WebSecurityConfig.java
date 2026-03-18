@@ -1,7 +1,7 @@
-package com.url.shortener.security;
+package com.tinyroute.security;
 
-import com.url.shortener.security.jwt.JwtAuthenticationFilter;
-import com.url.shortener.service.UserDetailsServiceImpl;
+import com.tinyroute.security.jwt.JwtAuthenticationFilter;
+import com.tinyroute.service.UserDetailsServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
