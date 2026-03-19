@@ -1,0 +1,13 @@
+package com.tinyroute.dtos;
+
+import com.tinyroute.models.UrlStatus;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
+public class RedirectErrorResponse {
+    private UrlStatus status;    // EXPIRED / CLICK_LIMIT_REACHED / DISABLED
+    private String message;      // reason
+    private String createdBy;
+}

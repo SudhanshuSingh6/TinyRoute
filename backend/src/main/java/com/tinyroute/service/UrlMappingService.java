@@ -1,9 +1,11 @@
 package com.tinyroute.service;
 
+import com.tinyroute.config.DomainBlacklistConfig;
 import com.tinyroute.dtos.ClickEventDTO;
 import com.tinyroute.dtos.UrlMappingDTO;
 import com.tinyroute.models.ClickEvent;
 import com.tinyroute.models.UrlMapping;
+import com.tinyroute.models.UrlStatus;
 import com.tinyroute.models.User;
 import com.tinyroute.repository.ClickEventRepository;
 import com.tinyroute.repository.UrlMappingRepository;
@@ -23,22 +25,40 @@ public class UrlMappingService {
 
     private UrlMappingRepository urlMappingRepository;
     private ClickEventRepository clickEventRepository;
+    private DomainBlacklistConfig domainBlacklistConfig;    // NEW
 
-    public UrlMappingDTO createShortUrl(String originalUrl, String customAlias, User user) {
+    public UrlMappingDTO createShortUrl(String originalUrl, String customAlias,
+                                        LocalDateTime expiresAt, Integer maxClicks,
+                                        String title, boolean isPublic, User user) {
+
+        // domain blacklist check
+        if (domainBlacklistConfig.isBlacklisted(originalUrl)) {
+            throw new RuntimeException("This domain is not allowed.");
+        }
+
+        // duplicate URL check — return existing if same user already shortened it
+        UrlMapping existing = urlMappingRepository.findByOriginalUrlAndUser(originalUrl, user);
+        if (existing != null && existing.getStatus() == UrlStatus.ACTIVE) {
+            return convertToDto(existing);
+        }
+
         UrlMapping urlMapping = new UrlMapping();
         urlMapping.setOriginalUrl(originalUrl);
         urlMapping.setUser(user);
         urlMapping.setCreatedDate(LocalDateTime.now());
+        urlMapping.setExpiresAt(expiresAt);
+        urlMapping.setMaxClicks(maxClicks);
+        urlMapping.setTitle(title);
+        urlMapping.setPublic(isPublic);
+        urlMapping.setStatus(UrlStatus.ACTIVE);
 
         if (customAlias != null && !customAlias.isBlank()) {
-            // check if alias is already taken
             if (urlMappingRepository.findByShortUrl(customAlias) != null) {
                 throw new RuntimeException("Alias '" + customAlias + "' is already taken. Please choose another.");
             }
             urlMapping.setShortUrl(customAlias);
             urlMapping.setCustomAlias(customAlias);
         } else {
-            // no alias provided — generate random short code
             urlMapping.setShortUrl(generateShortUrl());
         }
 
@@ -52,8 +72,14 @@ public class UrlMappingService {
         dto.setOriginalUrl(urlMapping.getOriginalUrl());
         dto.setShortUrl(urlMapping.getShortUrl());
         dto.setCustomAlias(urlMapping.getCustomAlias());
+        dto.setTitle(urlMapping.getTitle());
         dto.setClickCount(urlMapping.getClickCount());
         dto.setCreatedDate(urlMapping.getCreatedDate());
+        dto.setExpiresAt(urlMapping.getExpiresAt());
+        dto.setLastClickedAt(urlMapping.getLastClickedAt());
+        dto.setMaxClicks(urlMapping.getMaxClicks());
+        dto.setPublic(urlMapping.isPublic());
+        dto.setStatus(urlMapping.getStatus());
         dto.setUsername(urlMapping.getUser().getUsername());
         return dto;
     }
@@ -107,16 +133,36 @@ public class UrlMappingService {
                         Collectors.counting()));
     }
 
+    // called by RedirectController — returns UrlMapping with updated status
     public UrlMapping getOriginalUrl(String shortUrl) {
         UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
-        if (urlMapping != null) {
-            urlMapping.setClickCount(urlMapping.getClickCount() + 1);
+        if (urlMapping == null) return null;
+
+        // check and update status before returning
+        if (urlMapping.getExpiresAt() != null &&
+                LocalDateTime.now().isAfter(urlMapping.getExpiresAt())) {
+            urlMapping.setStatus(UrlStatus.EXPIRED);
             urlMappingRepository.save(urlMapping);
-            ClickEvent clickEvent = new ClickEvent();
-            clickEvent.setClickDate(LocalDateTime.now());
-            clickEvent.setUrlMapping(urlMapping);
-            clickEventRepository.save(clickEvent);
+            return urlMapping;
         }
+
+        if (urlMapping.getMaxClicks() != null &&
+                urlMapping.getClickCount() >= urlMapping.getMaxClicks()) {
+            urlMapping.setStatus(UrlStatus.CLICK_LIMIT_REACHED);
+            urlMappingRepository.save(urlMapping);
+            return urlMapping;
+        }
+
+        // valid click — increment count, update lastClickedAt, save click event
+        urlMapping.setClickCount(urlMapping.getClickCount() + 1);
+        urlMapping.setLastClickedAt(LocalDateTime.now());        // NEW
+        urlMappingRepository.save(urlMapping);
+
+        ClickEvent clickEvent = new ClickEvent();
+        clickEvent.setClickDate(LocalDateTime.now());
+        clickEvent.setUrlMapping(urlMapping);
+        clickEventRepository.save(clickEvent);
+
         return urlMapping;
     }
 }
