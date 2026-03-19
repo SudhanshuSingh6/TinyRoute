@@ -85,6 +85,11 @@
 			<artifactId>h2</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.bucket4j</groupId>
+			<artifactId>bucket4j-core</artifactId>
+			<version>8.3.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
