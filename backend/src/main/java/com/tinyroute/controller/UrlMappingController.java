@@ -13,6 +13,11 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
 import io.github.bucket4j.Refill;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Tag(name = "URL Management", description = "Shorten, manage and track URLs")
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/urls")
 @AllArgsConstructor
@@ -67,18 +74,13 @@ public class UrlMappingController {
         };
     }
 
-    // builds headers from probe — attached to every response
     private HttpHeaders buildRateLimitHeaders(ConsumptionProbe probe, long limit) {
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-RateLimit-Limit", String.valueOf(limit));
         headers.add("X-RateLimit-Remaining", String.valueOf(probe.getRemainingTokens()));
-
-        // warning — below 20% remaining
         if (probe.getRemainingTokens() <= (long)(limit * 0.2)) {
             headers.add("X-RateLimit-Warning", "Approaching rate limit");
         }
-
-        // retry-after only on 429 — convert nanoseconds to seconds
         if (!probe.isConsumed()) {
             headers.add("X-RateLimit-Retry-After",
                     String.valueOf(probe.getNanosToWaitForRefill() / 1_000_000_000));
@@ -86,7 +88,6 @@ public class UrlMappingController {
         return headers;
     }
 
-    // builds rich 429 response body
     private RateLimitErrorResponse build429Body(ConsumptionProbe probe, long limit, String endpoint) {
         long retryAfter = probe.getNanosToWaitForRefill() / 1_000_000_000;
         return new RateLimitErrorResponse(
@@ -99,29 +100,32 @@ public class UrlMappingController {
         );
     }
 
-    // carries probe + limit + admin flag back to each endpoint
     private record RateLimitResult(ConsumptionProbe probe, long limit, boolean isAdmin) {}
 
     private RateLimitResult getRateLimitResult(Principal principal, String endpoint) {
         User user = userService.findByUsername(principal.getName());
         String role = user.getRole().name();
-
         if ("ROLE_ADMIN".equals(role)) {
             return new RateLimitResult(null, Long.MAX_VALUE, true);
         }
-
         long limit = resolveLimit(role, endpoint);
         Bucket bucket = getBucket(principal.getName(), role, endpoint);
         ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
         return new RateLimitResult(probe, limit, false);
     }
 
+    @Operation(
+            summary = "Shorten a URL",
+            description = "Creates a short URL. Supports custom alias, expiry date, click limit, title and visibility. Rate limited per role."
+    )
+    @ApiResponse(responseCode = "200", description = "URL shortened successfully")
+    @ApiResponse(responseCode = "400", description = "Alias already taken or domain blacklisted")
+    @ApiResponse(responseCode = "429", description = "Rate limit exceeded")
     @PostMapping("/shorten")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> createShortUrl(@RequestBody Map<String, String> request,
                                             Principal principal) {
         RateLimitResult result = getRateLimitResult(principal, "shorten");
-
         if (!result.isAdmin() && !result.probe().isConsumed()) {
             return ResponseEntity.status(429)
                     .headers(buildRateLimitHeaders(result.probe(), result.limit()))
@@ -153,9 +157,19 @@ public class UrlMappingController {
         }
     }
 
+    @Operation(
+            summary = "Toggle URL active/disabled",
+            description = "Switches a URL between ACTIVE and DISABLED status. Only the owner can toggle their own URLs."
+    )
+    @ApiResponse(responseCode = "200", description = "Status updated successfully")
+    @ApiResponse(responseCode = "403", description = "You don't own this URL")
+    @ApiResponse(responseCode = "404", description = "URL not found")
+    @ApiResponse(responseCode = "400", description = "Cannot toggle URL in current status")
     @PatchMapping("/{id}/toggle")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<?> toggleUrl(@PathVariable Long id, Principal principal) {
+    public ResponseEntity<?> toggleUrl(
+            @Parameter(description = "ID of the URL to toggle") @PathVariable Long id,
+            Principal principal) {
         UrlMapping urlMapping = urlMappingRepository.findById(id).orElse(null);
         if (urlMapping == null) return ResponseEntity.notFound().build();
 
@@ -176,11 +190,16 @@ public class UrlMappingController {
         return ResponseEntity.ok("Status updated to: " + urlMapping.getStatus());
     }
 
+    @Operation(
+            summary = "Get all my URLs",
+            description = "Returns all shortened URLs created by the authenticated user. Rate limited per role."
+    )
+    @ApiResponse(responseCode = "200", description = "List of URLs returned")
+    @ApiResponse(responseCode = "429", description = "Rate limit exceeded")
     @PostMapping("/myurls")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> getUserUrls(Principal principal) {
         RateLimitResult result = getRateLimitResult(principal, "myurls");
-
         if (!result.isAdmin() && !result.probe().isConsumed()) {
             return ResponseEntity.status(429)
                     .headers(buildRateLimitHeaders(result.probe(), result.limit()))
@@ -195,15 +214,23 @@ public class UrlMappingController {
         return ResponseEntity.ok().headers(headers).body(urls);
     }
 
+    @Operation(
+            summary = "Get analytics for a specific URL",
+            description = "Returns click events grouped by date for a given short URL within a date range. Rate limited per role."
+    )
+    @ApiResponse(responseCode = "200", description = "Click events returned")
+    @ApiResponse(responseCode = "429", description = "Rate limit exceeded")
     @PostMapping("/analytics/{shortUrl}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> getUserAnalytics(
+            @Parameter(description = "The short URL code", example = "abc12345")
             @PathVariable String shortUrl,
+            @Parameter(description = "Start date in ISO format", example = "2024-01-01T00:00:00")
             @RequestParam("startDate") String startDate,
+            @Parameter(description = "End date in ISO format", example = "2024-12-31T23:59:59")
             @RequestParam("endDate") String endDate,
             Principal principal) {
         RateLimitResult result = getRateLimitResult(principal, "analytics");
-
         if (!result.isAdmin() && !result.probe().isConsumed()) {
             return ResponseEntity.status(429)
                     .headers(buildRateLimitHeaders(result.probe(), result.limit()))
@@ -220,11 +247,18 @@ public class UrlMappingController {
         return ResponseEntity.ok().headers(headers).body(clickEventDTOS);
     }
 
+    @Operation(
+            summary = "Get total clicks across all URLs",
+            description = "Returns total click counts grouped by date across all URLs of the authenticated user."
+    )
+    @ApiResponse(responseCode = "200", description = "Total clicks by date returned")
     @GetMapping("/totalClicks")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Map<LocalDate, Long>> getTotalClicksByDate(
             Principal principal,
+            @Parameter(description = "Start date", example = "2024-01-01")
             @RequestParam("startDate") String startDate,
+            @Parameter(description = "End date", example = "2024-12-31")
             @RequestParam("endDate") String endDate) {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
         User user = userService.findByUsername(principal.getName());
