@@ -32,7 +32,7 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder(){
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
@@ -40,7 +40,6 @@ public class WebSecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
-
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
@@ -56,8 +55,16 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/urls/**").authenticated()
+                        .requestMatchers("/api/urls/bio/**").permitAll()
                         .requestMatchers("/{shortUrl}").permitAll()
+                        // swagger URLs — allow without auth
+                        .requestMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+                        .requestMatchers("/api/urls/**").authenticated()
                         .anyRequest().authenticated()
                 );
         http.authenticationProvider(authenticationProvider());

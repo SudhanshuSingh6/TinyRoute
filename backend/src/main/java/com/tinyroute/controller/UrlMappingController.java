@@ -1,6 +1,7 @@
 package com.tinyroute.controller;
 
 import com.tinyroute.dtos.ClickEventDTO;
+import com.tinyroute.dtos.RateLimitErrorResponse;
 import com.tinyroute.dtos.UrlMappingDTO;
 import com.tinyroute.models.UrlMapping;
 import com.tinyroute.models.UrlStatus;
@@ -85,6 +86,19 @@ public class UrlMappingController {
         return headers;
     }
 
+    // builds rich 429 response body
+    private RateLimitErrorResponse build429Body(ConsumptionProbe probe, long limit, String endpoint) {
+        long retryAfter = probe.getNanosToWaitForRefill() / 1_000_000_000;
+        return new RateLimitErrorResponse(
+                "RATE_LIMIT_EXCEEDED",
+                "/" + endpoint,
+                limit,
+                probe.getRemainingTokens(),
+                retryAfter,
+                "You have exceeded the limit of " + limit + " requests/hour on /" + endpoint
+        );
+    }
+
     // carries probe + limit + admin flag back to each endpoint
     private record RateLimitResult(ConsumptionProbe probe, long limit, boolean isAdmin) {}
 
@@ -111,7 +125,7 @@ public class UrlMappingController {
         if (!result.isAdmin() && !result.probe().isConsumed()) {
             return ResponseEntity.status(429)
                     .headers(buildRateLimitHeaders(result.probe(), result.limit()))
-                    .body("Rate limit exceeded on /shorten. Limit: " + result.limit() + "/hr");
+                    .body(build429Body(result.probe(), result.limit(), "shorten"));
         }
 
         String originalUrl  = request.get("originalUrl");
@@ -170,7 +184,7 @@ public class UrlMappingController {
         if (!result.isAdmin() && !result.probe().isConsumed()) {
             return ResponseEntity.status(429)
                     .headers(buildRateLimitHeaders(result.probe(), result.limit()))
-                    .body("Rate limit exceeded on /myurls. Limit: " + result.limit() + "/hr");
+                    .body(build429Body(result.probe(), result.limit(), "myurls"));
         }
 
         User user = userService.findByUsername(principal.getName());
@@ -193,7 +207,7 @@ public class UrlMappingController {
         if (!result.isAdmin() && !result.probe().isConsumed()) {
             return ResponseEntity.status(429)
                     .headers(buildRateLimitHeaders(result.probe(), result.limit()))
-                    .body("Rate limit exceeded on /analytics. Limit: " + result.limit() + "/hr");
+                    .body(build429Body(result.probe(), result.limit(), "analytics"));
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
