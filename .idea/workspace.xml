@@ -6,12 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="12b6e11e-18e5-4ca5-88fe-ac59d93ddba9" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/RedirectController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/RedirectController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/models/ClickEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/models/ClickEvent.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/repository/ClickEventRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/repository/ClickEventRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/UrlMappingController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/UrlMappingController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/UrlMappingService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/UrlMappingService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -129,7 +125,7 @@
       <workItem from="1745519148900" duration="4252000" />
       <workItem from="1745744076212" duration="28000" />
       <workItem from="1745744196804" duration="149000" />
-      <workItem from="1773601044929" duration="27127000" />
+      <workItem from="1773601044929" duration="29737000" />
     </task>
     <servers />
   </component>

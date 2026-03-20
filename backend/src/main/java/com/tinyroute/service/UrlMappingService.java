@@ -1,6 +1,8 @@
 package com.tinyroute.service;
 
+import com.tinyroute.dtos.AnalyticsDTO;
 import com.tinyroute.dtos.ClickEventDTO;
+import com.tinyroute.dtos.ClickVelocityDTO;
 import com.tinyroute.dtos.UrlMappingDTO;
 import com.tinyroute.models.ClickEvent;
 import com.tinyroute.models.UrlMapping;
@@ -102,24 +104,76 @@ public class UrlMappingService {
                 .toList();
     }
 
-    public List<ClickEventDTO> getClickEventsByDate(String shortUrl, LocalDateTime start, LocalDateTime end) {
+    public AnalyticsDTO getAnalytics(String shortUrl, LocalDateTime start, LocalDateTime end) {
         UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
-        if (urlMapping != null) {
-            return clickEventRepository.findByUrlMappingAndClickDateBetween(urlMapping, start, end)
-                    .stream()
-                    .collect(Collectors.groupingBy(
-                            click -> click.getClickDate().toLocalDate(),
-                            Collectors.counting()))
-                    .entrySet().stream()
-                    .map(entry -> {
-                        ClickEventDTO dto = new ClickEventDTO();
-                        dto.setClickDate(entry.getKey());
-                        dto.setCount(entry.getValue());
-                        return dto;
-                    })
-                    .collect(Collectors.toList());
-        }
-        return null;
+        if (urlMapping == null) return null;
+
+        List<ClickEvent> clicks = clickEventRepository
+                .findByUrlMappingAndClickDateBetween(urlMapping, start, end);
+
+        AnalyticsDTO dto = new AnalyticsDTO();
+
+        // totals
+        dto.setTotalClicks(clicks.size());
+        dto.setUniqueClicks(clicks.stream().filter(ClickEvent::isUniqueClick).count());
+
+        dto.setClicksByCountry(clicks.stream()
+                .collect(Collectors.groupingBy(
+                        c -> c.getCountry() != null ? c.getCountry() : "Unknown",
+                        Collectors.counting())));
+
+        dto.setClicksByDevice(clicks.stream()
+                .collect(Collectors.groupingBy(
+                        c -> c.getDeviceType() != null ? c.getDeviceType() : "Unknown",
+                        Collectors.counting())));
+
+        dto.setClicksByBrowser(clicks.stream()
+                .collect(Collectors.groupingBy(
+                        c -> c.getBrowser() != null ? c.getBrowser() : "Unknown",
+                        Collectors.counting())));
+
+        dto.setClicksByOs(clicks.stream()
+                .collect(Collectors.groupingBy(
+                        c -> c.getOs() != null ? c.getOs() : "Unknown",
+                        Collectors.counting())));
+
+        // clicks by referrer
+        dto.setClicksByReferrer(clicks.stream()
+                .collect(Collectors.groupingBy(
+                        c -> c.getReferrer() != null ? c.getReferrer() : "Direct",
+                        Collectors.counting())));
+
+        dto.setClicksByHour(clicks.stream()
+                .collect(Collectors.groupingBy(
+                        c -> c.getClickDate().getHour(),
+                        Collectors.counting())));
+
+        dto.setClicksByDayOfWeek(clicks.stream()
+                .collect(Collectors.groupingBy(
+                        c -> c.getClickDate().getDayOfWeek().toString(),
+                        Collectors.counting())));
+
+        int peakHour = dto.getClicksByHour().entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(0);
+        dto.setPeakHour(peakHour);
+
+        // click velocity — last 24h vs previous 24h
+        LocalDateTime now = LocalDateTime.now();
+        long last24h = clicks.stream()
+                .filter(c -> c.getClickDate().isAfter(now.minusHours(24)))
+                .count();
+        long previous24h = clicks.stream()
+                .filter(c -> c.getClickDate().isAfter(now.minusHours(48))
+                        && c.getClickDate().isBefore(now.minusHours(24)))
+                .count();
+        String trend = last24h > previous24h ? "UP"
+                : last24h < previous24h ? "DOWN"
+                : "STABLE";
+        dto.setClickVelocity(new ClickVelocityDTO(last24h, previous24h, trend));
+
+        return dto;
     }
 
     public Map<LocalDate, Long> getTotalClicksByUserAndDate(User user, LocalDate start, LocalDate end) {
@@ -154,39 +208,21 @@ public class UrlMappingService {
             urlMappingRepository.save(urlMapping);
             return urlMapping;
         }
-
-        // increment click count and last clicked
         urlMapping.setClickCount(urlMapping.getClickCount() + 1);
         urlMapping.setLastClickedAt(LocalDateTime.now());
         urlMappingRepository.save(urlMapping);
-
-        // build and save click event with full analytics
         ClickEvent clickEvent = new ClickEvent();
         clickEvent.setClickDate(LocalDateTime.now());
         clickEvent.setUrlMapping(urlMapping);
-
-        // 1. get real IP — check X-Forwarded-For first (proxy/load balancer)
         String ip = getClientIp(request);
-
-        // 2. hash IP for privacy
         String ipHash = hashIp(ip);
         clickEvent.setIpHash(ipHash);
-
-        // 3. unique click check
         boolean isUnique = !clickEventRepository.existsByUrlMappingAndIpHash(urlMapping, ipHash);
         clickEvent.setUniqueClick(isUnique);
-
-        // 4. geo from ip-api.com
         populateGeo(clickEvent, ip);
-
-        // 5. device/browser/OS from User-Agent
         populateDevice(clickEvent, request.getHeader("User-Agent"));
-
-        // 6. referrer
         String referrer = request.getHeader("Referer");
         clickEvent.setReferrer(referrer != null ? referrer : "Direct");
-
-        // 7. language
         String language = request.getHeader("Accept-Language");
         clickEvent.setLanguage(language != null ? language.split(",")[0] : "Unknown");
 
@@ -218,8 +254,6 @@ public class UrlMappingService {
         }
     }
 
-    // calls ip-api.com — free, no API key needed, returns JSON
-    @SuppressWarnings("unchecked")
     private void populateGeo(ClickEvent clickEvent, String ip) {
         try {
             // skip for localhost — ip-api returns error for 127.0.0.1
@@ -259,7 +293,6 @@ public class UrlMappingService {
             Client client = parser.parse(userAgentString);
             clickEvent.setBrowser(client.userAgent.family);
             clickEvent.setOs(client.os.family);
-            // uap-java device family: "Spider" = bot, "Other" = desktop, else = mobile/tablet
             String device = client.device.family;
             if (device.equalsIgnoreCase("Other")) {
                 clickEvent.setDeviceType("Desktop");

@@ -1,6 +1,6 @@
 package com.tinyroute.controller;
 
-import com.tinyroute.dtos.ClickEventDTO;
+import com.tinyroute.dtos.AnalyticsDTO;
 import com.tinyroute.dtos.RateLimitErrorResponse;
 import com.tinyroute.dtos.UrlMappingDTO;
 import com.tinyroute.models.UrlMapping;
@@ -216,9 +216,10 @@ public class UrlMappingController {
 
     @Operation(
             summary = "Get analytics for a specific URL",
-            description = "Returns click events grouped by date for a given short URL within a date range. Rate limited per role."
+            description = "Returns rich analytics including geo, device, browser, referrer, peak hour and click velocity."
     )
-    @ApiResponse(responseCode = "200", description = "Click events returned")
+    @ApiResponse(responseCode = "200", description = "Analytics returned")
+    @ApiResponse(responseCode = "404", description = "Short URL not found")
     @ApiResponse(responseCode = "429", description = "Rate limit exceeded")
     @PostMapping("/analytics/{shortUrl}")
     @PreAuthorize("hasRole('USER')")
@@ -240,11 +241,14 @@ public class UrlMappingController {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
         LocalDateTime start = LocalDateTime.parse(startDate, formatter);
         LocalDateTime end   = LocalDateTime.parse(endDate, formatter);
-        List<ClickEventDTO> clickEventDTOS = urlMappingService.getClickEventsByDate(shortUrl, start, end);
+
+        AnalyticsDTO analytics = urlMappingService.getAnalytics(shortUrl, start, end);
+        if (analytics == null) return ResponseEntity.notFound().build();
+
         HttpHeaders headers = result.isAdmin()
                 ? new HttpHeaders()
                 : buildRateLimitHeaders(result.probe(), result.limit());
-        return ResponseEntity.ok().headers(headers).body(clickEventDTOS);
+        return ResponseEntity.ok().headers(headers).body(analytics);
     }
 
     @Operation(
