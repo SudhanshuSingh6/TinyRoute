@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -24,17 +25,18 @@ public class RedirectController {
 
     @Operation(
             summary = "Redirect to original URL",
-            description = "Resolves a short URL and redirects to the original. Returns 410 if expired, click limit reached, or disabled."
+            description = "Resolves a short URL and redirects. Tracks geo, device, browser, referrer and unique clicks."
     )
     @ApiResponse(responseCode = "302", description = "Redirect to original URL")
     @ApiResponse(responseCode = "404", description = "Short URL not found")
     @ApiResponse(responseCode = "410", description = "URL expired, click limit reached, or disabled")
     @GetMapping("/{shortUrl}")
     public ResponseEntity<?> redirect(
-            @Parameter(description = "The short URL code", example = "abc12345")
-            @PathVariable String shortUrl) {
+            @Parameter(description = "Short URL code", example = "abc12345")
+            @PathVariable String shortUrl,
+            HttpServletRequest request) {   // NEW — passed to service for analytics
 
-        UrlMapping urlMapping = urlMappingService.getOriginalUrl(shortUrl);
+        UrlMapping urlMapping = urlMappingService.getOriginalUrl(shortUrl, request);
 
         if (urlMapping == null) {
             return ResponseEntity.notFound().build();
