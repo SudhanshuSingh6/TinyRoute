@@ -54,10 +54,14 @@ public class WebSecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/public/**").permitAll()
                         .requestMatchers("/api/urls/bio/**").permitAll()
+                        // preview and QR are public
+                        .requestMatchers(HttpMethod.GET, "/api/urls/*/preview").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/urls/*/qr").permitAll()
+                        // short URL redirect — handled by RedirectController
                         .requestMatchers("/{shortUrl}").permitAll()
-                        // swagger URLs — allow without auth
+                        // swagger
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",

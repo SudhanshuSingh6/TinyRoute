@@ -1,11 +1,6 @@
 package com.tinyroute.service;
 
-import com.tinyroute.dtos.AnalyticsDTO;
-import com.tinyroute.dtos.ClickEventDTO;
-import com.tinyroute.dtos.ClickVelocityDTO;
-import com.tinyroute.dtos.UrlEditHistoryDTO;
-import com.tinyroute.dtos.UrlMappingDTO;
-import com.tinyroute.dtos.UrlPreviewDTO;
+import com.tinyroute.dtos.*;
 import com.tinyroute.models.ClickEvent;
 import com.tinyroute.models.UrlEditHistory;
 import com.tinyroute.models.UrlMapping;
@@ -15,6 +10,7 @@ import com.tinyroute.repository.ClickEventRepository;
 import com.tinyroute.repository.UrlEditHistoryRepository;
 import com.tinyroute.repository.UrlMappingRepository;
 import com.tinyroute.config.DomainBlacklistConfig;
+import com.tinyroute.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +46,8 @@ public class UrlMappingService {
     private UrlMappingRepository urlMappingRepository;
     private ClickEventRepository clickEventRepository;
     private UrlEditHistoryRepository urlEditHistoryRepository;
+    private UserRepository userRepository;
+    private UserService userService;
     private DomainBlacklistConfig domainBlacklistConfig;
 
     public UrlMappingDTO createShortUrl(String originalUrl, String customAlias,
@@ -263,6 +261,36 @@ public class UrlMappingService {
                 .collect(Collectors.groupingBy(
                         click -> click.getClickDate().toLocalDate(),
                         Collectors.counting()));
+    }
+
+    public BioPageDTO getBioPage(String username) {
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) return null;
+
+        // @Transactional increment — safe under concurrent requests
+        userService.incrementBioPageViews(username);
+
+        // re-fetch to get updated view count
+        user = userRepository.findByUsername(username).orElseThrow();
+
+        UserProfileDTO profile = new UserProfileDTO();
+        profile.setUsername(user.getUsername());
+        profile.setBio(user.getBio());
+        profile.setAvatarUrl(user.getAvatarUrl());
+        profile.setBioPageViews(user.getBioPageViews());
+
+        // only show public, active, non-deleted URLs
+        List<UrlMappingDTO> publicUrls = urlMappingRepository.findByUser(user).stream()
+                .filter(u -> u.isPublic()
+                        && u.getStatus() == UrlStatus.ACTIVE
+                        && !u.isDeleted())
+                .map(this::convertToDto)
+                .toList();
+
+        BioPageDTO dto = new BioPageDTO();
+        dto.setProfile(profile);
+        dto.setUrls(publicUrls);
+        return dto;
     }
 
     public UrlPreviewDTO getPreview(String shortUrl) {
