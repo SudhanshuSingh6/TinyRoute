@@ -1,8 +1,10 @@
 package com.tinyroute.controller;
 
-import com.tinyroute.dtos.AnalyticsDTO;
+import com.tinyroute.dtos.ClickEventDTO;
 import com.tinyroute.dtos.RateLimitErrorResponse;
+import com.tinyroute.dtos.UrlEditHistoryDTO;
 import com.tinyroute.dtos.UrlMappingDTO;
+import com.tinyroute.dtos.UrlPreviewDTO;
 import com.tinyroute.models.UrlMapping;
 import com.tinyroute.models.UrlStatus;
 import com.tinyroute.models.User;
@@ -19,7 +21,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -37,14 +41,24 @@ import java.util.concurrent.ConcurrentHashMap;
 @SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/urls")
-@AllArgsConstructor
 public class UrlMappingController {
 
-    private UrlMappingService urlMappingService;
-    private UserService userService;
-    private UrlMappingRepository urlMappingRepository;
+    private final UrlMappingService urlMappingService;
+    private final UserService userService;
+    private final UrlMappingRepository urlMappingRepository;
+
+    @Value("${frontend.url}")
+    private String frontendUrl;
 
     private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
+
+    public UrlMappingController(UrlMappingService urlMappingService,
+                                UserService userService,
+                                UrlMappingRepository urlMappingRepository) {
+        this.urlMappingService = urlMappingService;
+        this.userService = userService;
+        this.urlMappingRepository = urlMappingRepository;
+    }
 
     private Bucket getBucket(String username, String role, String endpoint) {
         String key = username + ":" + endpoint;
@@ -158,6 +172,84 @@ public class UrlMappingController {
     }
 
     @Operation(
+            summary = "Soft delete a URL",
+            description = "Marks a URL as deleted. It is never removed from the database so analytics remain intact. Only the owner can delete their own URLs."
+    )
+    @ApiResponse(responseCode = "204", description = "URL deleted successfully")
+    @ApiResponse(responseCode = "403", description = "You don't own this URL")
+    @ApiResponse(responseCode = "404", description = "URL not found")
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> deleteUrl(
+            @Parameter(description = "ID of the URL to delete") @PathVariable Long id,
+            Principal principal) {
+        try {
+            urlMappingService.deleteUrl(id, principal.getName());
+            return ResponseEntity.noContent().build();  // 204 — success, no body
+        } catch (RuntimeException e) {
+            if ("FORBIDDEN".equals(e.getMessage())) {
+                return ResponseEntity.status(403).body("You don't own this URL.");
+            }
+            return ResponseEntity.notFound().build();   // URL not found
+        }
+    }
+
+    @Operation(
+            summary = "Edit destination URL",
+            description = "Updates the destination of a short URL. The previous destination is saved to edit history. Only the owner can edit their own URLs."
+    )
+    @ApiResponse(responseCode = "200", description = "URL updated successfully")
+    @ApiResponse(responseCode = "400", description = "Domain is blacklisted")
+    @ApiResponse(responseCode = "403", description = "You don't own this URL")
+    @ApiResponse(responseCode = "404", description = "URL not found")
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> editUrl(
+            @Parameter(description = "ID of the URL to edit") @PathVariable Long id,
+            @RequestBody Map<String, String> request,
+            Principal principal) {
+        String newOriginalUrl = request.get("originalUrl");
+        if (newOriginalUrl == null || newOriginalUrl.isBlank()) {
+            return ResponseEntity.badRequest().body("originalUrl is required.");
+        }
+        try {
+            UrlMappingDTO dto = urlMappingService.editUrl(id, newOriginalUrl, principal.getName());
+            return ResponseEntity.ok(dto);
+        } catch (RuntimeException e) {
+            if ("FORBIDDEN".equals(e.getMessage())) {
+                return ResponseEntity.status(403).body("You don't own this URL.");
+            }
+            if (e.getMessage().contains("not allowed")) {
+                return ResponseEntity.badRequest().body(e.getMessage());
+            }
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @Operation(
+            summary = "Get edit history for a URL",
+            description = "Returns all previous destination URLs for a given short URL, newest first. Only the owner can view history."
+    )
+    @ApiResponse(responseCode = "200", description = "Edit history returned")
+    @ApiResponse(responseCode = "403", description = "You don't own this URL")
+    @ApiResponse(responseCode = "404", description = "URL not found")
+    @GetMapping("/{id}/history")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> getEditHistory(
+            @Parameter(description = "ID of the URL") @PathVariable Long id,
+            Principal principal) {
+        try {
+            List<UrlEditHistoryDTO> history = urlMappingService.getEditHistory(id, principal.getName());
+            return ResponseEntity.ok(history);
+        } catch (RuntimeException e) {
+            if ("FORBIDDEN".equals(e.getMessage())) {
+                return ResponseEntity.status(403).body("You don't own this URL.");
+            }
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @Operation(
             summary = "Toggle URL active/disabled",
             description = "Switches a URL between ACTIVE and DISABLED status. Only the owner can toggle their own URLs."
     )
@@ -192,7 +284,7 @@ public class UrlMappingController {
 
     @Operation(
             summary = "Get all my URLs",
-            description = "Returns all shortened URLs created by the authenticated user. Rate limited per role."
+            description = "Returns all shortened URLs created by the authenticated user. Soft-deleted URLs are excluded. Rate limited per role."
     )
     @ApiResponse(responseCode = "200", description = "List of URLs returned")
     @ApiResponse(responseCode = "429", description = "Rate limit exceeded")
@@ -216,10 +308,9 @@ public class UrlMappingController {
 
     @Operation(
             summary = "Get analytics for a specific URL",
-            description = "Returns rich analytics including geo, device, browser, referrer, peak hour and click velocity."
+            description = "Returns click events grouped by date for a given short URL within a date range. Rate limited per role."
     )
-    @ApiResponse(responseCode = "200", description = "Analytics returned")
-    @ApiResponse(responseCode = "404", description = "Short URL not found")
+    @ApiResponse(responseCode = "200", description = "Click events returned")
     @ApiResponse(responseCode = "429", description = "Rate limit exceeded")
     @PostMapping("/analytics/{shortUrl}")
     @PreAuthorize("hasRole('USER')")
@@ -241,10 +332,8 @@ public class UrlMappingController {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
         LocalDateTime start = LocalDateTime.parse(startDate, formatter);
         LocalDateTime end   = LocalDateTime.parse(endDate, formatter);
-
-        AnalyticsDTO analytics = urlMappingService.getAnalytics(shortUrl, start, end);
+        Object analytics = urlMappingService.getAnalytics(shortUrl, start, end);
         if (analytics == null) return ResponseEntity.notFound().build();
-
         HttpHeaders headers = result.isAdmin()
                 ? new HttpHeaders()
                 : buildRateLimitHeaders(result.probe(), result.limit());
@@ -270,5 +359,39 @@ public class UrlMappingController {
         LocalDate end   = LocalDate.parse(endDate, formatter);
         Map<LocalDate, Long> totalClicks = urlMappingService.getTotalClicksByUserAndDate(user, start, end);
         return ResponseEntity.ok(totalClicks);
+    }
+
+    @Operation(
+            summary = "Preview a short URL's destination",
+            description = "Scrapes the destination page for title, description and og:image. Public endpoint — no auth required."
+    )
+    @ApiResponse(responseCode = "200", description = "Preview data returned")
+    @ApiResponse(responseCode = "404", description = "Short URL not found or deleted")
+    @GetMapping("/{shortUrl}/preview")
+    public ResponseEntity<?> getPreview(
+            @Parameter(description = "The short URL code", example = "abc12345")
+            @PathVariable String shortUrl) {
+        UrlPreviewDTO preview = urlMappingService.getPreview(shortUrl);
+        if (preview == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(preview);
+    }
+
+    @Operation(
+            summary = "Generate QR code for a short URL",
+            description = "Returns a 250x250 PNG QR code encoding the full short URL. Public endpoint — no auth required."
+    )
+    @ApiResponse(responseCode = "200", description = "PNG image returned")
+    @ApiResponse(responseCode = "404", description = "Short URL not found or deleted")
+    @GetMapping("/{shortUrl}/qr")
+    public ResponseEntity<byte[]> getQrCode(
+            @Parameter(description = "The short URL code", example = "abc12345")
+            @PathVariable String shortUrl) {
+        // strip trailing slash from frontendUrl if present
+        String baseUrl = frontendUrl.replaceAll("/$", "");
+        byte[] png = urlMappingService.generateQr(shortUrl, baseUrl);
+        if (png == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .body(png);
     }
 }

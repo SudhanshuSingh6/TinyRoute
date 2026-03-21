@@ -3,21 +3,36 @@ package com.tinyroute.service;
 import com.tinyroute.dtos.AnalyticsDTO;
 import com.tinyroute.dtos.ClickEventDTO;
 import com.tinyroute.dtos.ClickVelocityDTO;
+import com.tinyroute.dtos.UrlEditHistoryDTO;
 import com.tinyroute.dtos.UrlMappingDTO;
+import com.tinyroute.dtos.UrlPreviewDTO;
 import com.tinyroute.models.ClickEvent;
+import com.tinyroute.models.UrlEditHistory;
 import com.tinyroute.models.UrlMapping;
 import com.tinyroute.models.UrlStatus;
 import com.tinyroute.models.User;
 import com.tinyroute.repository.ClickEventRepository;
+import com.tinyroute.repository.UrlEditHistoryRepository;
 import com.tinyroute.repository.UrlMappingRepository;
 import com.tinyroute.config.DomainBlacklistConfig;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.jsoup.HttpStatusException;
+import org.jsoup.UnsupportedMimeTypeException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import ua_parser.Client;
 import ua_parser.Parser;
-
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDate;
@@ -27,12 +42,14 @@ import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class UrlMappingService {
 
     private UrlMappingRepository urlMappingRepository;
     private ClickEventRepository clickEventRepository;
+    private UrlEditHistoryRepository urlEditHistoryRepository;
     private DomainBlacklistConfig domainBlacklistConfig;
 
     public UrlMappingDTO createShortUrl(String originalUrl, String customAlias,
@@ -43,7 +60,7 @@ public class UrlMappingService {
         }
 
         UrlMapping existing = urlMappingRepository.findByOriginalUrlAndUser(originalUrl, user);
-        if (existing != null && existing.getStatus() == UrlStatus.ACTIVE) {
+        if (existing != null && existing.getStatus() == UrlStatus.ACTIVE && !existing.isDeleted()) {
             return convertToDto(existing);
         }
 
@@ -68,6 +85,66 @@ public class UrlMappingService {
         }
 
         return convertToDto(urlMappingRepository.save(urlMapping));
+    }
+
+    // soft delete — marks as deleted, records timestamp, never removes from DB
+    public void deleteUrl(Long id, String username) {
+        UrlMapping urlMapping = urlMappingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("URL not found with id: " + id));
+
+        if (!urlMapping.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("FORBIDDEN");
+        }
+
+        urlMapping.setDeleted(true);
+        urlMapping.setDeletedAt(LocalDateTime.now());
+        urlMappingRepository.save(urlMapping);
+    }
+
+    // edit destination — saves old URL to history before overwriting
+    public UrlMappingDTO editUrl(Long id, String newOriginalUrl, String username) {
+        UrlMapping urlMapping = urlMappingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("URL not found with id: " + id));
+
+        if (!urlMapping.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("FORBIDDEN");
+        }
+
+        if (domainBlacklistConfig.isBlacklisted(newOriginalUrl)) {
+            throw new RuntimeException("This domain is not allowed.");
+        }
+
+        // save old URL to history before overwriting
+        UrlEditHistory history = new UrlEditHistory();
+        history.setOldUrl(urlMapping.getOriginalUrl());
+        history.setChangedAt(LocalDateTime.now());
+        history.setUrlMapping(urlMapping);
+        urlEditHistoryRepository.save(history);
+
+        urlMapping.setOriginalUrl(newOriginalUrl);
+        return convertToDto(urlMappingRepository.save(urlMapping));
+    }
+
+    // returns previous destinations, newest first
+    public List<UrlEditHistoryDTO> getEditHistory(Long id, String username) {
+        UrlMapping urlMapping = urlMappingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("URL not found with id: " + id));
+
+        if (!urlMapping.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("FORBIDDEN");
+        }
+
+        return urlEditHistoryRepository
+                .findByUrlMappingOrderByChangedAtDesc(urlMapping)
+                .stream()
+                .map(h -> {
+                    UrlEditHistoryDTO dto = new UrlEditHistoryDTO();
+                    dto.setId(h.getId());
+                    dto.setOldUrl(h.getOldUrl());
+                    dto.setChangedAt(h.getChangedAt());
+                    return dto;
+                })
+                .toList();
     }
 
     private UrlMappingDTO convertToDto(UrlMapping urlMapping) {
@@ -98,8 +175,10 @@ public class UrlMappingService {
         return shortUrl.toString();
     }
 
+    // filters out soft-deleted URLs — user never sees them again
     public List<UrlMappingDTO> getUrlsByUser(User user) {
         return urlMappingRepository.findByUser(user).stream()
+                .filter(u -> !u.isDeleted())
                 .map(this::convertToDto)
                 .toList();
     }
@@ -113,7 +192,6 @@ public class UrlMappingService {
 
         AnalyticsDTO dto = new AnalyticsDTO();
 
-        // totals
         dto.setTotalClicks(clicks.size());
         dto.setUniqueClicks(clicks.stream().filter(ClickEvent::isUniqueClick).count());
 
@@ -137,7 +215,6 @@ public class UrlMappingService {
                         c -> c.getOs() != null ? c.getOs() : "Unknown",
                         Collectors.counting())));
 
-        // clicks by referrer
         dto.setClicksByReferrer(clicks.stream()
                 .collect(Collectors.groupingBy(
                         c -> c.getReferrer() != null ? c.getReferrer() : "Direct",
@@ -159,7 +236,6 @@ public class UrlMappingService {
                 .orElse(0);
         dto.setPeakHour(peakHour);
 
-        // click velocity — last 24h vs previous 24h
         LocalDateTime now = LocalDateTime.now();
         long last24h = clicks.stream()
                 .filter(c -> c.getClickDate().isAfter(now.minusHours(24)))
@@ -189,12 +265,66 @@ public class UrlMappingService {
                         Collectors.counting()));
     }
 
-    // called by RedirectController — now takes HttpServletRequest for analytics
+    public UrlPreviewDTO getPreview(String shortUrl) {
+        UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
+        if (urlMapping == null || urlMapping.isDeleted()) return null;
+
+        UrlPreviewDTO dto = new UrlPreviewDTO();
+
+        String originalUrl = urlMapping.getOriginalUrl(); // extract here
+        dto.setOriginalUrl(originalUrl);
+
+        try {
+            Document doc = Jsoup.connect(originalUrl) // use variable
+                    .userAgent("Mozilla/5.0")
+                    .timeout(5000)
+                    .get();
+
+            String ogTitle = doc.select("meta[property=og:title]").attr("content");
+            dto.setTitle(!ogTitle.isBlank() ? ogTitle : doc.title());
+
+            String desc = doc.select("meta[name=description]").attr("content");
+            dto.setDescription(!desc.isBlank() ? desc : null);
+
+            String image = doc.select("meta[property=og:image]").attr("abs:content");
+            dto.setImageUrl(!image.isBlank() ? image : null);
+
+        } catch (HttpStatusException e) {
+            log.warn("Site returned {} for '{}'", e.getStatusCode(), originalUrl);
+        } catch (UnsupportedMimeTypeException e) {
+            log.warn("Not an HTML page: '{}'", originalUrl);
+        } catch (SocketTimeoutException e) {
+            log.warn("Timeout fetching preview for '{}'", originalUrl);
+        } catch (IOException e) {
+            log.warn("Network error fetching '{}': {}", originalUrl, e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error in getPreview for '{}': {}", originalUrl, e.getMessage(), e);
+        }
+        return dto;
+    }
+
+    // generates a 250x250 PNG QR code encoding the full short URL
+    public byte[] generateQr(String shortUrl, String baseUrl) {
+        UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
+        if (urlMapping == null || urlMapping.isDeleted()) return null;
+
+        try {
+            String fullUrl = baseUrl + "/" + shortUrl;
+            QRCodeWriter writer = new QRCodeWriter();
+            BitMatrix matrix = writer.encode(fullUrl, BarcodeFormat.QR_CODE, 250, 250);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            MatrixToImageWriter.writeToStream(matrix, "PNG", out);
+            return out.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate QR code", e);
+        }
+    }
+
     public UrlMapping getOriginalUrl(String shortUrl, HttpServletRequest request) {
         UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
         if (urlMapping == null) return null;
+        if (urlMapping.isDeleted()) return null;
 
-        // status checks
         if (urlMapping.getExpiresAt() != null &&
                 LocalDateTime.now().isAfter(urlMapping.getExpiresAt())) {
             urlMapping.setStatus(UrlStatus.EXPIRED);
@@ -208,21 +338,28 @@ public class UrlMappingService {
             urlMappingRepository.save(urlMapping);
             return urlMapping;
         }
+
         urlMapping.setClickCount(urlMapping.getClickCount() + 1);
         urlMapping.setLastClickedAt(LocalDateTime.now());
         urlMappingRepository.save(urlMapping);
+
         ClickEvent clickEvent = new ClickEvent();
         clickEvent.setClickDate(LocalDateTime.now());
         clickEvent.setUrlMapping(urlMapping);
+
         String ip = getClientIp(request);
         String ipHash = hashIp(ip);
         clickEvent.setIpHash(ipHash);
+
         boolean isUnique = !clickEventRepository.existsByUrlMappingAndIpHash(urlMapping, ipHash);
         clickEvent.setUniqueClick(isUnique);
+
         populateGeo(clickEvent, ip);
         populateDevice(clickEvent, request.getHeader("User-Agent"));
+
         String referrer = request.getHeader("Referer");
         clickEvent.setReferrer(referrer != null ? referrer : "Direct");
+
         String language = request.getHeader("Accept-Language");
         clickEvent.setLanguage(language != null ? language.split(",")[0] : "Unknown");
 
@@ -230,16 +367,14 @@ public class UrlMappingService {
         return urlMapping;
     }
 
-    // reads X-Forwarded-For first — essential when behind a proxy/load balancer
     private String getClientIp(HttpServletRequest request) {
         String forwarded = request.getHeader("X-Forwarded-For");
         if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim(); // first IP in chain is the real client
+            return forwarded.split(",")[0].trim();
         }
         return request.getRemoteAddr();
     }
 
-    // SHA-256 hash — one-way, privacy safe, never store raw IP
     private String hashIp(String ip) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -254,9 +389,9 @@ public class UrlMappingService {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void populateGeo(ClickEvent clickEvent, String ip) {
         try {
-            // skip for localhost — ip-api returns error for 127.0.0.1
             if (ip.equals("127.0.0.1") || ip.equals("0:0:0:0:0:0:0:1")) {
                 clickEvent.setCountry("Local");
                 clickEvent.setCity("Local");
@@ -280,7 +415,6 @@ public class UrlMappingService {
         }
     }
 
-    // uap-java parses User-Agent into browser, OS, device
     private void populateDevice(ClickEvent clickEvent, String userAgentString) {
         try {
             if (userAgentString == null || userAgentString.isBlank()) {

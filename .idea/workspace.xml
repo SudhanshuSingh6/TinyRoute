@@ -6,7 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="12b6e11e-18e5-4ca5-88fe-ac59d93ddba9" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/UrlMappingController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/UrlMappingController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/models/UrlMapping.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/models/UrlMapping.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/UrlMappingService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/UrlMappingService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -18,6 +20,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Enum" />
+        <option value="Interface" />
         <option value="Class" />
       </list>
     </option>
@@ -125,7 +128,7 @@
       <workItem from="1745519148900" duration="4252000" />
       <workItem from="1745744076212" duration="28000" />
       <workItem from="1745744196804" duration="149000" />
-      <workItem from="1773601044929" duration="29737000" />
+      <workItem from="1773601044929" duration="35541000" />
     </task>
     <servers />
   </component>
