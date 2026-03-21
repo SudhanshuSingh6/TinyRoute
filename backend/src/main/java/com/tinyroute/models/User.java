@@ -15,5 +15,9 @@ public class User {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private Role role = Role.ROLE_USER;  // default is ROLE_USER
+    private Role role = Role.ROLE_USER;
+
+    private String bio;
+    private String avatarUrl;
+    private long bioPageViews = 0;
 }
