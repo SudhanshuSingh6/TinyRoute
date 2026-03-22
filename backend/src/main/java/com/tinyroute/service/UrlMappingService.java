@@ -10,6 +10,7 @@ import com.tinyroute.repository.ClickEventRepository;
 import com.tinyroute.repository.UrlEditHistoryRepository;
 import com.tinyroute.repository.UrlMappingRepository;
 import com.tinyroute.config.DomainBlacklistConfig;
+import com.tinyroute.exception.DomainBlacklistedException;
 import com.tinyroute.repository.UserRepository;
 import jakarta.persistence.LockModeType;
 import jakarta.servlet.http.HttpServletRequest;
@@ -63,7 +64,7 @@ public class UrlMappingService {
                                         LocalDateTime expiresAt, Integer maxClicks,
                                         String title, boolean isPublic, User user) {
         if (domainBlacklistConfig.isBlacklisted(originalUrl)) {
-            throw new RuntimeException("This domain is not allowed.");
+            throw new DomainBlacklistedException("This domain is not allowed.");
         }
 
         UrlMapping existing = urlMappingRepository.findByOriginalUrlAndUser(originalUrl, user);
@@ -114,8 +115,24 @@ public class UrlMappingService {
             throw new RuntimeException("FORBIDDEN");
         }
 
+        if (urlMapping.isDeleted()) {
+            throw new IllegalStateException("This short link has been deleted and cannot be edited.");
+        }
+        if (urlMapping.getStatus() == UrlStatus.EXPIRED) {
+            throw new IllegalStateException(
+                    "This short link expired on "
+                            + urlMapping.getExpiresAt().toLocalDate()
+                            + " and cannot be edited.");
+        }
+        if (urlMapping.getStatus() == UrlStatus.CLICK_LIMIT_REACHED) {
+            throw new IllegalStateException(
+                    "This short link has reached its click limit of "
+                            + urlMapping.getMaxClicks()
+                            + " and cannot be edited.");
+        }
+
         if (domainBlacklistConfig.isBlacklisted(newOriginalUrl)) {
-            throw new RuntimeException("This domain is not allowed.");
+            throw new DomainBlacklistedException("This domain is not allowed.");
         }
 
         UrlEditHistory history = new UrlEditHistory();

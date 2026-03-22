@@ -11,6 +11,7 @@ import com.tinyroute.models.User;
 import com.tinyroute.repository.UrlMappingRepository;
 import com.tinyroute.service.UrlMappingService;
 import com.tinyroute.service.UserService;
+import com.tinyroute.exception.DomainBlacklistedException;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
@@ -219,7 +220,10 @@ public class UrlMappingController {
             if ("FORBIDDEN".equals(e.getMessage())) {
                 return ResponseEntity.status(403).body("You don't own this URL.");
             }
-            if (e.getMessage().contains("not allowed")) {
+            if (e instanceof DomainBlacklistedException) {
+                return ResponseEntity.badRequest().body(e.getMessage());
+            }
+            if (e instanceof IllegalStateException) {
                 return ResponseEntity.badRequest().body(e.getMessage());
             }
             return ResponseEntity.notFound().build();
@@ -386,7 +390,6 @@ public class UrlMappingController {
     public ResponseEntity<byte[]> getQrCode(
             @Parameter(description = "The short URL code", example = "abc12345")
             @PathVariable String shortUrl) {
-        // strip trailing slash from frontendUrl if present
         String baseUrl = frontendUrl.replaceAll("/$", "");
         byte[] png = urlMappingService.generateQr(shortUrl, baseUrl);
         if (png == null) return ResponseEntity.notFound().build();
