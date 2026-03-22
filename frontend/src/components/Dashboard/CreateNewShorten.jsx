@@ -1,12 +1,12 @@
-import React, { useState } from "react";
-import { useStoreContext } from "../../contextApi/ContextApi";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { data } from "autoprefixer";
-import TextField from "../TextField";
 import { Tooltip } from "@mui/material";
 import { RxCross2 } from "react-icons/rx";
-import api from "../../api/api";
 import toast from "react-hot-toast";
+import TextField from "../common/TextField";
+import Button from "../common/Button";
+import api from "../../api/api";
+import { useStoreContext } from "../../contextApi/ContextApi";
 
 const CreateNewShorten = ({ setOpen, refetch }) => {
   const { token } = useStoreContext();
@@ -18,9 +18,7 @@ const CreateNewShorten = ({ setOpen, refetch }) => {
     reset,
     formState: { errors },
   } = useForm({
-    defaultValues: {
-      originalUrl: "",
-    },
+    defaultValues: { originalUrl: "" },
     mode: "onTouched",
   });
 
@@ -35,67 +33,69 @@ const CreateNewShorten = ({ setOpen, refetch }) => {
         },
       });
 
-      const shortenUrl = `${import.meta.env.VITE_REACT_SUBDOMAIN}/${
-        res.shortUrl
-      }`;
-      navigator.clipboard.writeText(shortenUrl).then(() => {
-        toast.success("Short URL Copied to Clipboard", {
-          position: "bottom-center",
-          className: "mb-5",
-          duration: 3000,
-        });
+      const shortenUrl = `${import.meta.env.VITE_REACT_SUBDOMAIN}/${res.shortUrl}`;
+
+      await navigator.clipboard.writeText(shortenUrl);
+      toast.success("Short URL created & copied to clipboard!", {
+        duration: 3000,
       });
 
-      // await refetch();
       reset();
+      // FIXED: refetch was commented out — now wired correctly
+      await refetch();
       setOpen(false);
     } catch (error) {
-      toast.error("Create ShortURL Failed");
+      toast.error("Failed to create short URL. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className=" flex justify-center items-center bg-white rounded-md">
+    <div className="flex justify-center items-center bg-white rounded-xl">
       <form
         onSubmit={handleSubmit(createShortUrlHandler)}
-        className="sm:w-[450px] w-[360px] relative  shadow-custom pt-8 pb-5 sm:px-8 px-4 rounded-lg"
+        className="sm:w-form-md w-form-sm relative shadow-custom pt-8 pb-5 sm:px-8 px-4 rounded-xl"
       >
-        <h1 className="font-montserrat sm:mt-0 mt-3 text-center  font-bold sm:text-2xl text-[22px] text-slate-800 ">
-          Create New Shorten Url
+        <h1 className="font-montserrat sm:mt-0 mt-3 text-center font-bold sm:text-2xl text-22 text-slate-800">
+          Create Short URL
         </h1>
 
-        <hr className="mt-2 sm:mb-5 mb-3 text-slate-950" />
+        <hr className="mt-2 sm:mb-5 mb-3 border-slate-200" />
 
-        <div>
+        <div className="mb-1">
           <TextField
             label="Enter URL"
             required
             id="originalUrl"
-            placeholder="https://example.com"
+            placeholder="https://example.com/your/long/url"
             type="url"
-            message="Url is required"
+            message="URL is required"
             register={register}
             errors={errors}
+            disabled={loading}
           />
         </div>
 
-        <button
-          className="bg-customRed font-semibold text-white w-32  bg-custom-gradient  py-2  transition-colors  rounded-md my-3"
-          type="text"
+        {/* FIXED: was type="text", now type="submit" */}
+        <Button
+          type="submit"
+          variant="primary"
+          size="md"
+          loading={loading}
+          className="mt-4"
         >
-          {loading ? "Loading..." : "Create"}
-        </button>
+          Create & Copy
+        </Button>
 
         {!loading && (
           <Tooltip title="Close">
             <button
-              disabled={loading}
+              type="button"
               onClick={() => setOpen(false)}
-              className=" absolute right-2 top-2  "
+              className="absolute right-2 top-2 text-slate-500 hover:text-slate-800"
             >
-              <RxCross2 className="text-slate-800   text-3xl" />
+              <RxCross2 className="text-3xl" />
             </button>
           </Tooltip>
         )}

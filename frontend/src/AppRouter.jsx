@@ -1,15 +1,18 @@
 import { Route, Routes } from "react-router-dom";
-import Navbar from "./components/NavBar";
-import ShortenUrlPage from "./components/ShortenUrlPage";
 import { Toaster } from "react-hot-toast";
-import Footer from "./components/Footer";
-import LandingPage from "./components/LandingPage";
-import AboutPage from "./components/AboutPage";
-import RegisterPage from "./components/RegisterPage";
-import LoginPage from "./components/LoginPage";
-import DashboardLayout from "./components/Dashboard/DashboardLayout";
+
+import Navbar from "./components/common/Navbar";
+import Footer from "./components/common/Footer";
 import PrivateRoute from "./PrivateRoute";
-import ErrorPage from "./components/ErrorPage";
+
+// Pages
+import LandingPage from "./pages/LandingPage";
+import AboutPage from "./pages/AboutPage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import DashboardLayout from "./pages/DashboardLayout";
+import ShortenUrlPage from "./pages/ShortenUrlPage";
+import ErrorPage from "./pages/ErrorPage";
 
 const AppRouter = () => {
   return (
@@ -17,9 +20,11 @@ const AppRouter = () => {
       <Navbar />
       <Toaster position="bottom-center" />
       <Routes>
+        {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/about" element={<AboutPage />} />
 
+        {/* Auth routes — redirect to dashboard if already logged in */}
         <Route
           path="/register"
           element={
@@ -37,6 +42,7 @@ const AppRouter = () => {
           }
         />
 
+        {/* Protected routes */}
         <Route
           path="/dashboard"
           element={
@@ -49,7 +55,7 @@ const AppRouter = () => {
         <Route
           path="*"
           element={
-            <ErrorPage message="We can't seem to find the page you're looking for" />
+            <ErrorPage message="We can't seem to find the page you're looking for." />
           }
         />
       </Routes>
