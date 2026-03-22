@@ -8,6 +8,17 @@ import java.util.List;
 
 @Entity
 @Data
+@Table(
+        name = "url_mapping",
+        indexes = {
+                @Index(name = "idx_short_url",  columnList = "shortUrl",  unique = true),
+                @Index(name = "idx_user_id",    columnList = "user_id"),
+                @Index(name = "idx_status",     columnList = "status"),
+                @Index(name = "idx_expires_at", columnList = "expiresAt"),
+                // soft delete filter
+                @Index(name = "idx_is_deleted", columnList = "isDeleted")
+        }
+)
 public class UrlMapping {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,7 +38,6 @@ public class UrlMapping {
     @Enumerated(EnumType.STRING)
     private UrlStatus status = UrlStatus.ACTIVE;
 
-    // soft delete fields
     private boolean isDeleted = false;
     private LocalDateTime deletedAt;
 
