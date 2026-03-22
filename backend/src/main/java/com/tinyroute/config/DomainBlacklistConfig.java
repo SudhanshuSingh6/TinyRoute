@@ -1,33 +1,36 @@
 package com.tinyroute.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
 
+@Slf4j
 @Component
 public class DomainBlacklistConfig {
 
-    // known malicious / disallowed domains
     private static final Set<String> BLACKLISTED_DOMAINS = Set.of(
-            "malware.com",            //random place holder examples
+            "malware.com",
             "phishing.com",
             "spam.com",
-            //"tinyroute.com",        // prevent same-domain infinite redirect loop
             "localhost"
     );
-
+    
     public boolean isBlacklisted(String url) {
+        if (url == null || url.isBlank()) {
+            return true;
+        }
         try {
             String domain = extractDomain(url);
             return BLACKLISTED_DOMAINS.stream()
                     .anyMatch(domain::contains);
         } catch (Exception e) {
-            return false;
+            log.warn("Could not parse domain from URL '{}', treating as blacklisted: {}", url, e.getMessage());
+            return true; // fail closed
         }
     }
 
     private String extractDomain(String url) {
-        // strips http/https and path, returns just the domain
         return url.replaceAll("https?://", "")
                 .split("/")[0]
                 .toLowerCase();

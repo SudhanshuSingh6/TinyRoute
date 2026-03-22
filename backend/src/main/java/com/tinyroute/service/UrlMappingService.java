@@ -11,12 +11,15 @@ import com.tinyroute.repository.UrlEditHistoryRepository;
 import com.tinyroute.repository.UrlMappingRepository;
 import com.tinyroute.config.DomainBlacklistConfig;
 import com.tinyroute.repository.UserRepository;
+import jakarta.persistence.LockModeType;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.HttpStatusException;
 import org.jsoup.UnsupportedMimeTypeException;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import ua_parser.Client;
 import ua_parser.Parser;
@@ -31,11 +34,11 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -43,6 +46,12 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class UrlMappingService {
 
+    private static final int  SHORT_URL_LENGTH   = 8;
+    private static final int  MAX_ALIAS_ATTEMPTS = 10;
+    private static final String CHARACTERS =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private UrlMappingRepository urlMappingRepository;
     private ClickEventRepository clickEventRepository;
     private UrlEditHistoryRepository urlEditHistoryRepository;
@@ -79,13 +88,11 @@ public class UrlMappingService {
             urlMapping.setShortUrl(customAlias);
             urlMapping.setCustomAlias(customAlias);
         } else {
-            urlMapping.setShortUrl(generateShortUrl());
+            urlMapping.setShortUrl(generateUniqueShortUrl());
         }
-
         return convertToDto(urlMappingRepository.save(urlMapping));
     }
 
-    // soft delete — marks as deleted, records timestamp, never removes from DB
     public void deleteUrl(Long id, String username) {
         UrlMapping urlMapping = urlMappingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("URL not found with id: " + id));
@@ -99,7 +106,6 @@ public class UrlMappingService {
         urlMappingRepository.save(urlMapping);
     }
 
-    // edit destination — saves old URL to history before overwriting
     public UrlMappingDTO editUrl(Long id, String newOriginalUrl, String username) {
         UrlMapping urlMapping = urlMappingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("URL not found with id: " + id));
@@ -112,7 +118,6 @@ public class UrlMappingService {
             throw new RuntimeException("This domain is not allowed.");
         }
 
-        // save old URL to history before overwriting
         UrlEditHistory history = new UrlEditHistory();
         history.setOldUrl(urlMapping.getOriginalUrl());
         history.setChangedAt(LocalDateTime.now());
@@ -123,7 +128,6 @@ public class UrlMappingService {
         return convertToDto(urlMappingRepository.save(urlMapping));
     }
 
-    // returns previous destinations, newest first
     public List<UrlEditHistoryDTO> getEditHistory(Long id, String username) {
         UrlMapping urlMapping = urlMappingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("URL not found with id: " + id));
@@ -163,17 +167,26 @@ public class UrlMappingService {
         return dto;
     }
 
-    private String generateShortUrl() {
-        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        Random random = new Random();
-        StringBuilder shortUrl = new StringBuilder(8);
-        for (int i = 0; i < 8; i++) {
-            shortUrl.append(characters.charAt(random.nextInt(characters.length())));
+    private String generateUniqueShortUrl() {
+        for (int attempt = 1; attempt <= MAX_ALIAS_ATTEMPTS; attempt++) {
+            String candidate = generateShortCode();
+            if (urlMappingRepository.findByShortUrl(candidate) == null) {
+                return candidate;
+            }
+            log.warn("Short URL collision on attempt {}: '{}'", attempt, candidate);
         }
-        return shortUrl.toString();
+        throw new RuntimeException(
+                "Could not generate a unique short URL after " + MAX_ALIAS_ATTEMPTS + " attempts.");
     }
 
-    // filters out soft-deleted URLs — user never sees them again
+    private String generateShortCode() {
+        StringBuilder sb = new StringBuilder(SHORT_URL_LENGTH);
+        for (int i = 0; i < SHORT_URL_LENGTH; i++) {
+            sb.append(CHARACTERS.charAt(SECURE_RANDOM.nextInt(CHARACTERS.length())));
+        }
+        return sb.toString();
+    }
+
     public List<UrlMappingDTO> getUrlsByUser(User user) {
         return urlMappingRepository.findByUser(user).stream()
                 .filter(u -> !u.isDeleted())
@@ -189,7 +202,6 @@ public class UrlMappingService {
                 .findByUrlMappingAndClickDateBetween(urlMapping, start, end);
 
         AnalyticsDTO dto = new AnalyticsDTO();
-
         dto.setTotalClicks(clicks.size());
         dto.setUniqueClicks(clicks.stream().filter(ClickEvent::isUniqueClick).count());
 
@@ -267,10 +279,7 @@ public class UrlMappingService {
         User user = userRepository.findByUsername(username).orElse(null);
         if (user == null) return null;
 
-        // @Transactional increment — safe under concurrent requests
         userService.incrementBioPageViews(username);
-
-        // re-fetch to get updated view count
         user = userRepository.findByUsername(username).orElseThrow();
 
         UserProfileDTO profile = new UserProfileDTO();
@@ -279,7 +288,6 @@ public class UrlMappingService {
         profile.setAvatarUrl(user.getAvatarUrl());
         profile.setBioPageViews(user.getBioPageViews());
 
-        // only show public, active, non-deleted URLs
         List<UrlMappingDTO> publicUrls = urlMappingRepository.findByUser(user).stream()
                 .filter(u -> u.isPublic()
                         && u.getStatus() == UrlStatus.ACTIVE
@@ -298,12 +306,11 @@ public class UrlMappingService {
         if (urlMapping == null || urlMapping.isDeleted()) return null;
 
         UrlPreviewDTO dto = new UrlPreviewDTO();
-
-        String originalUrl = urlMapping.getOriginalUrl(); // extract here
+        String originalUrl = urlMapping.getOriginalUrl();
         dto.setOriginalUrl(originalUrl);
 
         try {
-            Document doc = Jsoup.connect(originalUrl) // use variable
+            Document doc = Jsoup.connect(originalUrl)
                     .userAgent("Mozilla/5.0")
                     .timeout(5000)
                     .get();
@@ -331,7 +338,6 @@ public class UrlMappingService {
         return dto;
     }
 
-    // generates a 250x250 PNG QR code encoding the full short URL
     public byte[] generateQr(String shortUrl, String baseUrl) {
         UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
         if (urlMapping == null || urlMapping.isDeleted()) return null;
@@ -348,23 +354,28 @@ public class UrlMappingService {
         }
     }
 
+    @Transactional
     public UrlMapping getOriginalUrl(String shortUrl, HttpServletRequest request) {
         UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
         if (urlMapping == null) return null;
         if (urlMapping.isDeleted()) return null;
 
+        if (urlMapping.getStatus() == UrlStatus.DISABLED) {
+            return urlMapping; // no click recorded, no status change
+        }
+
         if (urlMapping.getExpiresAt() != null &&
                 LocalDateTime.now().isAfter(urlMapping.getExpiresAt())) {
             urlMapping.setStatus(UrlStatus.EXPIRED);
             urlMappingRepository.save(urlMapping);
-            return urlMapping;
+            return urlMapping; // no click recorded
         }
 
         if (urlMapping.getMaxClicks() != null &&
                 urlMapping.getClickCount() >= urlMapping.getMaxClicks()) {
             urlMapping.setStatus(UrlStatus.CLICK_LIMIT_REACHED);
             urlMappingRepository.save(urlMapping);
-            return urlMapping;
+            return urlMapping; // no click recorded
         }
 
         urlMapping.setClickCount(urlMapping.getClickCount() + 1);
@@ -375,7 +386,7 @@ public class UrlMappingService {
         clickEvent.setClickDate(LocalDateTime.now());
         clickEvent.setUrlMapping(urlMapping);
 
-        String ip = getClientIp(request);
+        String ip     = getClientIp(request);
         String ipHash = hashIp(ip);
         clickEvent.setIpHash(ipHash);
 
