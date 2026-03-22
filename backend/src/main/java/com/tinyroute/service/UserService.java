@@ -1,13 +1,16 @@
 package com.tinyroute.service;
 
 import com.tinyroute.dtos.LoginRequest;
+import com.tinyroute.dtos.RegisterRequest;
 import com.tinyroute.dtos.UserProfileDTO;
+import com.tinyroute.models.Role;
 import com.tinyroute.models.User;
 import com.tinyroute.repository.UserRepository;
 import com.tinyroute.security.jwt.JwtAuthenticationResponse;
 import com.tinyroute.security.jwt.JwtUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,9 +28,21 @@ public class UserService {
     private AuthenticationManager authenticationManager;
     private JwtUtils jwtUtils;
 
-    public User registerUser(User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
+    @Transactional
+    public void registerUser(RegisterRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new IllegalArgumentException("Username '" + request.getUsername() + "' is already taken.");
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email '" + request.getEmail() + "' is already registered.");
+        }
+
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(Role.ROLE_USER);
+        userRepository.save(user);
     }
 
     public JwtAuthenticationResponse authenticateUser(LoginRequest loginRequest) {
@@ -54,9 +69,7 @@ public class UserService {
 
     @Transactional
     public void incrementBioPageViews(String username) {
-        User user = findByUsername(username);
-        user.setBioPageViews(user.getBioPageViews() + 1);
-        userRepository.save(user);
+        userRepository.incrementBioPageViews(username);
     }
 
     public UserProfileDTO getProfile(String username) {
