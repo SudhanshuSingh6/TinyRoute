@@ -10,7 +10,6 @@ import com.tinyroute.repository.ClickEventRepository;
 import com.tinyroute.repository.UrlEditHistoryRepository;
 import com.tinyroute.repository.UrlMappingRepository;
 import com.tinyroute.config.DomainBlacklistConfig;
-import com.tinyroute.exception.DomainBlacklistedException;
 import com.tinyroute.repository.UserRepository;
 import jakarta.persistence.LockModeType;
 import jakarta.servlet.http.HttpServletRequest;
@@ -64,11 +63,21 @@ public class UrlMappingService {
                                         LocalDateTime expiresAt, Integer maxClicks,
                                         String title, boolean isPublic, User user) {
         if (domainBlacklistConfig.isBlacklisted(originalUrl)) {
-            throw new DomainBlacklistedException("This domain is not allowed.");
+            throw new RuntimeException("This domain is not allowed.");
         }
 
         UrlMapping existing = urlMappingRepository.findByOriginalUrlAndUser(originalUrl, user);
         if (existing != null && existing.getStatus() == UrlStatus.ACTIVE && !existing.isDeleted()) {
+            boolean hasCustomisation = (customAlias != null && !customAlias.isBlank())
+                    || expiresAt != null
+                    || maxClicks != null
+                    || (title != null && !title.isBlank());
+            if (hasCustomisation) {
+                throw new IllegalArgumentException(
+                        "You already have an active short link for this URL ("
+                                + existing.getShortUrl()
+                                + "). Delete it first to create one with different settings.");
+            }
             return convertToDto(existing);
         }
 
@@ -107,6 +116,28 @@ public class UrlMappingService {
         urlMappingRepository.save(urlMapping);
     }
 
+    @Transactional
+    public UrlMappingDTO toggleUrl(Long id, String username) {
+        UrlMapping urlMapping = urlMappingRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("URL not found with id: " + id));
+
+        if (!urlMapping.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("FORBIDDEN");
+        }
+        if (urlMapping.isDeleted()) {
+            throw new IllegalStateException("This short link has been deleted and cannot be toggled.");
+        }
+        if (urlMapping.getStatus() == UrlStatus.ACTIVE) {
+            urlMapping.setStatus(UrlStatus.DISABLED);
+        } else if (urlMapping.getStatus() == UrlStatus.DISABLED) {
+            urlMapping.setStatus(UrlStatus.ACTIVE);
+        } else {
+            throw new IllegalStateException(
+                    "Cannot toggle a URL with status: " + urlMapping.getStatus());
+        }
+        return convertToDto(urlMappingRepository.save(urlMapping));
+    }
+
     public UrlMappingDTO editUrl(Long id, String newOriginalUrl, String username) {
         UrlMapping urlMapping = urlMappingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("URL not found with id: " + id));
@@ -115,24 +146,8 @@ public class UrlMappingService {
             throw new RuntimeException("FORBIDDEN");
         }
 
-        if (urlMapping.isDeleted()) {
-            throw new IllegalStateException("This short link has been deleted and cannot be edited.");
-        }
-        if (urlMapping.getStatus() == UrlStatus.EXPIRED) {
-            throw new IllegalStateException(
-                    "This short link expired on "
-                            + urlMapping.getExpiresAt().toLocalDate()
-                            + " and cannot be edited.");
-        }
-        if (urlMapping.getStatus() == UrlStatus.CLICK_LIMIT_REACHED) {
-            throw new IllegalStateException(
-                    "This short link has reached its click limit of "
-                            + urlMapping.getMaxClicks()
-                            + " and cannot be edited.");
-        }
-
         if (domainBlacklistConfig.isBlacklisted(newOriginalUrl)) {
-            throw new DomainBlacklistedException("This domain is not allowed.");
+            throw new RuntimeException("This domain is not allowed.");
         }
 
         UrlEditHistory history = new UrlEditHistory();
