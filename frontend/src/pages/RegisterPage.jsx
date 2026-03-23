@@ -1,3 +1,4 @@
+import { API } from "../utils/apiRoutes";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
@@ -29,7 +30,7 @@ const RegisterPage = () => {
   const registerHandler = async (data) => {
     setLoader(true);
     try {
-      await api.post("/api/auth/public/register", {
+      await api.post(API.REGISTER, {
         username: data.username,
         email: data.email,
         password: data.password,

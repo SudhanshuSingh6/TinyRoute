@@ -1,3 +1,4 @@
+import { API } from "../utils/apiRoutes";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
@@ -27,7 +28,7 @@ const LoginPage = () => {
   const loginHandler = async (data) => {
     setLoader(true);
     try {
-      const { data: response } = await api.post("/api/auth/public/login", data);
+      const { data: response } = await api.post(API.LOGIN, data);
       setToken(response.token);
       localStorage.setItem("JWT_TOKEN", JSON.stringify(response.token));
       toast.success("Login successful!");

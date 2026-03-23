@@ -1,3 +1,4 @@
+import { API } from "../../utils/apiRoutes";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Tooltip } from "@mui/material";
@@ -25,7 +26,7 @@ const CreateNewShorten = ({ setOpen, refetch }) => {
   const createShortUrlHandler = async (data) => {
     setLoading(true);
     try {
-      const { data: res } = await api.post("/api/urls/shorten", data, {
+      const { data: res } = await api.post(API.SHORTEN, data, {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
@@ -41,7 +42,6 @@ const CreateNewShorten = ({ setOpen, refetch }) => {
       });
 
       reset();
-      // FIXED: refetch was commented out — now wired correctly
       await refetch();
       setOpen(false);
     } catch (error) {

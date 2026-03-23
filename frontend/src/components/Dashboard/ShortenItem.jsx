@@ -1,3 +1,4 @@
+import { API } from "../../utils/apiRoutes";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
@@ -10,6 +11,8 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
 import { useStoreContext } from "../../contextApi/ContextApi";
 import Graph from "./Graph";
+
+// ── Sub-components ────────────────────────────────────────────────────────────
 
 const ActionButton = ({ onClick, color, children }) => (
   <div
@@ -30,6 +33,8 @@ const NoDataOverlay = () => (
     </p>
   </div>
 );
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 const ShortenItem = ({ originalUrl, shortUrl, clickCount, createdDate }) => {
   const { token } = useStoreContext();
@@ -52,7 +57,7 @@ const ShortenItem = ({ originalUrl, shortUrl, clickCount, createdDate }) => {
     setLoader(true);
     try {
       const { data } = await api.get(
-        `/api/urls/analytics/${selectedUrl}?startDate=2024-12-01T00:00:00&endDate=2024-12-31T23:59:59`,
+        `${API.ANALYTICS(selectedUrl)}?startDate=2024-12-01T00:00:00&endDate=2024-12-31T23:59:59`,
         { headers: { "Content-Type": "application/json", Accept: "application/json", Authorization: "Bearer " + token } }
       );
       setAnalyticsData(data);
