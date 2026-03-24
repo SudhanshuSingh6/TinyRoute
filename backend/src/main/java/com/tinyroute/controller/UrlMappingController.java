@@ -288,7 +288,7 @@ public class UrlMappingController {
     )
     @ApiResponse(responseCode = "200", description = "List of URLs returned")
     @ApiResponse(responseCode = "429", description = "Rate limit exceeded")
-    @PostMapping("/myurls")
+    @GetMapping("/myurls")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> getUserUrls(Principal principal) {
         RateLimitResult result = getRateLimitResult(principal, "myurls");
@@ -312,7 +312,7 @@ public class UrlMappingController {
     )
     @ApiResponse(responseCode = "200", description = "Click events returned")
     @ApiResponse(responseCode = "429", description = "Rate limit exceeded")
-    @PostMapping("/analytics/{shortUrl}")
+    @GetMapping("/analytics/{shortUrl}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> getUserAnalytics(
             @Parameter(description = "The short URL code", example = "abc12345")
