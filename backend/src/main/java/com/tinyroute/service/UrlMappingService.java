@@ -52,6 +52,17 @@ public class UrlMappingService {
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    private static final Parser UA_PARSER;
+    static {
+        try {
+            UA_PARSER = new Parser();
+        } catch (Exception e) {
+            throw new ExceptionInInitializerError(
+                    "Failed to initialise ua-parser: " + e.getMessage());
+        }
+    }
+
     private UrlMappingRepository urlMappingRepository;
     private ClickEventRepository clickEventRepository;
     private UrlEditHistoryRepository urlEditHistoryRepository;
@@ -68,16 +79,6 @@ public class UrlMappingService {
 
         UrlMapping existing = urlMappingRepository.findByOriginalUrlAndUser(originalUrl, user);
         if (existing != null && existing.getStatus() == UrlStatus.ACTIVE && !existing.isDeleted()) {
-            boolean hasCustomisation = (customAlias != null && !customAlias.isBlank())
-                    || expiresAt != null
-                    || maxClicks != null
-                    || (title != null && !title.isBlank());
-            if (hasCustomisation) {
-                throw new IllegalArgumentException(
-                        "You already have an active short link for this URL ("
-                                + existing.getShortUrl()
-                                + "). Delete it first to create one with different settings.");
-            }
             return convertToDto(existing);
         }
 
@@ -114,28 +115,6 @@ public class UrlMappingService {
         urlMapping.setDeleted(true);
         urlMapping.setDeletedAt(LocalDateTime.now());
         urlMappingRepository.save(urlMapping);
-    }
-
-    @Transactional
-    public UrlMappingDTO toggleUrl(Long id, String username) {
-        UrlMapping urlMapping = urlMappingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("URL not found with id: " + id));
-
-        if (!urlMapping.getUser().getUsername().equals(username)) {
-            throw new RuntimeException("FORBIDDEN");
-        }
-        if (urlMapping.isDeleted()) {
-            throw new IllegalStateException("This short link has been deleted and cannot be toggled.");
-        }
-        if (urlMapping.getStatus() == UrlStatus.ACTIVE) {
-            urlMapping.setStatus(UrlStatus.DISABLED);
-        } else if (urlMapping.getStatus() == UrlStatus.DISABLED) {
-            urlMapping.setStatus(UrlStatus.ACTIVE);
-        } else {
-            throw new IllegalStateException(
-                    "Cannot toggle a URL with status: " + urlMapping.getStatus());
-        }
-        return convertToDto(urlMappingRepository.save(urlMapping));
     }
 
     public UrlMappingDTO editUrl(Long id, String newOriginalUrl, String username) {
@@ -312,13 +291,13 @@ public class UrlMappingService {
         if (user == null) return null;
 
         userService.incrementBioPageViews(username);
-        user = userRepository.findByUsername(username).orElseThrow();
+        long updatedViewCount = user.getBioPageViews() + 1;
 
         UserProfileDTO profile = new UserProfileDTO();
         profile.setUsername(user.getUsername());
         profile.setBio(user.getBio());
         profile.setAvatarUrl(user.getAvatarUrl());
-        profile.setBioPageViews(user.getBioPageViews());
+        profile.setBioPageViews(updatedViewCount);
 
         List<UrlMappingDTO> publicUrls = urlMappingRepository.findByUser(user).stream()
                 .filter(u -> u.isPublic()
@@ -494,8 +473,7 @@ public class UrlMappingService {
                 clickEvent.setDeviceType("Unknown");
                 return;
             }
-            Parser parser = new Parser();
-            Client client = parser.parse(userAgentString);
+            Client client = UA_PARSER.parse(userAgentString);
             clickEvent.setBrowser(client.userAgent.family);
             clickEvent.setOs(client.os.family);
             String device = client.device.family;
