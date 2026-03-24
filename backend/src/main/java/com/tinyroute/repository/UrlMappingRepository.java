@@ -11,5 +11,7 @@ import java.util.List;
 public interface UrlMappingRepository extends JpaRepository<UrlMapping, Long> {
     UrlMapping findByShortUrl(String shortUrl);
     List<UrlMapping> findByUser(User user);
+    List<UrlMapping> findByUserAndIsDeletedFalse(User user);
+    UrlMapping findByShortUrlAndUser(String shortUrl, User user);
     UrlMapping findByOriginalUrlAndUser(String originalUrl, User user); // duplicate check
 }

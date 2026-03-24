@@ -5,7 +5,10 @@ import com.tinyroute.dtos.RateLimitErrorResponse;
 import com.tinyroute.dtos.UrlEditHistoryDTO;
 import com.tinyroute.dtos.UrlMappingDTO;
 import com.tinyroute.dtos.UrlPreviewDTO;
+import com.tinyroute.models.UrlMapping;
+import com.tinyroute.models.UrlStatus;
 import com.tinyroute.models.User;
+import com.tinyroute.repository.UrlMappingRepository;
 import com.tinyroute.service.UrlMappingService;
 import com.tinyroute.service.UserService;
 import io.github.bucket4j.Bandwidth;
@@ -17,7 +20,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -38,11 +41,11 @@ import java.util.concurrent.ConcurrentHashMap;
 @SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/urls")
-@Slf4j
 public class UrlMappingController {
 
     private final UrlMappingService urlMappingService;
     private final UserService userService;
+    private final UrlMappingRepository urlMappingRepository;
 
     @Value("${frontend.url}")
     private String frontendUrl;
@@ -50,9 +53,11 @@ public class UrlMappingController {
     private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
 
     public UrlMappingController(UrlMappingService urlMappingService,
-                                UserService userService) {
+                                UserService userService,
+                                UrlMappingRepository urlMappingRepository) {
         this.urlMappingService = urlMappingService;
         this.userService = userService;
+        this.urlMappingRepository = urlMappingRepository;
     }
 
     private Bucket getBucket(String username, String role, String endpoint) {
@@ -109,18 +114,18 @@ public class UrlMappingController {
         );
     }
 
-    private record RateLimitResult(ConsumptionProbe probe, long limit, boolean isAdmin) {}
+    private record RateLimitResult(ConsumptionProbe probe, long limit, boolean isAdmin, User user) {}
 
     private RateLimitResult getRateLimitResult(Principal principal, String endpoint) {
         User user = userService.findByUsername(principal.getName());
         String role = user.getRole().name();
         if ("ROLE_ADMIN".equals(role)) {
-            return new RateLimitResult(null, Long.MAX_VALUE, true);
+            return new RateLimitResult(null, Long.MAX_VALUE, true, user);
         }
         long limit = resolveLimit(role, endpoint);
         Bucket bucket = getBucket(principal.getName(), role, endpoint);
         ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
-        return new RateLimitResult(probe, limit, false);
+        return new RateLimitResult(probe, limit, false, user);
     }
 
     @Operation(
@@ -153,7 +158,7 @@ public class UrlMappingController {
         Integer maxClicks = (maxClicksStr != null && !maxClicksStr.isBlank())
                 ? Integer.parseInt(maxClicksStr) : null;
 
-        User user = userService.findByUsername(principal.getName());
+        User user = result.user();
         try {
             UrlMappingDTO dto = urlMappingService.createShortUrl(
                     originalUrl, customAlias, expiresAt, maxClicks, title, isPublic, user);
@@ -180,16 +185,12 @@ public class UrlMappingController {
             Principal principal) {
         try {
             urlMappingService.deleteUrl(id, principal.getName());
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.noContent().build();  // 204 — success, no body
         } catch (RuntimeException e) {
             if ("FORBIDDEN".equals(e.getMessage())) {
                 return ResponseEntity.status(403).body("You don't own this URL.");
             }
-            if (e.getMessage() != null && e.getMessage().startsWith("URL not found")) {
-                return ResponseEntity.notFound().build();
-            }
-            log.error("Unexpected error deleting URL {}: {}", id, e.getMessage(), e);
-            return ResponseEntity.status(500).body("Something went wrong. Please try again.");
+            return ResponseEntity.notFound().build();   // URL not found
         }
     }
 
@@ -244,11 +245,7 @@ public class UrlMappingController {
             if ("FORBIDDEN".equals(e.getMessage())) {
                 return ResponseEntity.status(403).body("You don't own this URL.");
             }
-            if (e.getMessage() != null && e.getMessage().startsWith("URL not found")) {
-                return ResponseEntity.notFound().build();
-            }
-            log.error("Unexpected error fetching history for URL {}: {}", id, e.getMessage(), e);
-            return ResponseEntity.status(500).body("Something went wrong. Please try again.");
+            return ResponseEntity.notFound().build();
         }
     }
 
@@ -265,16 +262,24 @@ public class UrlMappingController {
     public ResponseEntity<?> toggleUrl(
             @Parameter(description = "ID of the URL to toggle") @PathVariable Long id,
             Principal principal) {
-        try {
-            UrlMappingDTO dto = urlMappingService.toggleUrl(id, principal.getName());
-            return ResponseEntity.ok(dto);
-        } catch (RuntimeException e) {
-            if ("FORBIDDEN".equals(e.getMessage()))
-                return ResponseEntity.status(403).body("You don't own this URL.");
-            if (e instanceof IllegalStateException)
-                return ResponseEntity.badRequest().body(e.getMessage());
-            return ResponseEntity.notFound().build();
+        UrlMapping urlMapping = urlMappingRepository.findById(id).orElse(null);
+        if (urlMapping == null) return ResponseEntity.notFound().build();
+
+        if (!urlMapping.getUser().getUsername().equals(principal.getName())) {
+            return ResponseEntity.status(403).body("You don't own this URL.");
         }
+
+        if (urlMapping.getStatus() == UrlStatus.ACTIVE) {
+            urlMapping.setStatus(UrlStatus.DISABLED);
+        } else if (urlMapping.getStatus() == UrlStatus.DISABLED) {
+            urlMapping.setStatus(UrlStatus.ACTIVE);
+        } else {
+            return ResponseEntity.badRequest()
+                    .body("Cannot toggle a URL with status: " + urlMapping.getStatus());
+        }
+
+        urlMappingRepository.save(urlMapping);
+        return ResponseEntity.ok("Status updated to: " + urlMapping.getStatus());
     }
 
     @Operation(
@@ -283,7 +288,7 @@ public class UrlMappingController {
     )
     @ApiResponse(responseCode = "200", description = "List of URLs returned")
     @ApiResponse(responseCode = "429", description = "Rate limit exceeded")
-    @GetMapping("/myurls")
+    @PostMapping("/myurls")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> getUserUrls(Principal principal) {
         RateLimitResult result = getRateLimitResult(principal, "myurls");
@@ -293,7 +298,7 @@ public class UrlMappingController {
                     .body(build429Body(result.probe(), result.limit(), "myurls"));
         }
 
-        User user = userService.findByUsername(principal.getName());
+        User user = result.user();
         List<UrlMappingDTO> urls = urlMappingService.getUrlsByUser(user);
         HttpHeaders headers = result.isAdmin()
                 ? new HttpHeaders()
@@ -307,7 +312,7 @@ public class UrlMappingController {
     )
     @ApiResponse(responseCode = "200", description = "Click events returned")
     @ApiResponse(responseCode = "429", description = "Rate limit exceeded")
-    @GetMapping("/analytics/{shortUrl}")
+    @PostMapping("/analytics/{shortUrl}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> getUserAnalytics(
             @Parameter(description = "The short URL code", example = "abc12345")
