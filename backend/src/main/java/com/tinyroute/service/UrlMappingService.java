@@ -205,8 +205,8 @@ public class UrlMappingService {
                 .toList();
     }
 
-    public AnalyticsDTO getAnalytics(String shortUrl, LocalDateTime start, LocalDateTime end) {
-        UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
+    public AnalyticsDTO getAnalytics(String shortUrl, LocalDateTime start, LocalDateTime end, String username) {
+        UrlMapping urlMapping = urlMappingRepository.findByShortUrlAndUserUsername(shortUrl, username);
         if (urlMapping == null) return null;
 
         List<ClickEvent> clicks = clickEventRepository

@@ -1,10 +1,6 @@
 package com.tinyroute.controller;
 
-import com.tinyroute.dtos.ClickEventDTO;
-import com.tinyroute.dtos.RateLimitErrorResponse;
-import com.tinyroute.dtos.UrlEditHistoryDTO;
-import com.tinyroute.dtos.UrlMappingDTO;
-import com.tinyroute.dtos.UrlPreviewDTO;
+import com.tinyroute.dtos.*;
 import com.tinyroute.models.UrlMapping;
 import com.tinyroute.models.UrlStatus;
 import com.tinyroute.models.User;
@@ -332,7 +328,7 @@ public class UrlMappingController {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
         LocalDateTime start = LocalDateTime.parse(startDate, formatter);
         LocalDateTime end   = LocalDateTime.parse(endDate, formatter);
-        Object analytics = urlMappingService.getAnalytics(shortUrl, start, end);
+        AnalyticsDTO analytics = urlMappingService.getAnalytics(shortUrl, start, end, principal.getName());
         if (analytics == null) return ResponseEntity.notFound().build();
         HttpHeaders headers = result.isAdmin()
                 ? new HttpHeaders()
