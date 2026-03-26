@@ -1,6 +1,8 @@
 package com.tinyroute.service;
 
 import com.tinyroute.dtos.*;
+import com.tinyroute.exception.DomainBlacklistedException;
+import com.tinyroute.exception.InvalidDestinationUrlException;
 import com.tinyroute.models.ClickEvent;
 import com.tinyroute.models.UrlEditHistory;
 import com.tinyroute.models.UrlMapping;
@@ -17,6 +19,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.HttpStatusException;
 import org.jsoup.UnsupportedMimeTypeException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,13 +35,14 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -46,10 +50,11 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class UrlMappingService {
 
-    private static final int  SHORT_URL_LENGTH   = 8;
-    private static final int  MAX_ALIAS_ATTEMPTS = 10;
+    private static final int SHORT_URL_LENGTH = 8;
+    private static final int MAX_ALIAS_ATTEMPTS = 10;
     private static final String CHARACTERS =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    private static final Set<String> ALLOWED_URL_SCHEMES = Set.of("http", "https");
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
@@ -70,38 +75,66 @@ public class UrlMappingService {
     private UserService userService;
     private DomainBlacklistConfig domainBlacklistConfig;
 
-    public UrlMappingDTO createShortUrl(String originalUrl, String customAlias,
-                                        LocalDateTime expiresAt, Integer maxClicks,
-                                        String title, boolean isPublic, User user) {
-        if (domainBlacklistConfig.isBlacklisted(originalUrl)) {
-            throw new RuntimeException("This domain is not allowed.");
+    @Transactional
+    public UrlMappingDTO createShortUrl(String originalUrl,
+                                        String customAlias,
+                                        LocalDateTime expiresAt,
+                                        Integer maxClicks,
+                                        String title,
+                                        boolean isPublic,
+                                        User user) {
+
+        if (user == null) {
+            throw new IllegalArgumentException("Authenticated user is required.");
         }
 
-        UrlMapping existing = urlMappingRepository.findByOriginalUrlAndUser(originalUrl, user);
+        if (expiresAt != null && expiresAt.isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Expiry must be in the future.");
+        }
+
+        if (maxClicks != null && maxClicks <= 0) {
+            throw new IllegalArgumentException("maxClicks must be greater than 0.");
+        }
+
+        String normalizedOriginalUrl = validateAndNormalizeDestinationUrl(originalUrl);
+
+        UrlMapping existing = urlMappingRepository.findByOriginalUrlAndUser(normalizedOriginalUrl, user);
         if (existing != null && existing.getStatus() == UrlStatus.ACTIVE && !existing.isDeleted()) {
             return convertToDto(existing);
         }
 
         UrlMapping urlMapping = new UrlMapping();
-        urlMapping.setOriginalUrl(originalUrl);
+        urlMapping.setOriginalUrl(normalizedOriginalUrl);
         urlMapping.setUser(user);
         urlMapping.setCreatedDate(LocalDateTime.now());
         urlMapping.setExpiresAt(expiresAt);
         urlMapping.setMaxClicks(maxClicks);
-        urlMapping.setTitle(title);
+        urlMapping.setTitle(title != null && !title.isBlank() ? title.trim() : null);
         urlMapping.setPublic(isPublic);
         urlMapping.setStatus(UrlStatus.ACTIVE);
 
         if (customAlias != null && !customAlias.isBlank()) {
-            if (urlMappingRepository.findByShortUrl(customAlias) != null) {
-                throw new RuntimeException("Alias '" + customAlias + "' is already taken.");
+            String alias = customAlias.trim();
+
+            if (alias.length() < 3 || alias.length() > 50) {
+                throw new IllegalArgumentException("Alias must be between 3 and 50 characters.");
             }
-            urlMapping.setShortUrl(customAlias);
-            urlMapping.setCustomAlias(customAlias);
+
+            if (!alias.matches("^[a-zA-Z0-9_-]+$")) {
+                throw new IllegalArgumentException("Alias may only contain letters, numbers, hyphens, and underscores.");
+            }
+
+            urlMapping.setShortUrl(alias);
+            urlMapping.setCustomAlias(alias);
         } else {
             urlMapping.setShortUrl(generateUniqueShortUrl());
         }
-        return convertToDto(urlMappingRepository.save(urlMapping));
+
+        try {
+            return convertToDto(urlMappingRepository.save(urlMapping));
+        } catch (DataIntegrityViolationException ex) {
+            throw new IllegalArgumentException("Alias is already taken.");
+        }
     }
 
     public void deleteUrl(Long id, String username) {
@@ -117,16 +150,23 @@ public class UrlMappingService {
         urlMappingRepository.save(urlMapping);
     }
 
-    public UrlMappingDTO editUrl(Long id, String newOriginalUrl, String username) {
+    @Transactional
+    public UrlMappingDTO editUrl(Long id, String newOriginalUrl, User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("Authenticated user is required.");
+        }
+
         UrlMapping urlMapping = urlMappingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("URL not found with id: " + id));
 
-        if (!urlMapping.getUser().getUsername().equals(username)) {
+        if (urlMapping.getUser() == null || !Objects.equals(urlMapping.getUser().getId(), user.getId())) {
             throw new RuntimeException("FORBIDDEN");
         }
 
-        if (domainBlacklistConfig.isBlacklisted(newOriginalUrl)) {
-            throw new RuntimeException("This domain is not allowed.");
+        String normalizedOriginalUrl = validateAndNormalizeDestinationUrl(newOriginalUrl);
+
+        if (Objects.equals(urlMapping.getOriginalUrl(), normalizedOriginalUrl)) {
+            return convertToDto(urlMapping);
         }
 
         UrlEditHistory history = new UrlEditHistory();
@@ -135,7 +175,8 @@ public class UrlMappingService {
         history.setUrlMapping(urlMapping);
         urlEditHistoryRepository.save(history);
 
-        urlMapping.setOriginalUrl(newOriginalUrl);
+        urlMapping.setOriginalUrl(normalizedOriginalUrl);
+
         return convertToDto(urlMappingRepository.save(urlMapping));
     }
 
@@ -176,6 +217,38 @@ public class UrlMappingService {
         dto.setStatus(urlMapping.getStatus());
         dto.setUsername(urlMapping.getUser().getUsername());
         return dto;
+    }
+
+    private String validateAndNormalizeDestinationUrl(String rawUrl) {
+        if (rawUrl == null || rawUrl.isBlank()) {
+            throw new InvalidDestinationUrlException("originalUrl is required.");
+        }
+
+        final URI uri;
+        try {
+            uri = new URI(rawUrl.trim()).normalize();
+        } catch (URISyntaxException ex) {
+            throw new InvalidDestinationUrlException("originalUrl must be a valid absolute URL.");
+        }
+
+        String scheme = uri.getScheme();
+        String host = uri.getHost();
+
+        if (scheme == null || host == null || host.isBlank()) {
+            throw new InvalidDestinationUrlException("originalUrl must include a valid scheme and host.");
+        }
+
+        String normalizedScheme = scheme.toLowerCase(Locale.ROOT);
+        if (!ALLOWED_URL_SCHEMES.contains(normalizedScheme)) {
+            throw new InvalidDestinationUrlException("Only http:// and https:// URLs are allowed.");
+        }
+
+        String normalizedHost = host.toLowerCase(Locale.ROOT);
+        if (domainBlacklistConfig.isBlacklisted(normalizedHost)) {
+            throw new DomainBlacklistedException("This domain is not allowed.");
+        }
+
+        return uri.toString();
     }
 
     private String generateUniqueShortUrl() {
@@ -314,7 +387,7 @@ public class UrlMappingService {
 
     public UrlPreviewDTO getPreview(String shortUrl) {
         UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
-        if (urlMapping == null || urlMapping.isDeleted()) return null;
+        if (!isPubliclyAccessible(urlMapping)) return null;
 
         UrlPreviewDTO dto = new UrlPreviewDTO();
         String originalUrl = urlMapping.getOriginalUrl();
@@ -351,7 +424,7 @@ public class UrlMappingService {
 
     public byte[] generateQr(String shortUrl, String baseUrl) {
         UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
-        if (urlMapping == null || urlMapping.isDeleted()) return null;
+        if (!isPubliclyAccessible(urlMapping)) return null;
 
         try {
             String fullUrl = baseUrl + "/" + shortUrl;
@@ -363,6 +436,24 @@ public class UrlMappingService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate QR code", e);
         }
+    }
+
+
+    private boolean isPubliclyAccessible(UrlMapping urlMapping) {
+        if (urlMapping == null) return false;
+        if (urlMapping.isDeleted()) return false;
+        if (!urlMapping.isPublic()) return false;
+        if (urlMapping.getStatus() != UrlStatus.ACTIVE) return false;
+
+        if (urlMapping.getExpiresAt() != null && LocalDateTime.now().isAfter(urlMapping.getExpiresAt())) {
+            return false;
+        }
+
+        if (urlMapping.getMaxClicks() != null && urlMapping.getClickCount() >= urlMapping.getMaxClicks()) {
+            return false;
+        }
+
+        return true;
     }
 
     @Transactional
