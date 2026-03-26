@@ -3,6 +3,7 @@ package com.tinyroute.config;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.Locale;
 import java.util.Set;
 
 @Slf4j
@@ -15,24 +16,35 @@ public class DomainBlacklistConfig {
             "spam.com",
             "localhost"
     );
-    
-    public boolean isBlacklisted(String url) {
-        if (url == null || url.isBlank()) {
+
+    public boolean isBlacklisted(String host) {
+        if (host == null || host.isBlank()) {
             return true;
         }
+
         try {
-            String domain = extractDomain(url);
+            String domain = normalizeDomain(host);
+
             return BLACKLISTED_DOMAINS.stream()
-                    .anyMatch(domain::contains);
+                    .map(this::normalizeDomain)
+                    .anyMatch(blocked -> domain.equals(blocked) || domain.endsWith("." + blocked));
         } catch (Exception e) {
-            log.warn("Could not parse domain from URL '{}', treating as blacklisted: {}", url, e.getMessage());
-            return true; // fail closed
+            log.warn("Could not normalize domain '{}', treating as blacklisted: {}", host, e.getMessage());
+            return true;
         }
     }
 
-    private String extractDomain(String url) {
-        return url.replaceAll("https?://", "")
-                .split("/")[0]
-                .toLowerCase();
+    private String normalizeDomain(String host) {
+        String normalized = host.trim().toLowerCase(Locale.ROOT);
+
+        if (normalized.endsWith(".")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+
+        if (normalized.startsWith("www.")) {
+            normalized = normalized.substring(4);
+        }
+
+        return normalized;
     }
 }
