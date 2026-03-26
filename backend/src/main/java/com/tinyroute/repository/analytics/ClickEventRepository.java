@@ -1,7 +1,7 @@
-package com.tinyroute.repository;
+package com.tinyroute.repository.analytics;
 
-import com.tinyroute.models.ClickEvent;
-import com.tinyroute.models.UrlMapping;
+import com.tinyroute.entity.ClickEvent;
+import com.tinyroute.entity.UrlMapping;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

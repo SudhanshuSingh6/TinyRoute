@@ -1,7 +1,7 @@
 package com.tinyroute.service;
 
-import com.tinyroute.models.Role;
-import com.tinyroute.models.User;
+import com.tinyroute.entity.Role;
+import com.tinyroute.entity.User;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;

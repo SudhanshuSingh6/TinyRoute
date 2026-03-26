@@ -1,7 +1,7 @@
-package com.tinyroute.repository;
+package com.tinyroute.repository.url;
 
-import com.tinyroute.models.UrlMapping;
-import com.tinyroute.models.User;
+import com.tinyroute.entity.UrlMapping;
+import com.tinyroute.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

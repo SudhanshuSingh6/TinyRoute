@@ -1,7 +1,7 @@
-package com.tinyroute.repository;
+package com.tinyroute.repository.url;
 
-import com.tinyroute.models.UrlEditHistory;
-import com.tinyroute.models.UrlMapping;
+import com.tinyroute.entity.UrlEditHistory;
+import com.tinyroute.entity.UrlMapping;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

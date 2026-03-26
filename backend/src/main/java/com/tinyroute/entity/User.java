@@ -1,4 +1,4 @@
-package com.tinyroute.models;
+package com.tinyroute.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;

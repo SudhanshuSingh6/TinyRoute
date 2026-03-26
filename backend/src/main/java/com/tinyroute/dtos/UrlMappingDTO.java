@@ -1,6 +1,6 @@
 package com.tinyroute.dtos;
 
-import com.tinyroute.models.UrlStatus;
+import com.tinyroute.entity.UrlStatus;
 import lombok.Data;
 
 import java.time.LocalDateTime;

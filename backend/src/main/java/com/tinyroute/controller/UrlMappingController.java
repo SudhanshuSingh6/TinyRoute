@@ -1,10 +1,10 @@
 package com.tinyroute.controller;
 
 import com.tinyroute.dtos.*;
-import com.tinyroute.models.UrlMapping;
-import com.tinyroute.models.UrlStatus;
-import com.tinyroute.models.User;
-import com.tinyroute.repository.UrlMappingRepository;
+import com.tinyroute.entity.UrlMapping;
+import com.tinyroute.entity.UrlStatus;
+import com.tinyroute.entity.User;
+import com.tinyroute.repository.url.UrlMappingRepository;
 import com.tinyroute.service.UrlMappingService;
 import com.tinyroute.service.UserService;
 import io.github.bucket4j.Bandwidth;
@@ -16,7 +16,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;

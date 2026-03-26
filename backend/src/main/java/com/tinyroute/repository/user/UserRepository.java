@@ -1,6 +1,6 @@
-package com.tinyroute.repository;
+package com.tinyroute.repository.user;
 
-import com.tinyroute.models.User;
+import com.tinyroute.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

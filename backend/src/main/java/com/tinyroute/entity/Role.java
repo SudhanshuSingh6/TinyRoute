@@ -1,4 +1,4 @@
-package com.tinyroute.models;
+package com.tinyroute.entity;
 
 public enum Role {
     ROLE_USER,

@@ -1,7 +1,7 @@
 package com.tinyroute.service;
 
-import com.tinyroute.models.User;
-import com.tinyroute.repository.UserRepository;
+import com.tinyroute.entity.User;
+import com.tinyroute.repository.user.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;

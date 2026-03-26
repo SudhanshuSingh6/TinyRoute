@@ -1,8 +1,8 @@
 package com.tinyroute.controller;
 
 import com.tinyroute.dtos.RedirectErrorResponse;
-import com.tinyroute.models.UrlMapping;
-import com.tinyroute.models.UrlStatus;
+import com.tinyroute.entity.UrlMapping;
+import com.tinyroute.entity.UrlStatus;
 import com.tinyroute.service.UrlMappingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
