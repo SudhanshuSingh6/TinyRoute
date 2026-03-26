@@ -37,10 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (jwt != null) {
             if (!jwtTokenProvider.validateToken(jwt)) {
                 SecurityContextHolder.clearContext();
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json");
-                response.getWriter().write(
-                        "{\"error\":\"Your session has expired. Please log in again.\"}");
+                filterChain.doFilter(request, response);
                 return;
             }
             try {
