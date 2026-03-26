@@ -1,5 +1,6 @@
 package com.tinyroute.service;
 
+import com.tinyroute.models.Role;
 import com.tinyroute.models.User;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,7 +10,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serial;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -33,22 +35,39 @@ public class UserDetailsImpl implements UserDetails {
     }
 
     public static UserDetailsImpl build(User user) {
-        GrantedAuthority authority = new SimpleGrantedAuthority(user.getRole().name());
+        Set<GrantedAuthority> authorities = new LinkedHashSet<>();
+        Role role = user.getRole();
+
+        authorities.add(new SimpleGrantedAuthority(role.name()));
+
+        if (role == Role.ROLE_PREMIUM) {
+            authorities.add(new SimpleGrantedAuthority(Role.ROLE_USER.name()));
+        } else if (role == Role.ROLE_ADMIN) {
+            authorities.add(new SimpleGrantedAuthority(Role.ROLE_PREMIUM.name()));
+            authorities.add(new SimpleGrantedAuthority(Role.ROLE_USER.name()));
+        }
+
         return new UserDetailsImpl(
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
                 user.getPassword(),
-                Collections.singletonList(authority)
+                authorities
         );
     }
 
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() { return authorities; }
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
+    }
 
     @Override
-    public String getPassword() { return password; }
+    public String getPassword() {
+        return password;
+    }
 
     @Override
-    public String getUsername() { return username; }
+    public String getUsername() {
+        return username;
+    }
 }
