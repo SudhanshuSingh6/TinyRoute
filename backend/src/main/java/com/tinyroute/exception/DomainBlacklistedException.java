@@ -1,7 +1,13 @@
 package com.tinyroute.exception;
 
-public class DomainBlacklistedException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class DomainBlacklistedException extends ApiException {
+
+    private static final HttpStatus STATUS = HttpStatus.UNPROCESSABLE_ENTITY;
+    private static final String ERROR_CODE = "DOMAIN_BLACKLISTED";
+
     public DomainBlacklistedException(String message) {
-        super(message);
+        super(STATUS, ERROR_CODE, message);
     }
 }
