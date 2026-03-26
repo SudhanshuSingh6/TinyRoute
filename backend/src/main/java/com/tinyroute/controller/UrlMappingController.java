@@ -209,7 +209,8 @@ public class UrlMappingController {
             return ResponseEntity.badRequest().body("originalUrl is required.");
         }
         try {
-            UrlMappingDTO dto = urlMappingService.editUrl(id, newOriginalUrl, principal.getName());
+            User user = userService.findByUsername(principal.getName());
+            UrlMappingDTO dto = urlMappingService.editUrl(id, newOriginalUrl, user);
             return ResponseEntity.ok(dto);
         } catch (RuntimeException e) {
             if ("FORBIDDEN".equals(e.getMessage())) {
