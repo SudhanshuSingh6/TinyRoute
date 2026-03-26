@@ -19,6 +19,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
+
 @Service
 @AllArgsConstructor
 public class UserService {
@@ -60,11 +62,36 @@ public class UserService {
                 () -> new UsernameNotFoundException("User not found with username: " + name));
     }
 
+    @Transactional
     public UserProfileDTO updateProfile(String username, String bio, String avatarUrl) {
         User user = findByUsername(username);
-        if (bio != null) user.setBio(bio);
-        if (avatarUrl != null) user.setAvatarUrl(avatarUrl);
-        return toProfileDto(userRepository.save(user));
+        boolean updated = false;
+
+        if (bio != null) {
+            String newBio = bio.trim();
+            newBio = newBio.isBlank() ? null : newBio;
+
+            if (!Objects.equals(user.getBio(), newBio)) {
+                user.setBio(newBio);
+                updated = true;
+            }
+        }
+
+        if (avatarUrl != null) {
+            String newAvatar = avatarUrl.trim();
+            newAvatar = newAvatar.isBlank() ? null : newAvatar;
+
+            if (!Objects.equals(user.getAvatarUrl(), newAvatar)) {
+                user.setAvatarUrl(newAvatar);
+                updated = true;
+            }
+        }
+
+        if (updated) {
+            userRepository.save(user);
+        }
+
+        return toProfileDto(user);
     }
 
     @Transactional
