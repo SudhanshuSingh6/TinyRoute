@@ -14,35 +14,38 @@ export const useFetchMyShortUrls = (token, onError) => {
     async () => api.get(API.MY_URLS, { headers: authHeaders(token) }),
     {
       select: (data) =>
-        data.data.sort(
+        (data.data ?? []).sort(
           (a, b) => new Date(b.createdDate) - new Date(a.createdDate)
         ),
       onError,
       staleTime: 5000,
+      enabled: !!token,
     }
   );
 };
 
-export const useFetchTotalClicks = (
-  token,
-  onError,
-  startDate = `${new Date().getFullYear()}-01-01`,
-  endDate   = `${new Date().getFullYear()}-12-31`
-) => {
+export const useFetchTotalClicks = (token, onError, startDate, endDate) => {
+  const year = new Date().getFullYear();
+  const from = startDate || `${year}-01-01`;
+  const to = endDate || `${year}-12-31`;
+
   return useQuery(
-    ["url-totalclick", startDate, endDate],
+    ["url-totalclick", from, to],
     async () =>
-      api.get(`${API.TOTAL_CLICKS}?startDate=${startDate}&endDate=${endDate}`, {
+      api.get(`${API.TOTAL_CLICKS}?startDate=${from}&endDate=${to}`, {
         headers: authHeaders(token),
       }),
     {
       select: (data) =>
-        Object.keys(data.data).map((key) => ({
-          clickDate: key,
-          count: data.data[key],
-        })),
+        Object.entries(data.data ?? {})
+          .sort(([a], [b]) => new Date(a) - new Date(b))
+          .map(([clickDate, count]) => ({
+            clickDate,
+            count: Number(count) || 0,
+          })),
       onError,
       staleTime: 5000,
+      enabled: !!token && !!from && !!to,
     }
   );
 };
@@ -55,6 +58,7 @@ export const useFetchProfile = (token, onError) => {
       select: (data) => data.data,
       onError,
       staleTime: 10000,
+      enabled: !!token,
     }
   );
 };
@@ -64,7 +68,8 @@ export const useFetchAnalytics = (
   shortUrl,
   startDate,
   endDate,
-  onError
+  onError,
+  enabled = true
 ) => {
   return useQuery(
     ["analytics", shortUrl, startDate, endDate],
@@ -77,7 +82,7 @@ export const useFetchAnalytics = (
       select: (data) => data.data,
       onError,
       staleTime: 0,
-      enabled: !!shortUrl && !!startDate && !!endDate,
+      enabled: enabled && !!token && !!shortUrl && !!startDate && !!endDate,
     }
   );
 };
@@ -90,7 +95,7 @@ export const useFetchLinkHistory = (token, id, onError) => {
       select: (data) => data.data,
       onError,
       staleTime: 0,
-      enabled: !!id,
+      enabled: !!token && !!id,
     }
   );
 };

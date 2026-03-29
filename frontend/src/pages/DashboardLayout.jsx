@@ -7,6 +7,7 @@ import ShortenUrlList from "../components/dashboard/ShortenUrlList";
 import Loader from "../components/common/Loader";
 import EmptyState from "../components/common/EmptyState";
 import Button from "../components/common/Button";
+import DateRangePicker from "../components/common/DateRangePicker";
 import { useStoreContext } from "../contextApi/ContextApi";
 import { useFetchMyShortUrls, useFetchTotalClicks } from "../hooks/useQuery";
 
@@ -15,20 +16,31 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const [shortenPopUp, setShortenPopUp] = useState(false);
 
+  const currentYear = new Date().getFullYear();
+  const [startDate, setStartDate] = useState(`${currentYear}-01-01`);
+  const [endDate, setEndDate] = useState(`${currentYear}-12-31`);
+
   function onError() {
     navigate("/error");
   }
 
   const {
     isLoading,
-    data: myShortenUrls,
+    data: myShortenUrls = [],
     refetch,
   } = useFetchMyShortUrls(token, onError);
 
-  const { isLoading: loader, data: totalClicks } = useFetchTotalClicks(
+  const { isLoading: loader, data: totalClicks = [] } = useFetchTotalClicks(
     token,
-    onError
+    onError,
+    startDate,
+    endDate
   );
+
+  const onDateChange = (start, end) => {
+    setStartDate(start);
+    setEndDate(end);
+  };
 
   if (loader) {
     return <Loader fullPage message="Loading your dashboard..." />;
@@ -37,8 +49,17 @@ const DashboardLayout = () => {
   return (
     <div className="lg:px-14 sm:px-8 px-4 min-h-page">
       <div className="lg:w-11/12 w-full mx-auto py-16">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <h1 className="text-slate-900 font-bold text-2xl">Dashboard</h1>
+          <DateRangePicker
+            startDate={startDate}
+            endDate={endDate}
+            onChange={onDateChange}
+            type="date"
+            label="Clicks Range"
+          />
+        </div>
 
-        {/* Graph section */}
         <div className="h-96 relative">
           {totalClicks.length === 0 && (
             <div className="absolute flex flex-col justify-center sm:items-center items-end w-full left-0 top-0 bottom-0 right-0 m-auto pointer-events-none">
@@ -53,7 +74,6 @@ const DashboardLayout = () => {
           <Graph graphData={totalClicks} />
         </div>
 
-        {/* Create button */}
         <div className="py-5 sm:text-end text-center">
           <Button
             variant="primary"
@@ -64,7 +84,6 @@ const DashboardLayout = () => {
           </Button>
         </div>
 
-        {/* URL list */}
         <div>
           {isLoading ? (
             <Loader message="Loading your links..." />

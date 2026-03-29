@@ -5,11 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="12b6e11e-18e5-4ca5-88fe-ac59d93ddba9" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/TinyRoute.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/dtos/RegisterRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/dtos/RegisterRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/security/WebSecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/security/WebSecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/UrlMappingService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/UrlMappingService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/ErrorPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ErrorPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Dashboard/CreateNewShorten.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Dashboard/CreateNewShorten.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Dashboard/ShortenItem.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Dashboard/ShortenItem.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Dashboard/ShortenUrlList.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Dashboard/ShortenUrlList.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/hooks/useQuery.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/hooks/useQuery.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/DashboardLayout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/DashboardLayout.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,15 +25,20 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Enum" />
         <option value="Interface" />
         <option value="Class" />
+        <option value="Exception" />
+        <option value="Enum" />
       </list>
     </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="KubernetesApiPersistence"><![CDATA[{}]]></component>
+  <component name="KubernetesApiProvider"><![CDATA[{
+  "isMigrated": true
+}]]></component>
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
@@ -36,7 +47,7 @@
     </option>
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="DEPENDENCY_CHECKER_PROBLEMS_TAB" />
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 3
@@ -49,7 +60,24 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Application.TinyRouteApplication.executor": "Run",
+    "JUnit.All in tinyroute.executor": "Run",
+    "JUnit.AnalyticsControllerWebMvcTest.executor": "Run",
+    "JUnit.ProfileControllerWebMvcTest.executor": "Run",
+    "JUnit.RedirectConcurrencyIntegrationTest.executor": "Run",
+    "JUnit.RedirectConcurrencyIntegrationTest.redirectConcurrency_respectsMaxClicksUnderRace.executor": "Run",
+    "JUnit.RedirectControllerWebMvcTest.executor": "Run",
+    "JUnit.RedirectFlowIntegrationTest.executor": "Run",
     "JUnit.TinyRouteApplicationTests.executor": "Run",
+    "JUnit.UrlCreationServiceTest.createShortUrl_whenUserNull_throws.executor": "Run",
+    "JUnit.UrlCreationServiceTest.executor": "Run",
+    "JUnit.UrlRedirectServiceTest.executor": "Run",
+    "JUnit.com.tinyroute.controller in tinyroute.executor": "Run",
+    "JUnit.controller in tinyroute.executor": "Run",
+    "JUnit.exception in tinyroute.executor": "Run",
+    "JUnit.integration in tinyroute.executor": "Run",
+    "JUnit.java in tinyroute.executor": "Run",
+    "JUnit.repository in tinyroute.executor": "Run",
+    "JUnit.url in tinyroute.executor": "Run",
     "Maven.Unnamed.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RequestMappingsPanelOrder0": "0",
@@ -72,28 +100,75 @@
     "nodejs_package_manager_path": "npm",
     "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.0",
+    "project.structure.side.proportion": "0.2",
     "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings",
     "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "h2"
+    ]
   }
 }]]></component>
   <component name="RunManager" selected="Spring Boot.TinyRouteApplication">
-    <configuration name="TinyRouteApplicationTests" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="All in tinyroute" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="tinyroute" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TEST_OBJECT" value="package" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="RedirectConcurrencyIntegrationTest.redirectConcurrency_respectsMaxClicksUnderRace" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="tinyroute" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.tinyroute.*" />
+          <option name="PATTERN" value="com.tinyroute.integration.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
-      <option name="PACKAGE_NAME" value="com.tinyroute" />
-      <option name="MAIN_CLASS_NAME" value="com.tinyroute.TinyRouteApplicationTests" />
-      <option name="TEST_OBJECT" value="class" />
+      <option name="PACKAGE_NAME" value="com.tinyroute.integration" />
+      <option name="MAIN_CLASS_NAME" value="com.tinyroute.integration.RedirectConcurrencyIntegrationTest" />
+      <option name="METHOD_NAME" value="redirectConcurrency_respectsMaxClicksUnderRace" />
+      <option name="TEST_OBJECT" value="method" />
+      <dir value="$PROJECT_DIR$/backend/src/test/java" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="com.tinyroute.controller in tinyroute" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="tinyroute" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.tinyroute.controller.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.tinyroute.controller" />
+      <option name="TEST_OBJECT" value="package" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="integration in tinyroute" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="tinyroute" />
+      <option name="TEST_OBJECT" value="directory" />
+      <dir value="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/integration" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="java in tinyroute" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="tinyroute" />
+      <option name="TEST_OBJECT" value="directory" />
+      <dir value="$PROJECT_DIR$/backend/src/test/java" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
     <configuration name="TinyRouteApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="ALTERNATIVE_JRE_PATH" value="/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
       <module name="tinyroute" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.tinyroute.TinyRouteApplication" />
       <method v="2">
@@ -101,12 +176,20 @@
       </method>
     </configuration>
     <list>
-      <item itemvalue="JUnit.TinyRouteApplicationTests" />
+      <item itemvalue="JUnit.All in tinyroute" />
+      <item itemvalue="JUnit.RedirectConcurrencyIntegrationTest.redirectConcurrency_respectsMaxClicksUnderRace" />
+      <item itemvalue="JUnit.com.tinyroute.controller in tinyroute" />
+      <item itemvalue="JUnit.integration in tinyroute" />
+      <item itemvalue="JUnit.java in tinyroute" />
       <item itemvalue="Spring Boot.TinyRouteApplication" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="JUnit.TinyRouteApplicationTests" />
+        <item itemvalue="JUnit.java in tinyroute" />
+        <item itemvalue="JUnit.RedirectConcurrencyIntegrationTest.redirectConcurrency_respectsMaxClicksUnderRace" />
+        <item itemvalue="JUnit.All in tinyroute" />
+        <item itemvalue="JUnit.com.tinyroute.controller in tinyroute" />
+        <item itemvalue="JUnit.integration in tinyroute" />
       </list>
     </recent_temporary>
   </component>
@@ -128,7 +211,12 @@
       <workItem from="1745519148900" duration="4252000" />
       <workItem from="1745744076212" duration="28000" />
       <workItem from="1745744196804" duration="149000" />
-      <workItem from="1773601044929" duration="45858000" />
+      <workItem from="1773601044929" duration="66577000" />
+      <workItem from="1774217134016" duration="448000" />
+      <workItem from="1774217997341" duration="17817000" />
+      <workItem from="1774372759132" duration="1486000" />
+      <workItem from="1774674251687" duration="1679000" />
+      <workItem from="1774675957947" duration="50505000" />
     </task>
     <servers />
   </component>
