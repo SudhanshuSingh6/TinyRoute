@@ -10,9 +10,18 @@ import java.util.List;
 
 @Repository
 public interface ClickEventRepository extends JpaRepository<ClickEvent, Long> {
-    List<ClickEvent> findByUrlMappingAndClickDateBetween(UrlMapping mapping, LocalDateTime startDate, LocalDateTime endDate);
-    List<ClickEvent> findByUrlMappingInAndClickDateBetween(List<UrlMapping> urlMappings, LocalDateTime startDate, LocalDateTime endDate);
 
-    // used to check if this IP has clicked this URL before — for unique click detection
-    boolean existsByUrlMappingAndIpHash(UrlMapping urlMapping, String ipHash);
+    List<ClickEvent> findByUrlMappingAndClickDateBetween(
+            UrlMapping mapping,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    );
+
+    List<ClickEvent> findByUrlMappingInAndClickDateBetween(
+            List<UrlMapping> urlMappings,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    );
+
+    void deleteByUrlMapping(UrlMapping urlMapping);
 }

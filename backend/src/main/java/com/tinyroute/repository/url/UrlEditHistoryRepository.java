@@ -10,4 +10,5 @@ import java.util.List;
 @Repository
 public interface UrlEditHistoryRepository extends JpaRepository<UrlEditHistory, Long> {
     List<UrlEditHistory> findByUrlMappingOrderByChangedAtDesc(UrlMapping urlMapping);
+    void deleteByUrlMapping(UrlMapping urlMapping);
 }

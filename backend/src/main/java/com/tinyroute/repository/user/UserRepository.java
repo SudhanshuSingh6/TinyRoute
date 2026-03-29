@@ -15,7 +15,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE User u SET u.bioPageViews = u.bioPageViews + 1 WHERE u.username = :username")
     void incrementBioPageViews(@Param("username") String username);
 }

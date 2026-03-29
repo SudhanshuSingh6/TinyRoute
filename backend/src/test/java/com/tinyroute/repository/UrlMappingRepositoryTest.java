@@ -1,7 +1,9 @@
 package com.tinyroute.repository;
 
-import com.tinyroute.models.UrlMapping;
-import com.tinyroute.models.User;
+import com.tinyroute.entity.UrlMapping;
+import com.tinyroute.entity.User;
+import com.tinyroute.repository.url.UrlMappingRepository;
+import com.tinyroute.repository.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,7 +104,6 @@ class UrlMappingRepositoryTest {
         UrlMapping mapping = new UrlMapping();
         mapping.setOriginalUrl("https://youtube.com");
         mapping.setShortUrl("myalias");
-        mapping.setCustomAlias("myalias");
         mapping.setCreatedDate(LocalDateTime.now());
         mapping.setUser(testUser);
         urlMappingRepository.save(mapping);
@@ -110,7 +111,7 @@ class UrlMappingRepositoryTest {
         UrlMapping found = urlMappingRepository.findByShortUrl("myalias");
 
         assertNotNull(found);
-        assertEquals("myalias", found.getCustomAlias());
+        assertEquals("myalias", found.getShortUrl());
         assertEquals("https://youtube.com", found.getOriginalUrl());
     }
 

@@ -14,7 +14,14 @@ public class DomainBlacklistConfig {
             "malware.com",
             "phishing.com",
             "spam.com",
-            "localhost"
+            "localhost",
+            "localhost.localdomain",
+            "local",
+            "internal",
+            "metadata.google.internal",
+            "metadata",
+            "169.254.169.254",
+            "169.254.170.2"
     );
 
     public boolean isBlacklisted(String host) {
@@ -43,6 +50,10 @@ public class DomainBlacklistConfig {
 
         if (normalized.startsWith("www.")) {
             normalized = normalized.substring(4);
+        }
+
+        if (normalized.startsWith("[") && normalized.endsWith("]")) {
+            normalized = normalized.substring(1, normalized.length() - 1);
         }
 
         return normalized;

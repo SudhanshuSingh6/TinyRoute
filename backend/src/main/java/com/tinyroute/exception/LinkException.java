@@ -10,10 +10,8 @@ public class LinkException extends ApiException {
         NOT_FOUND,
         ACCESS_DENIED,
         EXPIRED,
-        DISABLED,
-        SOFT_DELETED
+        DISABLED
     }
-
     private final Reason reason;
 
     public LinkException(Reason reason, String message) {
@@ -42,10 +40,6 @@ public class LinkException extends ApiException {
         return new LinkException(Reason.DISABLED, message);
     }
 
-    public static LinkException softDeleted(String message) {
-        return new LinkException(Reason.SOFT_DELETED, message);
-    }
-
     public static LinkException notFound(String message, Throwable cause) {
         return new LinkException(Reason.NOT_FOUND, message, cause);
     }
@@ -62,15 +56,11 @@ public class LinkException extends ApiException {
         return new LinkException(Reason.DISABLED, message, cause);
     }
 
-    public static LinkException softDeleted(String message, Throwable cause) {
-        return new LinkException(Reason.SOFT_DELETED, message, cause);
-    }
-
     private static HttpStatus resolveStatus(Reason reason) {
         return switch (reason) {
             case NOT_FOUND    -> HttpStatus.NOT_FOUND;
             case ACCESS_DENIED -> HttpStatus.FORBIDDEN;
-            case EXPIRED, DISABLED, SOFT_DELETED -> HttpStatus.GONE;
+            case EXPIRED, DISABLED -> HttpStatus.GONE;
         };
     }
 
@@ -80,7 +70,6 @@ public class LinkException extends ApiException {
             case ACCESS_DENIED -> "LINK_ACCESS_DENIED";
             case EXPIRED      -> "LINK_EXPIRED";
             case DISABLED     -> "LINK_DISABLED";
-            case SOFT_DELETED -> "LINK_SOFT_DELETED";
         };
     }
 }
