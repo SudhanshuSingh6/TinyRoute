@@ -20,24 +20,17 @@ import java.time.LocalDateTime;
 public class AsyncAnalyticsWorker {
 
     private final ClickEventRepository clickEventRepository;
-    private final UrlMappingRepository urlMappingRepository;
     private final GeoLocationService geoLocationService;
     private final UserAgentParsingService userAgentParsingService;
 
     @Async
-    public void recordClickEvent(Long urlMappingId,
+    public void recordClickEvent(UrlMapping urlMapping,
                                  String ip,
                                  String userAgentHeader,
                                  String referrerHeader,
                                  String languageHeader,
                                  LocalDateTime clickDate) {
         try {
-            UrlMapping urlMapping = urlMappingRepository.findById(urlMappingId).orElse(null);
-            if (urlMapping == null) {
-                log.warn("UrlMapping {} not found during async click event recording", urlMappingId);
-                return;
-            }
-
             ClickEvent clickEvent = new ClickEvent();
             clickEvent.setClickDate(clickDate);
             clickEvent.setUrlMapping(urlMapping);
@@ -78,7 +71,7 @@ public class AsyncAnalyticsWorker {
             clickEventRepository.save(clickEvent);
 
         } catch (Exception e) {
-            log.warn("Failed to record async click event for urlMappingId {}: {}", urlMappingId, e.getMessage());
+            log.warn("Failed to record async click event for urlMappingId {}: {}", urlMapping, e.getMessage());
         }
     }
 }

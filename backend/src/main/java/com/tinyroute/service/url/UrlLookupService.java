@@ -2,7 +2,7 @@ package com.tinyroute.service.url;
 
 import com.tinyroute.dto.url.response.UrlPreviewResponse;
 import com.tinyroute.dto.user.UserProfileDTO;
-import com.tinyroute.dto.user.response.PublicPageResponse;
+import com.tinyroute.dto.user.response.PublicProfileResponse;
 import com.tinyroute.dto.user.response.PublicUrlDTO;
 import com.tinyroute.entity.UrlMapping;
 import com.tinyroute.entity.UrlStatus;
@@ -41,29 +41,18 @@ public class UrlLookupService {
     private final QrCodeService qrCodeService;
     private final UrlSafetyValidator urlSafetyValidator;
 
-    public PublicPageResponse getBioPage(String username) {
+    public List<PublicUrlDTO> getPublicUrls(String username) {
         User user = userRepository.findByUsername(username).orElse(null);
         if (user == null) {
             return null;
         }
-
-        userService.incrementBioPageViews(username);
-        User refreshed = userRepository.findByUsername(username).orElse(null);
-        if (refreshed == null) {
-            return null;
-        }
-
-        UserProfileDTO profile = userMapper.toUserProfileDTO(refreshed);
 
         List<PublicUrlDTO> publicUrls = urlMappingRepository.findByUser(user).stream()
                 .filter(this::isPubliclyAccessible)
                 .map(urlMapper::toPublicBioLinkResponse)
                 .toList();
 
-        PublicPageResponse dto = new PublicPageResponse();
-        dto.setProfile(profile);
-        dto.setUrls(publicUrls);
-        return dto;
+        return publicUrls;
     }
 
     public UrlPreviewResponse getPreview(String shortUrl) {

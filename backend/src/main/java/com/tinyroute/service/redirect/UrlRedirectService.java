@@ -79,7 +79,7 @@ public class UrlRedirectService {
         }
 
         asyncAnalyticsWorker.recordClickEvent(
-                urlMapping.getId(),
+                urlMapping,
                 ip,
                 request.getHeader("User-Agent"),
                 request.getHeader("Referer"),

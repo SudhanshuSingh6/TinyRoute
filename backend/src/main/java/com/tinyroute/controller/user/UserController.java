@@ -1,7 +1,9 @@
 package com.tinyroute.controller.user;
 
 import com.tinyroute.dto.user.UserProfileDTO;
+import com.tinyroute.dto.user.response.PublicProfileResponse;
 import com.tinyroute.dto.user.request.UpdateProfileRequest;
+import com.tinyroute.service.url.UrlLookupService;
 import com.tinyroute.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -11,27 +13,24 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 
 @Tag(name = "Profile", description = "Manage your profile")
 @SecurityRequirement(name = "bearerAuth")
 @RestController
-@RequestMapping("/api/auth/profile")
+@RequestMapping("/api/")
 @RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
+    private final UrlLookupService urlLookupService;
 
     @Operation(summary = "Update profile", description = "Update your bio and avatar URL.")
     @ApiResponse(responseCode = "200", description = "Profile updated successfully")
     @PreAuthorize("hasRole('USER')")
-    @PutMapping
+    @PutMapping("auth/profile")
     public ResponseEntity<UserProfileDTO> updateProfile(
             @Valid @RequestBody UpdateProfileRequest request,
             Principal principal) {
@@ -47,7 +46,7 @@ public class UserController {
     @ApiResponse(responseCode = "200", description = "Profile returned")
     @ApiResponse(responseCode = "401", description = "Not authenticated")
     @PreAuthorize("hasRole('USER')")
-    @GetMapping
+    @GetMapping("auth/profile")
     public ResponseEntity<UserProfileDTO> getProfile(Principal principal) {
         return ResponseEntity.ok(userService.getProfile(principal.getName()));
     }

@@ -37,6 +37,7 @@ public class UrlMapper {
         PublicUrlDTO dto = new PublicUrlDTO();
         dto.setShortUrl(urlMapping.getShortUrl());
         dto.setTitle(urlMapping.getTitle());
+        dto.setOriginalUrl(urlMapping.getOriginalUrl());
         dto.setCreatedDate(urlMapping.getCreatedDate());
         return dto;
     }

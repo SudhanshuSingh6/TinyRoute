@@ -25,8 +25,9 @@ public interface UrlUniqueVisitorRepository extends JpaRepository<UrlUniqueVisit
     @Transactional
     @Modifying
     @Query(value = """
-        INSERT IGNORE INTO url_unique_visitor (url_mapping_id, ip_hash, first_seen_at)
+        INSERT INTO url_unique_visitor (url_mapping_id, ip_hash, first_seen_at)
         VALUES (:urlMappingId, :ipHash, :firstSeenAt)
+        ON CONFLICT (url_mapping_id, ip_hash) DO NOTHING
         """, nativeQuery = true)
     int insertUniqueVisitor(@Param("urlMappingId") Long urlMappingId,
                             @Param("ipHash") String ipHash,
