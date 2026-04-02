@@ -9,6 +9,8 @@ import java.util.List;
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PublicPageResponse {
-    private UserProfileDTO profile;
+    private String username;
+    private String avatarUrl;
+    private String bio;
     private List<PublicUrlDTO> urls;
 }

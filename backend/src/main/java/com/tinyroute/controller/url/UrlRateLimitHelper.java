@@ -1,97 +1,86 @@
 package com.tinyroute.controller.url;
 
-import com.tinyroute.dto.error.RateLimitErrorResponse;
+import com.tinyroute.entity.Role;
 import com.tinyroute.entity.User;
+import com.tinyroute.common.ratelimit.RateLimitPlan;
+import com.tinyroute.service.ratelimit.RateLimitService;
 import com.tinyroute.service.user.UserService;
-import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
-import io.github.bucket4j.Refill;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
 import java.security.Principal;
-import java.time.Duration;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @RequiredArgsConstructor
 public class UrlRateLimitHelper {
 
     private final UserService userService;
-    private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
-
-    public record RateLimitResult(ConsumptionProbe probe, long limit, boolean isAdmin, User user) {}
+    private final RateLimitService rateLimitService;
 
     public RateLimitResult getRateLimitResult(Principal principal, String endpoint) {
         User user = userService.findByUsername(principal.getName());
-        String role = user.getRole().name();
 
-        if ("ROLE_ADMIN".equals(role)) {
-            return new RateLimitResult(null, Long.MAX_VALUE, true, user);
+        boolean isAdmin = user.getRole() == Role.ROLE_ADMIN;
+
+        if (isAdmin) {
+            return new RateLimitResult(user, true, null, null);
         }
 
-        long limit = resolveLimit(role, endpoint);
-        Bucket bucket = getBucket(principal.getName(), role, endpoint);
+        RateLimitPlan plan = resolvePlan(endpoint);
+        String key = "rate_limit:" + endpoint + ":" + user.getId();
+
+        Bucket bucket = rateLimitService.resolveBucket(key, plan);
         ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
-        return new RateLimitResult(probe, limit, false, user);
+
+        return new RateLimitResult(user, false, probe, plan);
     }
 
-    public HttpHeaders buildRateLimitHeaders(ConsumptionProbe probe, long limit) {
+    private RateLimitPlan resolvePlan(String endpoint) {
+        return switch (endpoint) {
+            case "analytics" -> RateLimitPlan.ANALYTICS;
+            case "myurls" -> RateLimitPlan.MY_URLS;
+            case "url_management" -> RateLimitPlan.URL_MANAGEMENT;
+            case "auth" -> RateLimitPlan.AUTH;
+            default -> RateLimitPlan.DEFAULT;
+        };
+    }
+
+    public HttpHeaders buildRateLimitHeaders(ConsumptionProbe probe, RateLimitPlan plan) {
         HttpHeaders headers = new HttpHeaders();
-        headers.add("X-RateLimit-Limit", String.valueOf(limit));
+
+        if (probe == null || plan == null) {
+            return headers;
+        }
+
+        headers.add("X-RateLimit-Limit", String.valueOf(plan.getCapacity()));
         headers.add("X-RateLimit-Remaining", String.valueOf(probe.getRemainingTokens()));
+        headers.add("X-RateLimit-Retry-After-Seconds",
+                String.valueOf(Math.max(1, probe.getNanosToWaitForRefill() / 1_000_000_000)));
 
-        if (probe.getRemainingTokens() <= (long) (limit * 0.2)) {
-            headers.add("X-RateLimit-Warning", "Approaching rate limit");
-        }
-
-        if (!probe.isConsumed()) {
-            headers.add("X-RateLimit-Retry-After",
-                    String.valueOf(probe.getNanosToWaitForRefill() / 1_000_000_000));
-        }
         return headers;
     }
 
-    public RateLimitErrorResponse build429Body(ConsumptionProbe probe, long limit, String endpoint) {
-        long retryAfter = probe.getNanosToWaitForRefill() / 1_000_000_000;
-        return new RateLimitErrorResponse(
-                "RATE_LIMIT_EXCEEDED",
-                "/" + endpoint,
-                limit,
-                probe.getRemainingTokens(),
-                retryAfter,
-                "You have exceeded the limit of " + limit + " requests/hour on /" + endpoint
+    public Map<String, Object> build429Body(ConsumptionProbe probe, RateLimitPlan plan, String endpoint) {
+        return Map.of(
+                "status", 429,
+                "error", "RATE_LIMIT_EXCEEDED",
+                "message", "Too many requests for " + endpoint + ". Please try again later.",
+                "limit", plan != null ? plan.getCapacity() : 0,
+                "remaining", probe != null ? probe.getRemainingTokens() : 0,
+                "retryAfterSeconds", probe != null
+                        ? Math.max(1, probe.getNanosToWaitForRefill() / 1_000_000_000)
+                        : 0
         );
     }
 
-    private Bucket getBucket(String username, String role, String endpoint) {
-        String key = username + ":" + endpoint;
-        return buckets.computeIfAbsent(key, k -> {
-            long limit = resolveLimit(role, endpoint);
-            return Bucket.builder()
-                    .addLimit(Bandwidth.classic(limit, Refill.greedy(limit, Duration.ofHours(1))))
-                    .build();
-        });
-    }
-
-    private long resolveLimit(String role, String endpoint) {
-        return switch (role) {
-            case "ROLE_ADMIN" -> Long.MAX_VALUE;
-            case "ROLE_PREMIUM" -> switch (endpoint) {
-                case "shorten" -> 100;
-                case "analytics" -> 200;
-                case "myurls" -> 500;
-                default -> 100;
-            };
-            default -> switch (endpoint) {
-                case "shorten" -> 10;
-                case "analytics" -> 30;
-                case "myurls" -> 100;
-                default -> 10;
-            };
-        };
-    }
+    public record RateLimitResult(
+            User user,
+            boolean isAdmin,
+            ConsumptionProbe probe,
+            RateLimitPlan limit
+    ) {}
 }
