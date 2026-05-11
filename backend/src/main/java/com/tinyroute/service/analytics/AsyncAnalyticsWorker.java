@@ -1,12 +1,11 @@
 package com.tinyroute.service.analytics;
 
-import com.tinyroute.common.hash.HashUtil;
 import com.tinyroute.entity.ClickEvent;
 import com.tinyroute.entity.UrlMapping;
 import com.tinyroute.infra.geo.GeoLocationService;
+import com.tinyroute.infra.network.ClientIpService;
 import com.tinyroute.infra.ua.UserAgentParsingService;
 import com.tinyroute.repository.analytics.ClickEventRepository;
-import com.tinyroute.repository.url.UrlMappingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -22,6 +21,7 @@ public class AsyncAnalyticsWorker {
     private final ClickEventRepository clickEventRepository;
     private final GeoLocationService geoLocationService;
     private final UserAgentParsingService userAgentParsingService;
+    private final ClientIpService clientIpService;
 
     @Async
     public void recordClickEvent(UrlMapping urlMapping,
@@ -35,7 +35,7 @@ public class AsyncAnalyticsWorker {
             clickEvent.setClickDate(clickDate);
             clickEvent.setUrlMapping(urlMapping);
 
-            String ipHash = HashUtil.sha256Hex(ip);
+            String ipHash = clientIpService.hashIp(ip);
             clickEvent.setIpHash(ipHash);
 
             // Geo (safe)
@@ -71,7 +71,9 @@ public class AsyncAnalyticsWorker {
             clickEventRepository.save(clickEvent);
 
         } catch (Exception e) {
-            log.warn("Failed to record async click event for urlMappingId {}: {}", urlMapping, e.getMessage());
+            log.warn("Failed to record async click event for urlMappingId {}: {}",
+                    urlMapping.getId(),
+                    e.getMessage());
         }
     }
 }

@@ -33,7 +33,7 @@ public interface UrlMappingRepository extends JpaRepository<UrlMapping, Long> {
         set u.status = :status
         where u.id = :id
     """)
-    int updateStatus(@Param("id") Long id, @Param("status") UrlStatus status);
+    void updateStatus(@Param("id") Long id, @Param("status") UrlStatus status);
 
     @Transactional
     @Modifying

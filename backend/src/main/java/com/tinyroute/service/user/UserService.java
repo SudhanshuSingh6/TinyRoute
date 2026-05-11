@@ -1,54 +1,38 @@
 package com.tinyroute.service.user;
 
-import com.tinyroute.dto.auth.request.LoginRequest;
-import com.tinyroute.dto.auth.request.RegisterRequest;
-import com.tinyroute.dto.auth.response.JwtAuthenticationResponse;
 import com.tinyroute.dto.user.UserProfileDTO;
 import com.tinyroute.dto.user.response.PublicProfileResponse;
 import com.tinyroute.dto.user.response.PublicUrlDTO;
-import com.tinyroute.entity.Role;
 import com.tinyroute.entity.UrlMapping;
 import com.tinyroute.entity.UrlStatus;
 import com.tinyroute.entity.User;
-import com.tinyroute.exception.ApiException;
-import com.tinyroute.exception.EmailAlreadyExistsException;
-import com.tinyroute.exception.UsernameAlreadyExistsException;
+import com.tinyroute.exception.ErrorMessages;
+import com.tinyroute.exception.UrlException;
 import com.tinyroute.mapper.UrlMapper;
 import com.tinyroute.mapper.UserMapper;
 import com.tinyroute.repository.url.UrlMappingRepository;
 import com.tinyroute.repository.user.UserRepository;
-import com.tinyroute.service.url.UrlLookupService;
-import com.tinyroute.security.jwt.JwtService;
-import com.tinyroute.security.UserDetailsImpl;
-import lombok.AllArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserService {
 
-    private UserRepository userRepository;
-    private UserMapper userMapper;
-    private UrlMappingRepository urlMappingRepository;
-    private UrlMapper urlMapper;
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
+    private final UrlMappingRepository urlMappingRepository;
+    private final UrlMapper urlMapper;
 
     public User findByUsername(String username) {
-        return userRepository.findByUsername(username).orElseThrow(
-                () -> new UsernameNotFoundException("User not found with username: " + username));
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException(ErrorMessages.USER_NOT_FOUND));
     }
 
     @Transactional
@@ -85,13 +69,10 @@ public class UserService {
 
     @Transactional
     public PublicProfileResponse getPublicProfile(String username) {
-        User user = userRepository.findByUsername(username).orElse(null);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> UrlException.notFound("Public profile not found."));
 
-        if (user == null) {
-            return null;
-        }
-
-        userRepository.incrementBioPageViews(username);
+        user.setBioPageViews(user.getBioPageViews() + 1);
 
         UserProfileDTO profile = userMapper.toUserProfileDTO(user);
 
@@ -108,12 +89,11 @@ public class UserService {
         return dto;
     }
 
-
     public UserProfileDTO getProfile(String username) {
         return toProfileDto(findByUsername(username));
     }
 
-    public UserProfileDTO toProfileDto(User user) {
+    private UserProfileDTO toProfileDto(User user) {
         return userMapper.toUserProfileDTO(user);
     }
 
@@ -128,6 +108,8 @@ public class UserService {
         if (urlMapping.getExpiresAt() != null && LocalDateTime.now().isAfter(urlMapping.getExpiresAt())) {
             return false;
         }
-        return urlMapping.getMaxClicks() == null || urlMapping.getClickCount() < urlMapping.getMaxClicks();
+
+        return urlMapping.getMaxClicks() == null
+                || urlMapping.getClickCount() < urlMapping.getMaxClicks();
     }
 }

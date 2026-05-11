@@ -1,26 +1,27 @@
 package com.tinyroute.service.url;
 
 import com.tinyroute.dto.url.response.UrlPreviewResponse;
-import com.tinyroute.dto.user.UserProfileDTO;
-import com.tinyroute.dto.user.response.PublicProfileResponse;
 import com.tinyroute.dto.user.response.PublicUrlDTO;
 import com.tinyroute.entity.UrlMapping;
 import com.tinyroute.entity.UrlStatus;
 import com.tinyroute.entity.User;
+import com.tinyroute.exception.ApiException;
 import com.tinyroute.exception.DomainBlacklistedException;
+import com.tinyroute.exception.ErrorCodes;
+import com.tinyroute.exception.ErrorMessages;
 import com.tinyroute.exception.InvalidDestinationUrlException;
+import com.tinyroute.exception.UrlException;
 import com.tinyroute.infra.qr.QrCodeService;
 import com.tinyroute.mapper.UrlMapper;
-import com.tinyroute.mapper.UserMapper;
 import com.tinyroute.repository.url.UrlMappingRepository;
 import com.tinyroute.repository.user.UserRepository;
-import com.tinyroute.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -35,40 +36,37 @@ public class UrlLookupService {
 
     private final UrlMappingRepository urlMappingRepository;
     private final UserRepository userRepository;
-    private final UserService userService;
     private final UrlMapper urlMapper;
-    private final UserMapper userMapper;
     private final QrCodeService qrCodeService;
-    private final UrlSafetyValidator urlSafetyValidator;
+    private final UrlValidationService urlValidationService;
 
     public List<PublicUrlDTO> getPublicUrls(String username) {
-        User user = userRepository.findByUsername(username).orElse(null);
-        if (user == null) {
-            return null;
-        }
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ApiException(
+                        HttpStatus.NOT_FOUND,
+                        ErrorCodes.USER_NOT_FOUND,
+                        ErrorMessages.USER_NOT_FOUND
+                ));
 
-        List<PublicUrlDTO> publicUrls = urlMappingRepository.findByUser(user).stream()
+        return urlMappingRepository.findByUser(user).stream()
                 .filter(this::isPubliclyAccessible)
                 .map(urlMapper::toPublicBioLinkResponse)
                 .toList();
-
-        return publicUrls;
     }
 
     public UrlPreviewResponse getPreview(String shortUrl) {
-        UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
-        if (!isPubliclyAccessible(urlMapping)) {
-            return null;
-        }
+        UrlMapping urlMapping = getPublicUrlOrThrow(shortUrl);
 
         UrlPreviewResponse dto = new UrlPreviewResponse();
         final String originalUrl;
+
         try {
-            originalUrl = urlSafetyValidator.validateAndNormalizeDestinationUrl(urlMapping.getOriginalUrl());
+            originalUrl = urlValidationService.validateAndNormalizeDestinationUrl(urlMapping.getOriginalUrl());
         } catch (DomainBlacklistedException | InvalidDestinationUrlException ex) {
             log.warn("Blocked unsafe preview target for shortUrl '{}': {}", shortUrl, ex.getMessage());
-            return null;
+            throw UrlException.notFound();
         }
+
         dto.setOriginalUrl(originalUrl);
 
         try {
@@ -86,6 +84,7 @@ public class UrlLookupService {
 
             String image = doc.select("meta[property=og:image]").attr("abs:content");
             dto.setImageUrl(!image.isBlank() ? image : null);
+
         } catch (HttpStatusException e) {
             log.warn("Site returned {} for '{}'", e.getStatusCode(), originalUrl);
         } catch (UnsupportedMimeTypeException e) {
@@ -97,17 +96,24 @@ public class UrlLookupService {
         } catch (Exception e) {
             log.error("Unexpected error in getPreview for '{}': {}", originalUrl, e.getMessage(), e);
         }
+
         return dto;
     }
 
     public byte[] generateQr(String shortUrl, String baseUrl) {
-        UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
-        if (!isPubliclyAccessible(urlMapping)) {
-            return null;
-        }
-
+        getPublicUrlOrThrow(shortUrl);
         String fullUrl = baseUrl + "/" + shortUrl;
         return qrCodeService.generatePng(fullUrl, 250, 250);
+    }
+
+    private UrlMapping getPublicUrlOrThrow(String shortUrl) {
+        UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
+
+        if (!isPubliclyAccessible(urlMapping)) {
+            throw UrlException.notFound();
+        }
+
+        return urlMapping;
     }
 
     private boolean isPubliclyAccessible(UrlMapping urlMapping) {
@@ -118,9 +124,11 @@ public class UrlLookupService {
         if (urlMapping.getStatus() != UrlStatus.ACTIVE) {
             return false;
         }
+
         if (urlMapping.getExpiresAt() != null && LocalDateTime.now().isAfter(urlMapping.getExpiresAt())) {
             return false;
         }
+
         return urlMapping.getMaxClicks() == null || urlMapping.getClickCount() < urlMapping.getMaxClicks();
     }
 }

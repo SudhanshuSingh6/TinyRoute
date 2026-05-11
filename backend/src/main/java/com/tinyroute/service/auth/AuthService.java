@@ -5,9 +5,8 @@ import com.tinyroute.dto.auth.request.RegisterRequest;
 import com.tinyroute.dto.auth.response.JwtAuthenticationResponse;
 import com.tinyroute.entity.Role;
 import com.tinyroute.entity.User;
+import com.tinyroute.exception.AlreadyExistsException;
 import com.tinyroute.exception.ApiException;
-import com.tinyroute.exception.EmailAlreadyExistsException;
-import com.tinyroute.exception.UsernameAlreadyExistsException;
 import com.tinyroute.repository.user.UserRepository;
 import com.tinyroute.security.UserDetailsImpl;
 import com.tinyroute.security.jwt.JwtService;
@@ -55,10 +54,10 @@ public class AuthService {
         String email    = normalizeEmail(request.getEmail());
 
         if (userRepository.existsByUsername(username)) {
-            throw new UsernameAlreadyExistsException("Username '" + username + "' is already taken.");
+            throw AlreadyExistsException.username();
         }
         if (userRepository.existsByEmail(email)) {
-            throw new EmailAlreadyExistsException("Email '" + email + "' is already registered.");
+            throw AlreadyExistsException.email();
         }
 
         User user = new User();
@@ -71,10 +70,10 @@ public class AuthService {
             userRepository.save(user);
         } catch (DataIntegrityViolationException ex) {
             if (userRepository.existsByUsername(username)) {
-                throw new UsernameAlreadyExistsException("Username '" + username + "' is already taken.");
+                throw AlreadyExistsException.username();
             }
             if (userRepository.existsByEmail(email)) {
-                throw new EmailAlreadyExistsException("Email '" + email + "' is already registered.");
+                throw AlreadyExistsException.email();
             }
             throw new ApiException(
                     HttpStatus.CONFLICT,

@@ -87,15 +87,15 @@ export const useFetchAnalytics = (
   );
 };
 
-export const useFetchLinkHistory = (token, id, onError) => {
+export const useFetchLinkHistory = (token, shortUrl, onError) => {
   return useQuery(
-    ["link-history", id],
-    async () => api.get(API.HISTORY(id), { headers: authHeaders(token) }),
+    ["link-history", shortUrl],
+    async () => api.get(API.HISTORY(shortUrl), { headers: authHeaders(token) }),
     {
       select: (data) => data.data,
       onError,
       staleTime: 0,
-      enabled: !!token && !!id,
+      enabled: !!token && !!shortUrl,
     }
   );
 };
@@ -133,19 +133,26 @@ export const createShortUrl = async (token, data) => {
   return response.data;
 };
 
-export const deleteShortUrl = async (token, id) => {
-  await api.delete(API.DELETE(id), { headers: authHeaders(token) });
+export const deleteShortUrl = async (token, shortUrl) => {
+  await api.delete(API.DELETE(shortUrl), { headers: authHeaders(token) });
 };
 
-export const toggleShortUrl = async (token, id) => {
-  const response = await api.patch(API.TOGGLE(id), null, {
+export const disableShortUrl = async (token, shortUrl) => {
+  const response = await api.patch(API.DISABLE(shortUrl), null, {
     headers: authHeaders(token),
   });
   return response.data;
 };
 
-export const editShortUrl = async (token, id, data) => {
-  const response = await api.put(API.EDIT(id), data, {
+export const enableShortUrl = async (token, shortUrl) => {
+  const response = await api.patch(API.ENABLE(shortUrl), null, {
+    headers: authHeaders(token),
+  });
+  return response.data;
+};
+
+export const editShortUrl = async (token, shortUrl, data) => {
+  const response = await api.put(API.EDIT(shortUrl), data, {
     headers: authHeaders(token),
   });
   return response.data;

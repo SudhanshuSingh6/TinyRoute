@@ -8,7 +8,7 @@ import { useStoreContext } from "../contextApi/ContextApi";
 import { useFetchLinkHistory } from "../hooks/useQuery";
 
 const LinkHistoryPage = () => {
-  const { id } = useParams();
+  const { shortUrl } = useParams();
   const navigate = useNavigate();
   const { token } = useStoreContext();
 
@@ -16,7 +16,7 @@ const LinkHistoryPage = () => {
     navigate("/error");
   };
 
-  const { isLoading, data: history = [] } = useFetchLinkHistory(token, id, onError);
+  const { isLoading, data: history = [] } = useFetchLinkHistory(token, shortUrl, onError);
 
   const sortedHistory = useMemo(() => {
     return [...history].sort(
@@ -32,7 +32,7 @@ const LinkHistoryPage = () => {
     <div className="min-h-page bg-slate-50 lg:px-14 sm:px-8 px-4 py-8">
       <div className="max-w-4xl mx-auto bg-white border border-slate-200 rounded-xl p-6 shadow-card">
         <h1 className="text-2xl font-bold text-slate-900 mb-1">Link Edit History</h1>
-        <p className="text-slate-500 text-sm mb-6">Tracking changes for link id: {id}</p>
+        <p className="text-slate-500 text-sm mb-6">Tracking changes for link: {shortUrl}</p>
 
         {sortedHistory.length === 0 ? (
           <EmptyState

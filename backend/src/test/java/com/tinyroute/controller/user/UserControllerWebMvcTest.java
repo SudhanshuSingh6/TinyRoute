@@ -3,6 +3,7 @@ package com.tinyroute.controller.user;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tinyroute.dto.user.UserProfileDTO;
 import com.tinyroute.exception.GlobalExceptionHandler;
+import com.tinyroute.service.url.UrlLookupService;
 import com.tinyroute.service.user.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,9 @@ class UserControllerWebMvcTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private UrlLookupService urlLookupService;
 
     @Test
     void getProfile_validPrincipal_returns200() throws Exception {

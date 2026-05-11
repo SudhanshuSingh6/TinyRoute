@@ -1,5 +1,8 @@
 package com.tinyroute.integration;
 
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.api.StatefulRedisConnection;
 import com.tinyroute.entity.ClickEvent;
 import com.tinyroute.entity.Role;
 import com.tinyroute.entity.UrlMapping;
@@ -13,6 +16,7 @@ import com.tinyroute.repository.analytics.UrlUniqueVisitorRepository;
 import com.tinyroute.repository.url.UrlEditHistoryRepository;
 import com.tinyroute.repository.url.UrlMappingRepository;
 import com.tinyroute.repository.user.UserRepository;
+import com.tinyroute.service.analytics.UniqueVisitorRegistrationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +33,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -59,6 +65,14 @@ class RedirectFlowIntegrationTest {
     private GeoLocationService geoLocationService;
     @MockitoBean
     private UserAgentParsingService userAgentParsingService;
+    @MockitoBean
+    private UniqueVisitorRegistrationService uniqueVisitorRegistrationService;
+    @MockitoBean
+    private RedisClient redisClient;
+    @MockitoBean
+    private StatefulRedisConnection<String, byte[]> redisConnection;
+    @MockitoBean
+    private ProxyManager<String> proxyManager;
 
     @BeforeEach
     void setUp() {
@@ -74,6 +88,8 @@ class RedirectFlowIntegrationTest {
                 .thenReturn(new GeoLocationService.GeoLocation("India", "Bengaluru"));
         when(userAgentParsingService.parse(any()))
                 .thenReturn(new UserAgentParsingService.ParsedUserAgent("Chrome", "Windows", "Desktop"));
+        when(uniqueVisitorRegistrationService.registerIfFirstVisit(anyLong(), anyString(), any()))
+                .thenReturn(true);
     }
 
     @Test
@@ -111,6 +127,43 @@ class RedirectFlowIntegrationTest {
                 LocalDateTime.now().plusDays(1)
         );
         assertEquals(1, clickEvents.size());
-        assertEquals(1, urlUniqueVisitorRepository.count());
+    }
+
+    @Test
+    void redirectEndpoint_whenFirstUniqueClickReachesLimit_firstRequestStillRedirects_secondRequestReturnsGone() throws Exception {
+        User user = new User();
+        user.setUsername("integration_limit_user");
+        user.setEmail("integration_limit_user@example.com");
+        user.setPassword("password123");
+        user.setRole(Role.ROLE_USER);
+        user = userRepository.save(user);
+
+        UrlMapping mapping = new UrlMapping();
+        mapping.setUser(user);
+        mapping.setOriginalUrl("https://openai.com/limit");
+        mapping.setShortUrl("itlimit1");
+        mapping.setStatus(UrlStatus.ACTIVE);
+        mapping.setCreatedDate(LocalDateTime.now());
+        mapping.setMaxClicks(1);
+        mapping.setClickCount(0);
+        urlMappingRepository.save(mapping);
+
+        mockMvc.perform(get("/itlimit1")
+                        .header("User-Agent", "Mozilla/5.0")
+                        .header("Referer", "https://example.com")
+                        .header("Accept-Language", "en-US,en;q=0.9"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", "https://openai.com/limit"));
+
+        mockMvc.perform(get("/itlimit1")
+                        .header("User-Agent", "Mozilla/5.0")
+                        .header("Referer", "https://example.com")
+                        .header("Accept-Language", "en-US,en;q=0.9"))
+                .andExpect(status().isGone());
+
+        UrlMapping updated = urlMappingRepository.findByShortUrl("itlimit1");
+        assertNotNull(updated);
+        assertEquals(1, updated.getClickCount());
+        assertEquals(UrlStatus.CLICK_LIMIT_REACHED, updated.getStatus());
     }
 }

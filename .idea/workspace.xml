@@ -5,17 +5,72 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="12b6e11e-18e5-4ca5-88fe-ac59d93ddba9" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/TinyRoute.iml" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/ShortUrlGenerationFailedException.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Dashboard/CreateNewShorten.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Dashboard/CreateNewShorten.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/common/generator/SecureCodeGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/common/generator/SecureCodeGenerator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/common/hash/HashUtil.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/common/network/IpUtil.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/common/ratelimit/RateLimitPlan.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/infra/ratelimit/RateLimitPlan.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/common/time/DateTimeUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/common/time/DateTimeUtil.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/config/DomainBlacklistConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/config/DomainBlacklistConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/analytics/AnalyticsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/analytics/AnalyticsController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/preview/PreviewController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/preview/PreviewController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/redirect/RedirectController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/redirect/RedirectController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/url/UrlCreationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/url/UrlCreationController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/url/UrlManagementController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/url/UrlManagementController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/url/UrlRateLimitHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/url/UrlRateLimitHelper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/user/PublicProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/user/PublicProfileController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/user/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/user/UserController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/ApiException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/ApiException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/DomainBlacklistedException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/DomainBlacklistedException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/DuplicateAliasException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/EmailAlreadyExistsException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/InvalidDestinationUrlException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/InvalidDestinationUrlException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/InvalidUrlException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/InvalidUrlException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/LinkException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/UrlException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/RateLimitExceededException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/RateLimitExceededException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/ShortCodeExhaustedException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/UsernameAlreadyExistsException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/repository/url/UrlMappingRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/repository/url/UrlMappingRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/analytics/AnalyticsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/analytics/AnalyticsService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/analytics/AsyncAnalyticsWorker.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/analytics/AsyncAnalyticsWorker.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/auth/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/auth/AuthService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/ratelimit/RateLimitService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/ratelimit/RateLimitService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/redirect/UrlRedirectService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/redirect/UrlRedirectService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlCreationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlCreationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlLookupService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlLookupService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlManagementService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlManagementService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlSafetyValidator.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlValidationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlValidationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/user/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/user/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/TinyRouteApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/TinyRouteApplicationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/analytics/AnalyticsControllerWebMvcTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/analytics/AnalyticsControllerWebMvcTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/url/UrlCreationControllerWebMvcTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/url/UrlCreationControllerWebMvcTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/url/UrlManagementControllerWebMvcTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/url/UrlManagementControllerWebMvcTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/user/UserControllerWebMvcTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/user/UserControllerWebMvcTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/integration/RedirectConcurrencyIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/integration/RedirectConcurrencyIntegrationTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/integration/RedirectFlowIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/integration/RedirectFlowIntegrationTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/repository/PersistenceRulesDataJpaTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/repository/PersistenceRulesDataJpaTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/analytics/AnalyticsServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/analytics/AnalyticsServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/url/UrlCreationServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/url/UrlCreationServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/url/UrlManagementServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/url/UrlManagementServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/url/UrlRedirectServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/url/UrlRedirectServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/AppRouter.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/AppRouter.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/Dashboard/ShortenItem.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Dashboard/ShortenItem.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Dashboard/ShortenUrlList.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Dashboard/ShortenUrlList.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/link/LinkPreviewCard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/link/LinkPreviewCard.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/link/QRCodeDisplay.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/link/QRCodeDisplay.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/hooks/useQuery.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/hooks/useQuery.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/DashboardLayout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/DashboardLayout.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/AnalyticsPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/AnalyticsPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/BioPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/BioPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/LinkDetailPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/LinkDetailPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/LinkHistoryPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/LinkHistoryPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/ProfilePage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/ProfilePage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/utils/apiRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/utils/apiRoutes.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -26,19 +81,19 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Interface" />
-        <option value="Class" />
         <option value="Exception" />
         <option value="Enum" />
+        <option value="Class" />
       </list>
     </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="KubernetesApiPersistence"><![CDATA[{}]]></component>
-  <component name="KubernetesApiProvider"><![CDATA[{
-  "isMigrated": true
-}]]></component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
@@ -57,60 +112,60 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.TinyRouteApplication.executor": "Run",
-    "JUnit.All in tinyroute.executor": "Run",
-    "JUnit.AnalyticsControllerWebMvcTest.executor": "Run",
-    "JUnit.ProfileControllerWebMvcTest.executor": "Run",
-    "JUnit.RedirectConcurrencyIntegrationTest.executor": "Run",
-    "JUnit.RedirectConcurrencyIntegrationTest.redirectConcurrency_respectsMaxClicksUnderRace.executor": "Run",
-    "JUnit.RedirectControllerWebMvcTest.executor": "Run",
-    "JUnit.RedirectFlowIntegrationTest.executor": "Run",
-    "JUnit.TinyRouteApplicationTests.executor": "Run",
-    "JUnit.UrlCreationServiceTest.createShortUrl_whenUserNull_throws.executor": "Run",
-    "JUnit.UrlCreationServiceTest.executor": "Run",
-    "JUnit.UrlRedirectServiceTest.executor": "Run",
-    "JUnit.com.tinyroute.controller in tinyroute.executor": "Run",
-    "JUnit.controller in tinyroute.executor": "Run",
-    "JUnit.exception in tinyroute.executor": "Run",
-    "JUnit.integration in tinyroute.executor": "Run",
-    "JUnit.java in tinyroute.executor": "Run",
-    "JUnit.repository in tinyroute.executor": "Run",
-    "JUnit.url in tinyroute.executor": "Run",
-    "Maven.Unnamed.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "Spring Boot.TinyRouteApplication.executor": "Run",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/Users/sudhanshu/Documents/TinyRoute",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.TinyRouteApplication.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in tinyroute.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AnalyticsControllerWebMvcTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ProfileControllerWebMvcTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RedirectConcurrencyIntegrationTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RedirectConcurrencyIntegrationTest.redirectConcurrency_respectsMaxClicksUnderRace.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RedirectControllerWebMvcTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RedirectFlowIntegrationTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.TinyRouteApplicationTests.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UrlCreationServiceTest.createShortUrl_whenUserNull_throws.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UrlCreationServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UrlRedirectServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.com.tinyroute.controller in tinyroute.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.controller in tinyroute.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.exception in tinyroute.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.integration in tinyroute.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.java in tinyroute.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.repository in tinyroute.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.url in tinyroute.executor&quot;: &quot;Run&quot;,
+    &quot;Maven.Unnamed.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Spring Boot.TinyRouteApplication.executor&quot;: &quot;Run&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/sudhanshu/Documents/TinyRoute&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.DirectoryMappings&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "DatabaseDriversLRU": [
-      "h2"
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;h2&quot;
     ]
   }
-}]]></component>
-  <component name="RunManager" selected="Spring Boot.TinyRouteApplication">
+}</component>
+  <component name="RunManager" selected="JUnit.java in tinyroute">
     <configuration name="All in tinyroute" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="tinyroute" />
       <option name="PACKAGE_NAME" value="" />
@@ -150,10 +205,10 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="integration in tinyroute" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="exception in tinyroute" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="tinyroute" />
       <option name="TEST_OBJECT" value="directory" />
-      <dir value="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/integration" />
+      <dir value="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/exception" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -167,7 +222,7 @@
       </method>
     </configuration>
     <configuration name="TinyRouteApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
-      <option name="ALTERNATIVE_JRE_PATH" value="/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home" />
+      <option name="ALTERNATIVE_JRE_PATH" value="21 (2)" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
       <module name="tinyroute" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.tinyroute.TinyRouteApplication" />
@@ -176,20 +231,20 @@
       </method>
     </configuration>
     <list>
+      <item itemvalue="JUnit.exception in tinyroute" />
       <item itemvalue="JUnit.All in tinyroute" />
       <item itemvalue="JUnit.RedirectConcurrencyIntegrationTest.redirectConcurrency_respectsMaxClicksUnderRace" />
       <item itemvalue="JUnit.com.tinyroute.controller in tinyroute" />
-      <item itemvalue="JUnit.integration in tinyroute" />
       <item itemvalue="JUnit.java in tinyroute" />
       <item itemvalue="Spring Boot.TinyRouteApplication" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="JUnit.java in tinyroute" />
+        <item itemvalue="JUnit.exception in tinyroute" />
         <item itemvalue="JUnit.RedirectConcurrencyIntegrationTest.redirectConcurrency_respectsMaxClicksUnderRace" />
         <item itemvalue="JUnit.All in tinyroute" />
         <item itemvalue="JUnit.com.tinyroute.controller in tinyroute" />
-        <item itemvalue="JUnit.integration in tinyroute" />
       </list>
     </recent_temporary>
   </component>
@@ -197,7 +252,6 @@
     <attachedChunks>
       <set>
         <option value="bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.31033.145" />
-        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-IU-253.31033.145" />
       </set>
     </attachedChunks>
   </component>
@@ -216,7 +270,10 @@
       <workItem from="1774217997341" duration="17817000" />
       <workItem from="1774372759132" duration="1486000" />
       <workItem from="1774674251687" duration="1679000" />
-      <workItem from="1774675957947" duration="50505000" />
+      <workItem from="1774675957947" duration="67988000" />
+      <workItem from="1774915483712" duration="55966000" />
+      <workItem from="1775268109963" duration="30584000" />
+      <workItem from="1778468199817" duration="9000" />
     </task>
     <servers />
   </component>

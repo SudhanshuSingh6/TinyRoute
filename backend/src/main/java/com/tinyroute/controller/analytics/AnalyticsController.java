@@ -1,5 +1,6 @@
 package com.tinyroute.controller.analytics;
 
+import com.tinyroute.infra.ratelimit.RateLimitEndpoint;
 import com.tinyroute.controller.url.UrlRateLimitHelper;
 import com.tinyroute.dto.analytics.request.AnalyticsQueryRequest;
 import com.tinyroute.dto.analytics.response.LinkAnalyticsResponse;
@@ -38,35 +39,28 @@ public class AnalyticsController {
     )
     @ApiResponse(responseCode = "200", description = "Analytics returned successfully")
     @ApiResponse(responseCode = "400", description = "Invalid date range")
-    @ApiResponse(responseCode = "404", description = "Link not found")
+    @ApiResponse(responseCode = "404", description = "URL not found")
     @ApiResponse(responseCode = "429", description = "Rate limit exceeded")
     @GetMapping("/analytics/{shortUrl}")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<?> getUserAnalytics(
+    public ResponseEntity<LinkAnalyticsResponse> getUserAnalytics(
             @Parameter(description = "The short URL code", example = "abc12345")
             @PathVariable String shortUrl,
             @Valid @ModelAttribute AnalyticsQueryRequest request,
             Principal principal) {
-
-
         UrlRateLimitHelper.RateLimitResult result =
-                rateLimitHelper.getRateLimitResult(principal, "analytics");
+                rateLimitHelper.getRateLimitResult(principal, RateLimitEndpoint.ANALYTICS);
 
-        if (!result.isAdmin() && !result.probe().isConsumed()) {
-            return ResponseEntity.status(429)
-                    .headers(rateLimitHelper.buildRateLimitHeaders(result.probe(), result.limit()))
-                    .body(rateLimitHelper.build429Body(result.probe(), result.limit(), "analytics"));
-        }
-
+        rateLimitHelper.enforceLimit(result, RateLimitEndpoint.ANALYTICS);
         LinkAnalyticsResponse analytics = analyticsService.getAnalytics(
                 shortUrl,
                 request,
-                principal.getName()
+                result.user().getUsername()
         );
 
         HttpHeaders headers = result.isAdmin()
                 ? new HttpHeaders()
-                : rateLimitHelper.buildRateLimitHeaders(result.probe(), result.limit());
+                : rateLimitHelper.buildRateLimitHeaders(result.probe(), result.plan());
 
         return ResponseEntity.ok().headers(headers).body(analytics);
     }

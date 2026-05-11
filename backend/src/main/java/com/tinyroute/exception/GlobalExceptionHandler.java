@@ -49,12 +49,12 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
 
         if (message.isBlank()) {
-            message = "Validation failed.";
+            message = ErrorMessages.VALIDATION_ERROR;
         }
 
         return build(
                 HttpStatus.BAD_REQUEST,
-                "VALIDATION_ERROR",
+                ErrorCodes.VALIDATION_ERROR,
                 message,
                 request,
                 new HttpHeaders()
@@ -68,8 +68,8 @@ public class GlobalExceptionHandler {
     ) {
         return build(
                 HttpStatus.BAD_REQUEST,
-                "MALFORMED_REQUEST_BODY",
-                "Request body is missing or malformed.",
+                ErrorCodes.MALFORMED_REQUEST_BODY,
+                ErrorMessages.MALFORMED_REQUEST_BODY,
                 request,
                 new HttpHeaders()
         );
@@ -82,7 +82,7 @@ public class GlobalExceptionHandler {
     ) {
         return build(
                 HttpStatus.BAD_REQUEST,
-                "INVALID_DATE_FORMAT",
+                ErrorCodes.INVALID_DATE_FORMAT,
                 "Invalid date format. Use ISO-8601 (e.g. 2026-03-27T10:15:30 or 2026-03-27).",
                 request,
                 new HttpHeaders()
@@ -96,7 +96,7 @@ public class GlobalExceptionHandler {
     ) {
         return build(
                 HttpStatus.BAD_REQUEST,
-                "INVALID_PARAMETER_TYPE",
+                ErrorCodes.INVALID_PARAMETER_TYPE,
                 "Invalid value for parameter: " + ex.getName(),
                 request,
                 new HttpHeaders()
@@ -110,7 +110,7 @@ public class GlobalExceptionHandler {
     ) {
         return build(
                 HttpStatus.BAD_REQUEST,
-                "MISSING_PARAMETER",
+                ErrorCodes.MISSING_PARAMETER,
                 "Required request parameter '%s' is not present.".formatted(ex.getParameterName()),
                 request,
                 new HttpHeaders()
@@ -124,8 +124,8 @@ public class GlobalExceptionHandler {
     ) {
         return build(
                 HttpStatus.UNAUTHORIZED,
-                "INVALID_CREDENTIALS",
-                "Username or password is incorrect.",
+                ErrorCodes.INVALID_CREDENTIALS,
+                ErrorMessages.INVALID_CREDENTIALS,
                 request,
                 new HttpHeaders()
         );
@@ -138,10 +138,11 @@ public class GlobalExceptionHandler {
     ) {
         String message = ex.getMessage() != null && !ex.getMessage().isBlank()
                 ? ex.getMessage()
-                : "User not found.";
+                : ErrorMessages.USER_NOT_FOUND;
+
         return build(
                 HttpStatus.NOT_FOUND,
-                "USER_NOT_FOUND",
+                ErrorCodes.USER_NOT_FOUND,
                 message,
                 request,
                 new HttpHeaders()
@@ -153,13 +154,10 @@ public class GlobalExceptionHandler {
             AuthenticationException ex,
             HttpServletRequest request
     ) {
-        String message = ex.getMessage() != null && !ex.getMessage().isBlank()
-                ? ex.getMessage()
-                : "Authentication failed.";
         return build(
                 HttpStatus.UNAUTHORIZED,
-                "AUTHENTICATION_FAILED",
-                message,
+                ErrorCodes.AUTHENTICATION_FAILED,
+                ErrorMessages.AUTHENTICATION_FAILED,
                 request,
                 new HttpHeaders()
         );
@@ -172,8 +170,8 @@ public class GlobalExceptionHandler {
     ) {
         return build(
                 HttpStatus.BAD_REQUEST,
-                "INVALID_ARGUMENT",
-                ex.getMessage() != null ? ex.getMessage() : "Invalid argument.",
+                ErrorCodes.INVALID_ARGUMENT,
+                ex.getMessage() != null ? ex.getMessage() : ErrorMessages.INVALID_ARGUMENT,
                 request,
                 new HttpHeaders()
         );
@@ -185,10 +183,11 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         log.error("Unhandled exception for {}", request.getRequestURI(), ex);
+
         return build(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "INTERNAL_ERROR",
-                "An unexpected error occurred",
+                ErrorCodes.INTERNAL_ERROR,
+                ErrorMessages.INTERNAL_ERROR,
                 request,
                 new HttpHeaders()
         );

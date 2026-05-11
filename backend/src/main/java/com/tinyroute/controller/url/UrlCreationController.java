@@ -1,5 +1,6 @@
 package com.tinyroute.controller.url;
 
+import com.tinyroute.infra.ratelimit.RateLimitEndpoint;
 import com.tinyroute.dto.url.request.CreateShortUrlRequest;
 import com.tinyroute.dto.url.response.UrlDetailsResponse;
 import com.tinyroute.service.url.UrlCreationService;
@@ -12,10 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 
@@ -36,31 +34,20 @@ public class UrlCreationController {
         @ApiResponse(responseCode = "429", description = "Rate limit exceeded")
         @PostMapping("/shorten")
         @PreAuthorize("hasRole('USER')")
-        public ResponseEntity<?> createShortUrl(
-                        @Valid @RequestBody CreateShortUrlRequest request,
-                        Principal principal) {
-                UrlRateLimitHelper.RateLimitResult result = rateLimitHelper.getRateLimitResult(principal, "shorten");
+        public ResponseEntity<UrlDetailsResponse> createShortUrl(
+                @Valid @RequestBody CreateShortUrlRequest request,
+                Principal principal
+        ) {
+                UrlRateLimitHelper.RateLimitResult result =
+                        rateLimitHelper.getRateLimitResult(principal, RateLimitEndpoint.SHORTEN);
 
-                if (result.user() == null) {
-                        return ResponseEntity.status(401).body("Authenticated user could not be resolved");
-                }
+                rateLimitHelper.enforceLimit(result, RateLimitEndpoint.SHORTEN);
 
-                if (!result.isAdmin() && !result.probe().isConsumed()) {
-                        return ResponseEntity.status(429)
-                                        .headers(rateLimitHelper.buildRateLimitHeaders(result.probe(), result.limit()))
-                                        .body(rateLimitHelper.build429Body(result.probe(), result.limit(), "shorten"));
-                }
-
-                UrlDetailsResponse dto = urlCreationService.createShortUrl(
-                                request.getOriginalUrl(),
-                                request.getCustomAlias(),
-                                request.getExpiresAt(),
-                                request.getTitle(),
-                                result.user());
+                UrlDetailsResponse dto = urlCreationService.createShortUrl(result.user(), request);
 
                 HttpHeaders headers = result.isAdmin()
-                                ? new HttpHeaders()
-                                : rateLimitHelper.buildRateLimitHeaders(result.probe(), result.limit());
+                        ? new HttpHeaders()
+                        : rateLimitHelper.buildRateLimitHeaders(result.probe(), result.plan());
 
                 return ResponseEntity.ok().headers(headers).body(dto);
         }

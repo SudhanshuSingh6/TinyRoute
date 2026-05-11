@@ -25,12 +25,6 @@ public class PublicProfileController {
     @ApiResponse(responseCode = "404", description = "User not found")
     @GetMapping("/{username}")
     public ResponseEntity<PublicProfileResponse> getPublicUserProfile(@PathVariable String username) {
-        PublicProfileResponse response = userService.getPublicProfile(username);
-
-        if (response == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(userService.getPublicProfile(username));
     }
 }

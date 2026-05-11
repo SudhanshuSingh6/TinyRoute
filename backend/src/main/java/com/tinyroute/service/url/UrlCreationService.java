@@ -1,19 +1,18 @@
 package com.tinyroute.service.url;
 
+import com.tinyroute.common.generator.SecureCodeGenerator;
+import com.tinyroute.dto.url.request.CreateShortUrlRequest;
 import com.tinyroute.dto.url.response.UrlDetailsResponse;
 import com.tinyroute.entity.Role;
 import com.tinyroute.entity.UrlMapping;
 import com.tinyroute.entity.UrlStatus;
 import com.tinyroute.entity.User;
-import com.tinyroute.exception.ApiException;
-import com.tinyroute.exception.DuplicateAliasException;
-import com.tinyroute.exception.InvalidUrlException;
+import com.tinyroute.exception.*;
 import com.tinyroute.mapper.UrlMapper;
 import com.tinyroute.repository.url.UrlMappingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -43,34 +42,30 @@ public class UrlCreationService {
     private final UrlValidationService urlValidationService;
     private final UrlMapper urlMapper;
 
-    public UrlDetailsResponse createShortUrl(String originalUrl,
-                                             String customAlias,
-                                             LocalDateTime expiresAt,
-                                             String title,
-                                             User user) {
+    public UrlDetailsResponse createShortUrl(User user,CreateShortUrlRequest request) {
         LocalDateTime now = LocalDateTime.now();
 
         String normalizedOriginalUrl =
-                urlValidationService.validateAndNormalizeDestinationUrl(originalUrl);
+                urlValidationService.validateAndNormalizeDestinationUrl(request.getOriginalUrl());
 
-        boolean alreadyExists = urlMappingRepository.existsByOriginalUrlAndUser(normalizedOriginalUrl, user);
+        boolean alreadyExists =
+                urlMappingRepository.existsByOriginalUrlAndUser(normalizedOriginalUrl, user);
+
         if (alreadyExists) {
-            throw new ApiException(
-                    HttpStatus.CONFLICT,
-                    "URL_ALREADY_EXISTS",
-                    "A link for this destination already exists. Use the existing link instead."
-            );
+            throw AlreadyExistsException.custom(ErrorCodes.URL_ALREADY_EXISTS,
+                    "A URL for this destination already exists. Use the existing URL instead.");
         }
 
         UrlMapping urlMapping = buildUrlMapping(
                 normalizedOriginalUrl,
-                expiresAt,
-                title,
+                request.getExpiresAt(),
+                request.getTitle(),
                 user,
                 now
         );
+        String customAlias = request.getCustomAlias().trim();
 
-        if (customAlias != null && !customAlias.isBlank()) {
+        if (!customAlias.isBlank()) {
             return createWithCustomAlias(urlMapping, customAlias);
         }
 
@@ -82,7 +77,7 @@ public class UrlCreationService {
         validateAlias(alias);
 
         if (urlMappingRepository.existsByShortUrl(alias)) {
-            throw new DuplicateAliasException("Custom alias is already taken.");
+            throw AlreadyExistsException.alias();
         }
 
         urlMapping.setShortUrl(alias);
@@ -91,18 +86,13 @@ public class UrlCreationService {
             UrlMapping saved = urlMappingRepository.save(urlMapping);
             return urlMapper.toUrlDetailsResponse(saved);
         } catch (DataIntegrityViolationException ex) {
-            throw new DuplicateAliasException("Custom alias is already taken.");
+            throw AlreadyExistsException.alias();
         }
     }
 
     private UrlDetailsResponse createWithGeneratedAlias(UrlMapping urlMapping) {
         for (int attempt = 1; attempt <= MAX_ALIAS_ATTEMPTS; attempt++) {
-            String candidate = generateShortCode();
-
-            if (urlMappingRepository.existsByShortUrl(candidate)) {
-                continue;
-            }
-
+            String candidate = SecureCodeGenerator.generateShortCode(SHORT_URL_LENGTH);
             urlMapping.setShortUrl(candidate);
 
             try {
@@ -112,10 +102,7 @@ public class UrlCreationService {
                 log.warn("Short URL DB collision on attempt {}: '{}'", attempt, candidate);
             }
         }
-
-        throw new ApiException(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "SHORT_URL_GENERATION_FAILED",
+        throw new ShortUrlGenerationFailedException(
                 "Could not generate a unique short URL after " + MAX_ALIAS_ATTEMPTS + " attempts."
         );
     }
@@ -155,16 +142,11 @@ public class UrlCreationService {
 
     private Integer determineMaxClicks(User user) {
         if (user.getRole() == Role.ROLE_ADMIN) {
-            return 10000;
+            return 100000;
         }
         if (user.getRole() == Role.ROLE_PREMIUM) {
-            return 1000;
+            return 10000;
         }
-        return 100;
-    }
-
-    private String generateShortCode() {
-        return com.tinyroute.common.generator.SecureCodeGenerator
-                .generateShortCode(SHORT_URL_LENGTH);
+        return 1000;
     }
 }

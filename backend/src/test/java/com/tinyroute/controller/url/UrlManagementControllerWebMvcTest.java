@@ -6,20 +6,15 @@ import com.tinyroute.dto.url.request.UpdateShortUrlRequest;
 import com.tinyroute.dto.url.response.EditHistoryDTO;
 import com.tinyroute.dto.url.response.UrlDetailsResponse;
 import com.tinyroute.entity.Role;
-import com.tinyroute.entity.UrlMapping;
 import com.tinyroute.entity.UrlStatus;
 import com.tinyroute.entity.User;
 import com.tinyroute.exception.ApiException;
 import com.tinyroute.exception.GlobalExceptionHandler;
-import com.tinyroute.exception.LinkException;
-import com.tinyroute.repository.url.UrlMappingRepository;
 import com.tinyroute.service.analytics.AnalyticsService;
 import com.tinyroute.service.url.UrlManagementService;
 import com.tinyroute.service.user.UserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -31,10 +26,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -68,20 +59,24 @@ class UrlManagementControllerWebMvcTest {
     private UserService userService;
 
     @MockitoBean
-    private UrlMappingRepository urlMappingRepository;
-
-    @MockitoBean
     private UrlRateLimitHelper rateLimitHelper;
 
+    @BeforeEach
+    void setUpRateLimit() {
+        when(rateLimitHelper.getRateLimitResult(any(java.security.Principal.class), any()))
+                .thenReturn(new UrlRateLimitHelper.RateLimitResult(testUser(), true, null, null));
+        when(userService.findByUsername("alice")).thenReturn(testUser());
+    }
+
     // ─────────────────────────────────────────────────
-    // DELETE /{id}
+    // DELETE /{shortUrl}
     // ─────────────────────────────────────────────────
 
     @Test
     void deleteUrl_success_returns204() throws Exception {
-        doNothing().when(urlManagementService).deleteUrl(eq(1L), eq("alice"));
+        doNothing().when(urlManagementService).deleteUrl(eq("abc12345"), eq(100L));
 
-        mockMvc.perform(delete("/api/urls/1")
+        mockMvc.perform(delete("/api/urls/abc12345")
                         .principal(() -> "alice"))
                 .andExpect(status().isNoContent());
     }
@@ -89,9 +84,9 @@ class UrlManagementControllerWebMvcTest {
     @Test
     void deleteUrl_notFound_returns404() throws Exception {
         doThrow(new ApiException(HttpStatus.NOT_FOUND, "URL_NOT_FOUND", "Not found"))
-                .when(urlManagementService).deleteUrl(eq(99L), eq("alice"));
+                .when(urlManagementService).deleteUrl(eq("missing99"), eq(100L));
 
-        mockMvc.perform(delete("/api/urls/99")
+        mockMvc.perform(delete("/api/urls/missing99")
                         .principal(() -> "alice"))
                 .andExpect(status().isNotFound());
     }
@@ -99,15 +94,15 @@ class UrlManagementControllerWebMvcTest {
     @Test
     void deleteUrl_notOwner_returns403() throws Exception {
         doThrow(new ApiException(HttpStatus.FORBIDDEN, "FORBIDDEN", "You don't own this URL."))
-                .when(urlManagementService).deleteUrl(eq(2L), eq("alice"));
+                .when(urlManagementService).deleteUrl(eq("alice-own"), eq(100L));
 
-        mockMvc.perform(delete("/api/urls/2")
+        mockMvc.perform(delete("/api/urls/alice-own")
                         .principal(() -> "alice"))
                 .andExpect(status().isForbidden());
     }
 
     // ─────────────────────────────────────────────────
-    // PUT /{id} — edit destination URL
+    // PUT /{shortUrl} — edit destination URL
     // ─────────────────────────────────────────────────
 
     @Test
@@ -118,13 +113,13 @@ class UrlManagementControllerWebMvcTest {
         UrlDetailsResponse response = new UrlDetailsResponse();
         response.setShortUrl("abc12345");
         response.setOriginalUrl("https://new-destination.com");
-        when(urlManagementService.editUrl(eq(1L), eq("https://new-destination.com"), eq(user)))
+        when(urlManagementService.editUrl(eq("abc12345"), any(UpdateShortUrlRequest.class), eq(user.getId())))
                 .thenReturn(response);
 
         UpdateShortUrlRequest request = new UpdateShortUrlRequest();
         request.setOriginalUrl("https://new-destination.com");
 
-        mockMvc.perform(put("/api/urls/1")
+        mockMvc.perform(put("/api/urls/abc12345")
                         .principal(() -> "alice")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -138,12 +133,12 @@ class UrlManagementControllerWebMvcTest {
         User user = testUser();
         when(userService.findByUsername("alice")).thenReturn(user);
         doThrow(new ApiException(HttpStatus.FORBIDDEN, "FORBIDDEN", "You don't own this URL."))
-                .when(urlManagementService).editUrl(eq(2L), any(), eq(user));
+                .when(urlManagementService).editUrl(eq("abc12345"), any(UpdateShortUrlRequest.class), eq(user.getId()));
 
         UpdateShortUrlRequest request = new UpdateShortUrlRequest();
         request.setOriginalUrl("https://new-destination.com");
 
-        mockMvc.perform(put("/api/urls/2")
+        mockMvc.perform(put("/api/urls/abc12345")
                         .principal(() -> "alice")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -154,7 +149,7 @@ class UrlManagementControllerWebMvcTest {
     void editUrl_destinationAlreadyExists_returns409() throws Exception {
         User user = testUser();
         when(userService.findByUsername("alice")).thenReturn(user);
-        when(urlManagementService.editUrl(eq(1L), eq("https://dup.com"), eq(user)))
+        when(urlManagementService.editUrl(eq("abc12345"), any(UpdateShortUrlRequest.class), eq(user.getId())))
                 .thenThrow(new ApiException(
                         HttpStatus.CONFLICT,
                         "URL_ALREADY_EXISTS",
@@ -163,7 +158,7 @@ class UrlManagementControllerWebMvcTest {
         UpdateShortUrlRequest request = new UpdateShortUrlRequest();
         request.setOriginalUrl("https://dup.com");
 
-        mockMvc.perform(put("/api/urls/1")
+        mockMvc.perform(put("/api/urls/abc12345")
                         .principal(() -> "alice")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -175,7 +170,7 @@ class UrlManagementControllerWebMvcTest {
     @Test
     void editUrl_invalidBody_returns400() throws Exception {
         // Missing originalUrl: @NotBlank on UpdateShortUrlRequest ({} deserializes to null)
-        mockMvc.perform(put("/api/urls/1")
+        mockMvc.perform(put("/api/urls/abc12345")
                         .principal(() -> "alice")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
@@ -183,7 +178,7 @@ class UrlManagementControllerWebMvcTest {
     }
 
     // ─────────────────────────────────────────────────
-    // GET /{id}/history
+    // GET /{shortUrl}/history
     // ─────────────────────────────────────────────────
 
     @Test
@@ -198,10 +193,10 @@ class UrlManagementControllerWebMvcTest {
         entry2.setOldUrl("https://even-older-url.com");
         entry2.setChangedAt(LocalDateTime.of(2025, 12, 1, 8, 0));
 
-        when(urlManagementService.getEditHistory(eq(1L), eq("alice")))
+        when(urlManagementService.getEditHistory(eq("abc12345"), eq(100L)))
                 .thenReturn(List.of(entry1, entry2));
 
-        mockMvc.perform(get("/api/urls/1/history")
+        mockMvc.perform(get("/api/urls/abc12345/history")
                         .principal(() -> "alice"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].oldUrl").value("https://old-url.com"))
@@ -211,96 +206,84 @@ class UrlManagementControllerWebMvcTest {
 
     @Test
     void getEditHistory_notOwner_returns403() throws Exception {
-        when(urlManagementService.getEditHistory(eq(2L), eq("alice")))
+        when(urlManagementService.getEditHistory(eq("abc12345"), eq(100L)))
                 .thenThrow(new ApiException(HttpStatus.FORBIDDEN, "FORBIDDEN", "You don't own this URL."));
 
-        mockMvc.perform(get("/api/urls/2/history")
+        mockMvc.perform(get("/api/urls/abc12345/history")
                         .principal(() -> "alice"))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void getEditHistory_notFound_returns404() throws Exception {
-        when(urlManagementService.getEditHistory(eq(99L), eq("alice")))
+        when(urlManagementService.getEditHistory(eq("missing99"), eq(100L)))
                 .thenThrow(new ApiException(HttpStatus.NOT_FOUND, "URL_NOT_FOUND", "Not found"));
 
-        mockMvc.perform(get("/api/urls/99/history")
+        mockMvc.perform(get("/api/urls/missing99/history")
                         .principal(() -> "alice"))
                 .andExpect(status().isNotFound());
     }
 
 
     // ─────────────────────────────────────────────────
-    // PATCH /{id}/toggle
+    // PATCH /{shortUrl}/disable
     // ─────────────────────────────────────────────────
 
-    static Stream<Arguments> toggleFromActiveOrDisabled() {
-        return Stream.of(
-                Arguments.of(UrlStatus.ACTIVE, UrlStatus.DISABLED),
-                Arguments.of(UrlStatus.DISABLED, UrlStatus.ACTIVE)
-        );
-    }
+    @Test
+    void disableUrl_success_returns200() throws Exception {
+        UrlDetailsResponse response = new UrlDetailsResponse();
+        response.setShortUrl("abc12345");
+        response.setStatus(UrlStatus.DISABLED);
+        when(urlManagementService.disableUrl("abc12345", 100L)).thenReturn(response);
 
-    @ParameterizedTest
-    @MethodSource("toggleFromActiveOrDisabled")
-    void toggleUrl_activeDisabledRoundTrip_returns200(UrlStatus initial, UrlStatus expectedAfterToggle)
-            throws Exception {
-        User owner = testUser();
-        UrlMapping mapping = activeMapping(owner);
-        mapping.setStatus(initial);
-
-        when(urlMappingRepository.findById(1L)).thenReturn(Optional.of(mapping));
-        when(urlMappingRepository.save(any(UrlMapping.class))).thenAnswer(i -> i.getArgument(0));
-
-        mockMvc.perform(patch("/api/urls/1/toggle")
+        mockMvc.perform(patch("/api/urls/abc12345/disable")
                         .principal(() -> "alice"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(expectedAfterToggle.name()));
-
-        assertEquals(expectedAfterToggle, mapping.getStatus());
+                .andExpect(jsonPath("$.shortUrl").value("abc12345"))
+                .andExpect(jsonPath("$.status").value("DISABLED"));
     }
 
     @Test
-    void toggleUrl_notFound_returns404() throws Exception {
-        when(urlMappingRepository.findById(99L)).thenReturn(Optional.empty());
+    void disableUrl_invalidState_returns400() throws Exception {
+        when(urlManagementService.disableUrl("abc12345", 100L))
+                .thenThrow(new ApiException(HttpStatus.BAD_REQUEST, "URL_DISABLE_INVALID", "Only ACTIVE links can be disabled."));
 
-        mockMvc.perform(patch("/api/urls/99/toggle")
-                        .principal(() -> "alice"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("LINK_NOT_FOUND"));
-    }
-
-    @Test
-    void toggleUrl_notOwner_returns403() throws Exception {
-        User someone = new User();
-        someone.setUsername("bob");
-        UrlMapping mapping = activeMapping(someone);
-
-        when(urlMappingRepository.findById(1L)).thenReturn(Optional.of(mapping));
-
-        mockMvc.perform(patch("/api/urls/1/toggle")
-                        .principal(() -> "alice"))  // alice ≠ bob
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.error").value("LINK_ACCESS_DENIED"));
-    }
-
-
-    @Test
-    void toggleUrl_expiredStatus_returns400() throws Exception {
-        User owner = testUser();
-        UrlMapping mapping = activeMapping(owner);
-        mapping.setStatus(UrlStatus.EXPIRED);
-
-        when(urlMappingRepository.findById(1L)).thenReturn(Optional.of(mapping));
-
-        mockMvc.perform(patch("/api/urls/1/toggle")
+        mockMvc.perform(patch("/api/urls/abc12345/disable")
                         .principal(() -> "alice"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("URL_TOGGLE_INVALID"));
+                .andExpect(jsonPath("$.error").value("URL_DISABLE_INVALID"));
     }
 
     // ─────────────────────────────────────────────────
-    // PATCH /{id}/expiry
+    // PATCH /{shortUrl}/enable
+    // ─────────────────────────────────────────────────
+    @Test
+    void enableUrl_success_returns200() throws Exception {
+        UrlDetailsResponse response = new UrlDetailsResponse();
+        response.setShortUrl("abc12345");
+        response.setStatus(UrlStatus.ACTIVE);
+        when(urlManagementService.enableUrl("abc12345", 100L)).thenReturn(response);
+
+        mockMvc.perform(patch("/api/urls/abc12345/enable")
+                        .principal(() -> "alice"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.shortUrl").value("abc12345"))
+                .andExpect(jsonPath("$.status").value("ACTIVE"));
+    }
+
+    @Test
+    void enableUrl_expired_returns400() throws Exception {
+        when(urlManagementService.enableUrl("abc12345", 100L))
+                .thenThrow(new ApiException(HttpStatus.BAD_REQUEST, "URL_EXPIRED", "Cannot enable an expired URL."));
+
+        mockMvc.perform(patch("/api/urls/abc12345/enable")
+                        .principal(() -> "alice"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("URL_EXPIRED"));
+    }
+
+    // ─────────────────────────────────────────────────
+    // PATCH /{shortUrl}/expiry
     // ─────────────────────────────────────────────────
 
     @Test
@@ -311,12 +294,12 @@ class UrlManagementControllerWebMvcTest {
         UrlDetailsResponse response = new UrlDetailsResponse();
         response.setShortUrl("abc12345");
         response.setExpiresAt(LocalDateTime.of(2027, 1, 1, 0, 0));
-        when(urlManagementService.updateExpiry(eq(1L), any(), eq(user))).thenReturn(response);
+        when(urlManagementService.updateExpiry(eq("abc12345"), any(), eq(user.getId()))).thenReturn(response);
 
         UpdateExpiryRequest request = new UpdateExpiryRequest();
         request.setExpiresAt(LocalDateTime.of(2027, 1, 1, 0, 0));
 
-        mockMvc.perform(patch("/api/urls/1/expiry")
+        mockMvc.perform(patch("/api/urls/abc12345/expiry")
                         .principal(() -> "alice")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -329,7 +312,7 @@ class UrlManagementControllerWebMvcTest {
         UpdateExpiryRequest request = new UpdateExpiryRequest();
         request.setExpiresAt(LocalDateTime.of(2020, 1, 1, 0, 0));
 
-        mockMvc.perform(patch("/api/urls/1/expiry")
+        mockMvc.perform(patch("/api/urls/abc12345/expiry")
                         .principal(() -> "alice")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -348,15 +331,5 @@ class UrlManagementControllerWebMvcTest {
         user.setEmail("alice@example.com");
         user.setRole(Role.ROLE_USER);
         return user;
-    }
-
-    private UrlMapping activeMapping(User owner) {
-        UrlMapping mapping = new UrlMapping();
-        mapping.setId(1L);
-        mapping.setShortUrl("abc12345");
-        mapping.setOriginalUrl("https://openai.com");
-        mapping.setStatus(UrlStatus.ACTIVE);
-        mapping.setUser(owner);
-        return mapping;
     }
 }

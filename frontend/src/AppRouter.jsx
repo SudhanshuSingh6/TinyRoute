@@ -87,7 +87,7 @@ const AppRouter = () => {
             }
           />
           <Route
-            path="/history/:id"
+            path="/history/:shortUrl"
             element={
               <PrivateRoute publicPage={false}>
                 <LinkHistoryPage />

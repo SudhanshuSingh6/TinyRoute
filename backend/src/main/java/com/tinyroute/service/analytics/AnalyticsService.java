@@ -6,6 +6,9 @@ import com.tinyroute.entity.ClickEvent;
 import com.tinyroute.entity.UrlMapping;
 import com.tinyroute.entity.User;
 import com.tinyroute.exception.ApiException;
+import com.tinyroute.exception.ErrorCodes;
+import com.tinyroute.exception.ErrorMessages;
+import com.tinyroute.exception.UrlException;
 import com.tinyroute.mapper.AnalyticsMapper;
 import com.tinyroute.repository.analytics.ClickEventRepository;
 import com.tinyroute.repository.analytics.UrlUniqueVisitorRepository;
@@ -34,13 +37,8 @@ public class AnalyticsService {
                                               AnalyticsQueryRequest request,
                                               String username) {
 
-        UrlMapping urlMapping = urlMappingRepository
-                .findByShortUrlAndUserUsername(shortUrl, username)
-                .orElseThrow(() -> new ApiException(
-                        HttpStatus.NOT_FOUND,
-                        "LINK_NOT_FOUND",
-                        "Link not found."
-                ));
+        UrlMapping urlMapping = getOwnedUrlOrThrow(shortUrl, username);
+        LocalDateTime now = LocalDateTime.now();
 
         LocalDateTime start = request.getStartDate() != null
                 ? request.getStartDate()
@@ -48,17 +46,17 @@ public class AnalyticsService {
 
         LocalDateTime end = request.getEndDate() != null
                 ? request.getEndDate()
-                : LocalDateTime.now();
+                : now;
 
-        if (end.isAfter(LocalDateTime.now())) {
-            end = LocalDateTime.now();
+        if (end.isAfter(now)) {
+            end = now;
         }
 
         if (!end.isAfter(start)) {
             throw new ApiException(
                     HttpStatus.BAD_REQUEST,
-                    "INVALID_DATE_RANGE",
-                    "endDate must be after startDate."
+                    ErrorCodes.INVALID_DATE_RANGE,
+                    ErrorMessages.INVALID_DATE_RANGE
             );
         }
 
@@ -94,14 +92,13 @@ public class AnalyticsService {
     }
 
     public long getAllTimeUniqueClicks(String shortUrl, String username) {
-        UrlMapping urlMapping = urlMappingRepository
-                .findByShortUrlAndUserUsername(shortUrl, username)
-                .orElseThrow(() -> new ApiException(
-                        HttpStatus.NOT_FOUND,
-                        "LINK_NOT_FOUND",
-                        "Link not found."
-                ));
-
+        UrlMapping urlMapping = getOwnedUrlOrThrow(shortUrl, username);
         return urlMapping.getClickCount();
+    }
+
+    private UrlMapping getOwnedUrlOrThrow(String shortUrl, String username) {
+        return urlMappingRepository
+                .findByShortUrlAndUserUsername(shortUrl, username)
+                .orElseThrow(UrlException::notFound);
     }
 }

@@ -1,6 +1,7 @@
 package com.tinyroute.controller.url;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tinyroute.infra.ratelimit.RateLimitEndpoint;
 import com.tinyroute.dto.url.request.CreateShortUrlRequest;
 import com.tinyroute.dto.url.response.UrlDetailsResponse;
 import com.tinyroute.entity.Role;
@@ -24,7 +25,6 @@ import org.springframework.http.HttpStatus;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -52,8 +52,8 @@ class UrlCreationControllerWebMvcTest {
     @BeforeEach
     void rateLimitAllowsRequests() {
         principalUser = testUser();
-        when(rateLimitHelper.getRateLimitResult(any(Principal.class), eq("shorten")))
-                .thenReturn(new UrlRateLimitHelper.RateLimitResult(null, Long.MAX_VALUE, true, principalUser));
+        when(rateLimitHelper.getRateLimitResult(any(Principal.class), eq(RateLimitEndpoint.SHORTEN)))
+                .thenReturn(new UrlRateLimitHelper.RateLimitResult(principalUser, true, null, null));
     }
 
     @Test
@@ -62,11 +62,8 @@ class UrlCreationControllerWebMvcTest {
         response.setShortUrl("abc12345");
         response.setOriginalUrl("https://openai.com");
         when(urlCreationService.createShortUrl(
-                eq("https://openai.com"),
-                eq("openai-home"),
-                isNull(),
-                eq("OpenAI"),
-                eq(principalUser)
+                eq(principalUser),
+                any(CreateShortUrlRequest.class)
         )).thenReturn(response);
 
         CreateShortUrlRequest request = new CreateShortUrlRequest();
@@ -95,11 +92,8 @@ class UrlCreationControllerWebMvcTest {
     @Test
     void createShortUrl_whenNonDeletedExists_returns409Conflict() throws Exception {
         when(urlCreationService.createShortUrl(
-                eq("https://openai.com"),
-                isNull(),
-                isNull(),
-                isNull(),
-                eq(principalUser)
+                eq(principalUser),
+                any(CreateShortUrlRequest.class)
         )).thenThrow(new ApiException(
                 HttpStatus.CONFLICT,
                 "URL_ALREADY_EXISTS",
@@ -108,6 +102,7 @@ class UrlCreationControllerWebMvcTest {
 
         CreateShortUrlRequest request = new CreateShortUrlRequest();
         request.setOriginalUrl("https://openai.com");
+        request.setCustomAlias("openai-home");
 
         mockMvc.perform(post("/api/urls/shorten")
                         .principal(() -> "alice")

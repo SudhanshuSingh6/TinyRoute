@@ -8,8 +8,10 @@ import com.tinyroute.entity.UrlMapping;
 import com.tinyroute.entity.UrlStatus;
 import com.tinyroute.entity.User;
 import com.tinyroute.exception.ApiException;
+import com.tinyroute.exception.ErrorCodes;
+import com.tinyroute.exception.ErrorMessages;
 import com.tinyroute.exception.InvalidUrlException;
-import com.tinyroute.exception.LinkException;
+import com.tinyroute.exception.UrlException;
 import com.tinyroute.mapper.UrlMapper;
 import com.tinyroute.repository.analytics.ClickEventRepository;
 import com.tinyroute.repository.analytics.UrlUniqueVisitorRepository;
@@ -35,8 +37,6 @@ public class UrlManagementService {
     private final UrlValidationService urlValidationService;
     private final UrlMapper urlMapper;
 
-    // ---------- GET ALL USER URLS ----------
-
     public List<UrlDetailsResponse> getUrlsByUser(User user) {
         return urlMappingRepository.findByUser(user)
                 .stream()
@@ -44,46 +44,42 @@ public class UrlManagementService {
                 .toList();
     }
 
-    // ---------- GET SINGLE URL ----------
-
-    public UrlDetailsResponse getUrlDetails(String shortUrl, String username) {
-        UrlMapping urlMapping = getOwnedUrlOrThrow(shortUrl, username);
-        return urlMapper.toUrlDetailsResponse(urlMapping);
+    public UrlDetailsResponse getUrlDetails(String shortUrl, Long userId) {
+        return urlMapper.toUrlDetailsResponse(getOwnedUrlOrThrow(shortUrl, userId));
     }
-
-    // ---------- EDIT ORIGINAL URL + TITLE ----------
 
     @Transactional
     public UrlDetailsResponse editUrl(String shortUrl,
                                       UpdateShortUrlRequest request,
-                                      User user) {
-        UrlMapping urlMapping = getOwnedUrlOrThrow(shortUrl, user);
+                                      Long userId) {
+
+        UrlMapping urlMapping = getOwnedUrlOrThrow(shortUrl, userId);
 
         String normalizedOriginalUrl =
                 urlValidationService.validateAndNormalizeDestinationUrl(request.getOriginalUrl());
 
         String normalizedTitle = normalizeTitle(request.getTitle());
 
-        boolean originalUrlChanged = !Objects.equals(urlMapping.getOriginalUrl(), normalizedOriginalUrl);
+        boolean originalChanged = !Objects.equals(urlMapping.getOriginalUrl(), normalizedOriginalUrl);
         boolean titleChanged = !Objects.equals(urlMapping.getTitle(), normalizedTitle);
 
-        if (!originalUrlChanged && !titleChanged) {
+        if (!originalChanged && !titleChanged) {
             return urlMapper.toUrlDetailsResponse(urlMapping);
         }
 
-        if (originalUrlChanged) {
+        if (originalChanged) {
             boolean duplicateExists =
                     urlMappingRepository.existsByOriginalUrlAndUserAndIdNot(
                             normalizedOriginalUrl,
-                            user,
+                            urlMapping.getUser(),
                             urlMapping.getId()
                     );
 
             if (duplicateExists) {
                 throw new ApiException(
                         HttpStatus.CONFLICT,
-                        "URL_ALREADY_EXISTS",
-                        "A link for this destination already exists. Use the existing link instead."
+                        ErrorCodes.URL_ALREADY_EXISTS,
+                        ErrorMessages.URL_ALREADY_EXISTS
                 );
             }
 
@@ -101,14 +97,12 @@ public class UrlManagementService {
         return urlMapper.toUrlDetailsResponse(urlMappingRepository.save(urlMapping));
     }
 
-    // ---------- UPDATE EXPIRY ----------
-
     @Transactional
     public UrlDetailsResponse updateExpiry(String shortUrl,
                                            LocalDateTime expiresAt,
-                                           User user) {
-        UrlMapping urlMapping = getOwnedUrlOrThrow(shortUrl, user);
+                                           Long userId) {
 
+        UrlMapping urlMapping = getOwnedUrlOrThrow(shortUrl, userId);
         LocalDateTime now = LocalDateTime.now();
 
         if (expiresAt != null && expiresAt.isBefore(now)) {
@@ -124,7 +118,8 @@ public class UrlManagementService {
         if (urlMapping.getStatus() == UrlStatus.EXPIRED
                 && (expiresAt == null || !now.isAfter(expiresAt))) {
 
-            if (urlMapping.getMaxClicks() == null || urlMapping.getClickCount() < urlMapping.getMaxClicks()) {
+            if (urlMapping.getMaxClicks() == null ||
+                    urlMapping.getClickCount() < urlMapping.getMaxClicks()) {
                 urlMapping.setStatus(UrlStatus.ACTIVE);
             } else {
                 urlMapping.setStatus(UrlStatus.CLICK_LIMIT_REACHED);
@@ -134,17 +129,15 @@ public class UrlManagementService {
         return urlMapper.toUrlDetailsResponse(urlMappingRepository.save(urlMapping));
     }
 
-    // ---------- DISABLE ----------
-
     @Transactional
-    public UrlDetailsResponse disableUrl(String shortUrl, String username) {
-        UrlMapping urlMapping = getOwnedUrlOrThrow(shortUrl, username);
+    public UrlDetailsResponse disableUrl(String shortUrl, Long userId) {
+        UrlMapping urlMapping = getOwnedUrlOrThrow(shortUrl, userId);
 
         if (urlMapping.getStatus() != UrlStatus.ACTIVE) {
             throw new ApiException(
                     HttpStatus.BAD_REQUEST,
-                    "URL_DISABLE_INVALID",
-                    "Only ACTIVE links can be disabled."
+                    ErrorCodes.URL_DISABLE_INVALID,
+                    ErrorMessages.URL_DISABLE_INVALID
             );
         }
 
@@ -152,35 +145,29 @@ public class UrlManagementService {
         return urlMapper.toUrlDetailsResponse(urlMappingRepository.save(urlMapping));
     }
 
-    // ---------- ENABLE ----------
-
     @Transactional
-    public UrlDetailsResponse enableUrl(String shortUrl, String username) {
-        UrlMapping urlMapping = getOwnedUrlOrThrow(shortUrl, username);
+    public UrlDetailsResponse enableUrl(String shortUrl, Long userId) {
+        UrlMapping urlMapping = getOwnedUrlOrThrow(shortUrl, userId);
+        LocalDateTime now = LocalDateTime.now();
 
         if (urlMapping.getStatus() != UrlStatus.DISABLED) {
             throw new ApiException(
                     HttpStatus.BAD_REQUEST,
-                    "URL_ENABLE_INVALID",
-                    "Only DISABLED links can be enabled."
+                    ErrorCodes.URL_ENABLE_INVALID,
+                    ErrorMessages.URL_ENABLE_INVALID
             );
         }
-
-        LocalDateTime now = LocalDateTime.now();
 
         if (urlMapping.getExpiresAt() != null && now.isAfter(urlMapping.getExpiresAt())) {
-            throw new ApiException(
-                    HttpStatus.BAD_REQUEST,
-                    "URL_EXPIRED",
-                    "Cannot enable an expired URL."
-            );
+            throw UrlException.expired();
         }
 
-        if (urlMapping.getMaxClicks() != null && urlMapping.getClickCount() >= urlMapping.getMaxClicks()) {
+        if (urlMapping.getMaxClicks() != null &&
+                urlMapping.getClickCount() >= urlMapping.getMaxClicks()) {
             throw new ApiException(
                     HttpStatus.BAD_REQUEST,
-                    "CLICK_LIMIT_REACHED",
-                    "Cannot enable a URL that has reached its click limit."
+                    ErrorCodes.CLICK_LIMIT_REACHED,
+                    ErrorMessages.CLICK_LIMIT_REACHED
             );
         }
 
@@ -188,51 +175,43 @@ public class UrlManagementService {
         return urlMapper.toUrlDetailsResponse(urlMappingRepository.save(urlMapping));
     }
 
-    // ---------- EDIT HISTORY ----------
-
-    public List<EditHistoryDTO> getEditHistory(String shortUrl, String username) {
-        UrlMapping urlMapping = getOwnedUrlOrThrow(shortUrl, username);
-
+    public List<EditHistoryDTO> getEditHistory(String shortUrl, Long userId) {
         return urlEditHistoryRepository
-                .findByUrlMappingOrderByChangedAtDesc(urlMapping)
+                .findByUrlMappingOrderByChangedAtDesc(getOwnedUrlOrThrow(shortUrl, userId))
                 .stream()
                 .map(urlMapper::toEditHistoryResponse)
                 .toList();
     }
 
-    // ---------- DELETE ----------
-
     @Transactional
-    public void deleteUrl(String shortUrl, String username) {
-        UrlMapping urlMapping = getOwnedUrlOrThrow(shortUrl, username);
+    public void deleteUrl(String shortUrl, Long userId) {
+        UrlMapping urlMapping = getOwnedUrlOrThrow(shortUrl, userId);
 
-        // Delete child records first, then parent URL
         urlEditHistoryRepository.deleteByUrlMapping(urlMapping);
         urlUniqueVisitorRepository.deleteByUrlMapping(urlMapping);
         clickEventRepository.deleteByUrlMapping(urlMapping);
         urlMappingRepository.delete(urlMapping);
     }
 
-    // ---------- HELPERS ----------
-
-    private UrlMapping getOwnedUrlOrThrow(String shortUrl, String username) {
-        return urlMappingRepository.findByShortUrlAndUserUsername(shortUrl, username)
-                .orElseThrow(() -> LinkException.notFound("URL not found."));
-    }
-
-    private UrlMapping getOwnedUrlOrThrow(String shortUrl, User user) {
-        if (user == null) {
-            throw new InvalidUrlException("Authenticated user is required.");
+    private UrlMapping getOwnedUrlOrThrow(String shortUrl, Long userId) {
+        if (userId == null) {
+            throw new ApiException(
+                    HttpStatus.UNAUTHORIZED,
+                    ErrorCodes.AUTHENTICATION_FAILED,
+                    ErrorMessages.AUTHENTICATION_FAILED
+            );
         }
 
-        return urlMappingRepository.findByShortUrlAndUserId(shortUrl, user.getId())
-                .orElseThrow(() -> LinkException.notFound("URL not found."));
+        return urlMappingRepository.findByShortUrlAndUserId(shortUrl, userId)
+                .orElseThrow(UrlException::notFound);
     }
 
     private String normalizeTitle(String title) {
-        if (title == null || title.isBlank()) {
+        if (title == null) {
             return null;
         }
-        return title.trim();
+
+        String trimmed = title.trim();
+        return trimmed.isBlank() ? null : trimmed;
     }
 }

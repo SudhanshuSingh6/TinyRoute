@@ -1,7 +1,7 @@
 package com.tinyroute.service.redirect;
 
-import com.tinyroute.common.hash.HashUtil;
-import com.tinyroute.common.network.IpUtil;
+import com.tinyroute.common.time.DateTimeUtil;
+import com.tinyroute.infra.network.ClientIpService;
 import com.tinyroute.entity.UrlMapping;
 import com.tinyroute.entity.UrlStatus;
 import com.tinyroute.repository.url.UrlMappingRepository;
@@ -23,8 +23,9 @@ public class UrlRedirectService {
     private final UrlMappingRepository urlMappingRepository;
     private final UniqueVisitorRegistrationService uniqueVisitorRegistrationService;
     private final AsyncAnalyticsWorker asyncAnalyticsWorker;
+    private final ClientIpService clientIpService;
 
-    //@Transactional
+    @Transactional
     public UrlMapping getOriginalUrl(String shortUrl, HttpServletRequest request) {
         UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
         if (urlMapping == null) {
@@ -33,29 +34,19 @@ public class UrlRedirectService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        if (urlMapping.getStatus() == UrlStatus.DISABLED) {
+        UrlStatus resolvedStatus = resolveStatus(urlMapping);
+
+        if (urlMapping.getStatus() != resolvedStatus) {
+            urlMappingRepository.updateStatus(urlMapping.getId(), resolvedStatus);
+            urlMapping.setStatus(resolvedStatus);
+        }
+
+        if (resolvedStatus != UrlStatus.ACTIVE) {
             return urlMapping;
         }
 
-        if (urlMapping.getExpiresAt() != null && now.isAfter(urlMapping.getExpiresAt())) {
-            if (urlMapping.getStatus() != UrlStatus.EXPIRED) {
-                urlMappingRepository.updateStatus(urlMapping.getId(), UrlStatus.EXPIRED);
-                urlMapping.setStatus(UrlStatus.EXPIRED);
-            }
-            return urlMapping;
-        }
-
-        if (urlMapping.getMaxClicks() != null &&
-                urlMapping.getClickCount() >= urlMapping.getMaxClicks()) {
-            if (urlMapping.getStatus() != UrlStatus.CLICK_LIMIT_REACHED) {
-                urlMappingRepository.updateStatus(urlMapping.getId(), UrlStatus.CLICK_LIMIT_REACHED);
-                urlMapping.setStatus(UrlStatus.CLICK_LIMIT_REACHED);
-            }
-            return urlMapping;
-        }
-
-        String ip = IpUtil.resolveClientIp(request);
-        String ipHash = HashUtil.sha256Hex(ip);
+        String ip = clientIpService.resolveClientIp(request);
+        String ipHash = clientIpService.hashIp(ip);
 
         boolean isFirstVisit = uniqueVisitorRegistrationService.registerIfFirstVisit(
                 urlMapping.getId(), ipHash, now
@@ -69,13 +60,6 @@ public class UrlRedirectService {
         if (isFirstVisit) {
             urlMappingRepository.incrementClickCount(urlMapping.getId());
             urlMapping.setClickCount(urlMapping.getClickCount() + 1);
-
-            // If unique click just reached limit, mark for future requests
-            if (urlMapping.getMaxClicks() != null &&
-                    urlMapping.getClickCount() >= urlMapping.getMaxClicks()) {
-                urlMappingRepository.updateStatus(urlMapping.getId(), UrlStatus.CLICK_LIMIT_REACHED);
-                urlMapping.setStatus(UrlStatus.CLICK_LIMIT_REACHED);
-            }
         }
 
         asyncAnalyticsWorker.recordClickEvent(
@@ -88,5 +72,21 @@ public class UrlRedirectService {
         );
 
         return urlMapping;
+    }
+    private UrlStatus resolveStatus(UrlMapping urlMapping) {
+        if (urlMapping.getStatus() == UrlStatus.DISABLED) {
+            return UrlStatus.DISABLED;
+        }
+
+        if (DateTimeUtil.isExpired(urlMapping.getExpiresAt())) {
+            return UrlStatus.EXPIRED;
+        }
+
+        if (urlMapping.getMaxClicks() != null
+                && urlMapping.getClickCount() >= urlMapping.getMaxClicks()) {
+            return UrlStatus.CLICK_LIMIT_REACHED;
+        }
+
+        return UrlStatus.ACTIVE;
     }
 }

@@ -1,5 +1,8 @@
 package com.tinyroute.integration;
 
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.api.StatefulRedisConnection;
 import com.tinyroute.entity.Role;
 import com.tinyroute.entity.UrlMapping;
 import com.tinyroute.entity.UrlStatus;
@@ -8,6 +11,7 @@ import com.tinyroute.repository.analytics.UrlUniqueVisitorRepository;
 import com.tinyroute.repository.url.UrlMappingRepository;
 import com.tinyroute.repository.user.UserRepository;
 import com.tinyroute.service.analytics.AsyncAnalyticsWorker;
+import com.tinyroute.service.analytics.UniqueVisitorRegistrationService;
 import com.tinyroute.service.redirect.UrlRedirectService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,13 +25,18 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -47,6 +56,14 @@ class RedirectConcurrencyIntegrationTest {
 
     @MockitoBean
     private AsyncAnalyticsWorker asyncAnalyticsWorker;
+    @MockitoBean
+    private UniqueVisitorRegistrationService uniqueVisitorRegistrationService;
+    @MockitoBean
+    private RedisClient redisClient;
+    @MockitoBean
+    private StatefulRedisConnection<String, byte[]> redisConnection;
+    @MockitoBean
+    private ProxyManager<String> proxyManager;
 
     @BeforeEach
     void setUp() {
@@ -55,18 +72,19 @@ class RedirectConcurrencyIntegrationTest {
         userRepository.deleteAll();
 
         doNothing().when(asyncAnalyticsWorker).recordClickEvent(
-                org.mockito.ArgumentMatchers.anyLong(),
-                org.mockito.ArgumentMatchers.anyString(),
-                org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any()
+                any(com.tinyroute.entity.UrlMapping.class),
+                anyString(),
+                any(),
+                any(),
+                any(),
+                any()
         );
     }
 
     @Test
     void redirectConcurrency_respectsMaxClicksUnderRace() throws Exception {
         createActiveMapping("race-max", 1);
+        stubFirstVisitOnly();
 
         runConcurrentRedirectCalls("race-max", 8);
 
@@ -82,20 +100,25 @@ class RedirectConcurrencyIntegrationTest {
 
         assertEquals(1, updated.getClickCount());
         assertEquals(UrlStatus.CLICK_LIMIT_REACHED, updated.getStatus());
-        assertEquals(1, urlUniqueVisitorRepository.count());
     }
 
     @Test
     void redirectConcurrency_marksSingleUniqueClickForSameIp() throws Exception {
         createActiveMapping("race-uniq", 100);
+        stubFirstVisitOnly();
 
         runConcurrentRedirectCalls("race-uniq", 12);
 
         UrlMapping updated = urlMappingRepository.findByShortUrl("race-uniq");
 
         assertEquals(1, updated.getClickCount());
-        assertEquals(1, urlUniqueVisitorRepository.count());
         assertEquals(UrlStatus.ACTIVE, updated.getStatus());
+    }
+
+    private void stubFirstVisitOnly() {
+        AtomicBoolean first = new AtomicBoolean(true);
+        when(uniqueVisitorRegistrationService.registerIfFirstVisit(anyLong(), anyString(), any()))
+                .thenAnswer(invocation -> first.getAndSet(false));
     }
 
     private UrlMapping createActiveMapping(String shortUrl, Integer maxClicks) {

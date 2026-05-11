@@ -1,10 +1,14 @@
 package com.tinyroute.controller.url;
 
+import com.tinyroute.infra.ratelimit.RateLimitEndpoint;
 import com.tinyroute.dto.url.request.UpdateExpiryRequest;
 import com.tinyroute.dto.url.request.UpdateShortUrlRequest;
 import com.tinyroute.dto.url.response.EditHistoryDTO;
 import com.tinyroute.dto.url.response.UrlDetailsResponse;
 import com.tinyroute.entity.User;
+import com.tinyroute.exception.ApiException;
+import com.tinyroute.exception.ErrorCodes;
+import com.tinyroute.exception.ErrorMessages;
 import com.tinyroute.service.analytics.AnalyticsService;
 import com.tinyroute.service.url.UrlManagementService;
 import com.tinyroute.service.user.UserService;
@@ -17,6 +21,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -43,20 +48,11 @@ public class UrlManagementController {
         @ApiResponse(responseCode = "429", description = "Rate limit exceeded")
         @GetMapping
         @PreAuthorize("hasRole('USER')")
-        public ResponseEntity<?> getUserUrls(Principal principal) {
-                UrlRateLimitHelper.RateLimitResult result = rateLimitHelper.getRateLimitResult(principal, "myurls");
+        public ResponseEntity<List<UrlDetailsResponse>> getUserUrls(Principal principal) {
+                HttpHeaders headers = applyRateLimitOrThrow(principal, RateLimitEndpoint.MY_URLS);
 
-                if (!result.isAdmin() && !result.probe().isConsumed()) {
-                        return ResponseEntity.status(429)
-                                        .headers(rateLimitHelper.buildRateLimitHeaders(result.probe(), result.limit()))
-                                        .body(rateLimitHelper.build429Body(result.probe(), result.limit(), "myurls"));
-                }
-
-                List<UrlDetailsResponse> urls = urlManagementService.getUrlsByUser(result.user());
-
-                HttpHeaders headers = result.isAdmin()
-                                ? new HttpHeaders()
-                                : rateLimitHelper.buildRateLimitHeaders(result.probe(), result.limit());
+                List<UrlDetailsResponse> urls =
+                        urlManagementService.getUrlsByUser(getCurrentUser(principal));
 
                 return ResponseEntity.ok().headers(headers).body(urls);
         }
@@ -67,10 +63,15 @@ public class UrlManagementController {
         @GetMapping("/{shortUrl}")
         @PreAuthorize("hasRole('USER')")
         public ResponseEntity<UrlDetailsResponse> getUrlDetails(
-                        @Parameter(description = "Short URL code") @PathVariable String shortUrl,
-                        Principal principal) {
-                return ResponseEntity.ok(
-                                urlManagementService.getUrlDetails(shortUrl, principal.getName()));
+                @Parameter(description = "Short URL code") @PathVariable String shortUrl,
+                Principal principal) {
+
+                HttpHeaders headers = applyRateLimitOrThrow(principal, RateLimitEndpoint.URL_MANAGEMENT);
+
+                UrlDetailsResponse response =
+                        urlManagementService.getUrlDetails(shortUrl, getCurrentUserId(principal));
+
+                return ResponseEntity.ok().headers(headers).body(response);
         }
 
         @Operation(summary = "Edit destination URL and title")
@@ -80,12 +81,16 @@ public class UrlManagementController {
         @PutMapping("/{shortUrl}")
         @PreAuthorize("hasRole('USER')")
         public ResponseEntity<UrlDetailsResponse> editUrl(
-                        @Parameter(description = "Short URL code") @PathVariable String shortUrl,
-                        @Valid @RequestBody UpdateShortUrlRequest request,
-                        Principal principal) {
-                User user = userService.findByUsername(principal.getName());
-                return ResponseEntity.ok(
-                                urlManagementService.editUrl(shortUrl, request, user));
+                @Parameter(description = "Short URL code") @PathVariable String shortUrl,
+                @Valid @RequestBody UpdateShortUrlRequest request,
+                Principal principal) {
+
+                HttpHeaders headers = applyRateLimitOrThrow(principal, RateLimitEndpoint.URL_MANAGEMENT);
+
+                UrlDetailsResponse response =
+                        urlManagementService.editUrl(shortUrl, request, getCurrentUserId(principal));
+
+                return ResponseEntity.ok().headers(headers).body(response);
         }
 
         @Operation(summary = "Update URL expiry")
@@ -93,12 +98,16 @@ public class UrlManagementController {
         @PatchMapping("/{shortUrl}/expiry")
         @PreAuthorize("hasRole('USER')")
         public ResponseEntity<UrlDetailsResponse> updateExpiry(
-                        @Parameter(description = "Short URL code") @PathVariable String shortUrl,
-                        @Valid @RequestBody UpdateExpiryRequest request,
-                        Principal principal) {
-                User user = userService.findByUsername(principal.getName());
-                return ResponseEntity.ok(
-                                urlManagementService.updateExpiry(shortUrl, request.getExpiresAt(), user));
+                @Parameter(description = "Short URL code") @PathVariable String shortUrl,
+                @Valid @RequestBody UpdateExpiryRequest request,
+                Principal principal) {
+
+                HttpHeaders headers = applyRateLimitOrThrow(principal, RateLimitEndpoint.URL_MANAGEMENT);
+
+                UrlDetailsResponse response =
+                        urlManagementService.updateExpiry(shortUrl, request.getExpiresAt(), getCurrentUserId(principal));
+
+                return ResponseEntity.ok().headers(headers).body(response);
         }
 
         @Operation(summary = "Disable a URL")
@@ -106,10 +115,15 @@ public class UrlManagementController {
         @PatchMapping("/{shortUrl}/disable")
         @PreAuthorize("hasRole('USER')")
         public ResponseEntity<UrlDetailsResponse> disableUrl(
-                        @Parameter(description = "Short URL code") @PathVariable String shortUrl,
-                        Principal principal) {
-                return ResponseEntity.ok(
-                                urlManagementService.disableUrl(shortUrl, principal.getName()));
+                @Parameter(description = "Short URL code") @PathVariable String shortUrl,
+                Principal principal) {
+
+                HttpHeaders headers = applyRateLimitOrThrow(principal, RateLimitEndpoint.URL_MANAGEMENT);
+
+                UrlDetailsResponse response =
+                        urlManagementService.disableUrl(shortUrl, getCurrentUserId(principal));
+
+                return ResponseEntity.ok().headers(headers).body(response);
         }
 
         @Operation(summary = "Enable a URL")
@@ -117,10 +131,15 @@ public class UrlManagementController {
         @PatchMapping("/{shortUrl}/enable")
         @PreAuthorize("hasRole('USER')")
         public ResponseEntity<UrlDetailsResponse> enableUrl(
-                        @Parameter(description = "Short URL code") @PathVariable String shortUrl,
-                        Principal principal) {
-                return ResponseEntity.ok(
-                                urlManagementService.enableUrl(shortUrl, principal.getName()));
+                @Parameter(description = "Short URL code") @PathVariable String shortUrl,
+                Principal principal) {
+
+                HttpHeaders headers = applyRateLimitOrThrow(principal, RateLimitEndpoint.URL_MANAGEMENT);
+
+                UrlDetailsResponse response =
+                        urlManagementService.enableUrl(shortUrl, getCurrentUserId(principal));
+
+                return ResponseEntity.ok().headers(headers).body(response);
         }
 
         @Operation(summary = "Get edit history for a URL")
@@ -128,10 +147,15 @@ public class UrlManagementController {
         @GetMapping("/{shortUrl}/history")
         @PreAuthorize("hasRole('USER')")
         public ResponseEntity<List<EditHistoryDTO>> getEditHistory(
-                        @Parameter(description = "Short URL code") @PathVariable String shortUrl,
-                        Principal principal) {
-                return ResponseEntity.ok(
-                                urlManagementService.getEditHistory(shortUrl, principal.getName()));
+                @Parameter(description = "Short URL code") @PathVariable String shortUrl,
+                Principal principal) {
+
+                HttpHeaders headers = applyRateLimitOrThrow(principal, RateLimitEndpoint.URL_MANAGEMENT);
+
+                List<EditHistoryDTO> response =
+                        urlManagementService.getEditHistory(shortUrl, getCurrentUserId(principal));
+
+                return ResponseEntity.ok().headers(headers).body(response);
         }
 
         @Operation(summary = "Delete a URL", description = "Permanently deletes a URL and all its associated analytics.")
@@ -139,9 +163,12 @@ public class UrlManagementController {
         @DeleteMapping("/{shortUrl}")
         @PreAuthorize("hasRole('USER')")
         public ResponseEntity<Void> deleteUrl(
-                        @Parameter(description = "Short URL code") @PathVariable String shortUrl,
-                        Principal principal) {
-                urlManagementService.deleteUrl(shortUrl, principal.getName());
+                @Parameter(description = "Short URL code") @PathVariable String shortUrl,
+                Principal principal) {
+
+                applyRateLimitOrThrow(principal, RateLimitEndpoint.URL_MANAGEMENT);
+                urlManagementService.deleteUrl(shortUrl, getCurrentUserId(principal));
+
                 return ResponseEntity.noContent().build();
         }
 
@@ -150,13 +177,43 @@ public class UrlManagementController {
         @GetMapping("/total-clicks")
         @PreAuthorize("hasRole('USER')")
         public ResponseEntity<Map<LocalDate, Long>> getTotalClicksByDate(
-                        Principal principal,
-                        @Parameter(description = "Start date", example = "2024-01-01") @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-                        @Parameter(description = "End date", example = "2024-12-31") @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-                User user = userService.findByUsername(principal.getName());
-                Map<LocalDate, Long> totalClicks = analyticsService.getTotalClicksByUserAndDate(user, startDate,
-                                endDate);
+                Principal principal,
+                @Parameter(description = "Start date", example = "2024-01-01")
+                @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                @Parameter(description = "End date", example = "2024-12-31")
+                @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
-                return ResponseEntity.ok(totalClicks);
+                HttpHeaders headers = applyRateLimitOrThrow(principal, RateLimitEndpoint.ANALYTICS);
+
+                if (endDate.isBefore(startDate)) {
+                        throw new ApiException(
+                                HttpStatus.BAD_REQUEST,
+                                ErrorCodes.INVALID_DATE_RANGE,
+                                ErrorMessages.INVALID_DATE_RANGE
+                        );
+                }
+
+                Map<LocalDate, Long> totalClicks =
+                        analyticsService.getTotalClicksByUserAndDate(getCurrentUser(principal), startDate, endDate);
+                return ResponseEntity.ok().headers(headers).body(totalClicks);
+        }
+
+        private User getCurrentUser(Principal principal) {
+                return userService.findByUsername(principal.getName());
+        }
+
+        private Long getCurrentUserId(Principal principal) {
+                return getCurrentUser(principal).getId();
+        }
+
+        private HttpHeaders applyRateLimitOrThrow(Principal principal, RateLimitEndpoint endpoint) {
+                UrlRateLimitHelper.RateLimitResult result =
+                        rateLimitHelper.getRateLimitResult(principal, endpoint);
+
+                rateLimitHelper.enforceLimit(result, endpoint);
+
+                return result.isAdmin()
+                        ? new HttpHeaders()
+                        : rateLimitHelper.buildRateLimitHeaders(result.probe(), result.plan());
         }
 }

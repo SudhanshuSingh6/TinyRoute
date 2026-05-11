@@ -1,6 +1,6 @@
 package com.tinyroute.service.ratelimit;
 
-import com.tinyroute.common.ratelimit.RateLimitPlan;
+import com.tinyroute.infra.ratelimit.RateLimitPlan;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;

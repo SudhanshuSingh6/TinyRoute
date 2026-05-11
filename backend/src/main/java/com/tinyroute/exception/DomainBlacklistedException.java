@@ -4,10 +4,19 @@ import org.springframework.http.HttpStatus;
 
 public class DomainBlacklistedException extends ApiException {
 
-    private static final HttpStatus STATUS = HttpStatus.UNPROCESSABLE_ENTITY;
-    private static final String ERROR_CODE = "DOMAIN_BLACKLISTED";
+    public DomainBlacklistedException() {
+        super(
+                HttpStatus.UNPROCESSABLE_ENTITY,
+                ErrorCodes.DOMAIN_BLACKLISTED,
+                ErrorMessages.DOMAIN_BLACKLISTED
+        );
+    }
 
     public DomainBlacklistedException(String message) {
-        super(STATUS, ERROR_CODE, message);
+        super(
+                HttpStatus.UNPROCESSABLE_ENTITY,
+                ErrorCodes.DOMAIN_BLACKLISTED,
+                message
+        );
     }
 }

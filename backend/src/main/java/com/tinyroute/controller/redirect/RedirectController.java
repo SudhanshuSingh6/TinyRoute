@@ -63,16 +63,16 @@ public class RedirectController {
             return ResponseEntity.notFound().build();
         }
 
+        if (urlMapping.getStatus() == UrlStatus.DISABLED) {
+            return gone(urlMapping, "This link has been disabled by its owner.");
+        }
+
         if (urlMapping.getStatus() == UrlStatus.EXPIRED) {
             return gone(urlMapping, "This link expired on " + urlMapping.getExpiresAt().format(READABLE_DATE));
         }
 
         if (urlMapping.getStatus() == UrlStatus.CLICK_LIMIT_REACHED) {
             return gone(urlMapping, "This link has reached its maximum click limit of " + urlMapping.getMaxClicks());
-        }
-
-        if (urlMapping.getStatus() == UrlStatus.DISABLED) {
-            return gone(urlMapping, "This link has been disabled by its owner.");
         }
 
         URI destination = toSafeRedirectUri(urlMapping.getOriginalUrl());

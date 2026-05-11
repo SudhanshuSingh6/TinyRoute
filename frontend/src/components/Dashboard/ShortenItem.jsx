@@ -21,7 +21,8 @@ import toast from "react-hot-toast";
 import {
   deleteShortUrl,
   editShortUrl,
-  toggleShortUrl,
+  disableShortUrl,
+  enableShortUrl,
   useFetchAnalytics,
 } from "../../hooks/useQuery";
 import { useStoreContext } from "../../contextApi/ContextApi";
@@ -207,7 +208,7 @@ const ShortenItem = ({
 
     setEditLoading(true);
     try {
-      await editShortUrl(token, id, { originalUrl: trimmedUrl });
+      await editShortUrl(token, shortUrl, { originalUrl: trimmedUrl });
       setCurrentOriginalUrl(trimmedUrl);
       setIsEditing(false);
       setEditError("");
@@ -232,7 +233,7 @@ const ShortenItem = ({
   const handleDeleteConfirm = async () => {
     setDeleteLoading(true);
     try {
-      await deleteShortUrl(token, id);
+      await deleteShortUrl(token, shortUrl);
       toast.success("Link deleted successfully.");
       setDeleteOpen(false);
       await refetch();
@@ -262,7 +263,10 @@ const ShortenItem = ({
   const handleToggleConfirm = async () => {
     setToggleLoading(true);
     try {
-      const updated = await toggleShortUrl(token, id);
+      const updated = isActive 
+        ? await disableShortUrl(token, shortUrl)
+        : await enableShortUrl(token, shortUrl);
+        
       setCurrentStatus(updated.status);
       toast.success(
         updated.status === "ACTIVE"
@@ -448,7 +452,7 @@ const ShortenItem = ({
             <Tooltip title="View history">
               <button
                 type="button"
-                onClick={() => navigate(`/history/${id}`)}
+                onClick={() => navigate(`/history/${shortUrl}`)}
                 className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-all"
                 aria-label="View link history"
               >

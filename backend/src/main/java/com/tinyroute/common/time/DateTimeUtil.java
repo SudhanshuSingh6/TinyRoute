@@ -3,14 +3,11 @@ package com.tinyroute.common.time;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-public class DateTimeUtil {
+public class
+
+DateTimeUtil {
 
     private DateTimeUtil() {
-        // Private constructor to prevent instantiation
-    }
-
-    public static LocalDateTime now() {
-        return LocalDateTime.now(ZoneId.of("UTC")); // Or default system timezone
     }
     
     public static boolean isExpired(LocalDateTime expiresAt) {
