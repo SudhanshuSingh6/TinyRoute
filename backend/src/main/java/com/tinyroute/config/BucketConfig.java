@@ -29,8 +29,19 @@ public class BucketConfig {
     @Bean
     public RedisClient redisClient() {
 
-        RedisURI.Builder builder =
-                RedisURI.Builder.redis(redisHost, redisPort);
+        @Bean
+        public RedisClient redisClient () {
+
+            RedisURI.Builder builder =
+                    RedisURI.Builder.redis(redisHost, redisPort)
+                            .withSsl(true);
+
+            if (!redisPassword.isBlank()) {
+                builder.withPassword(redisPassword.toCharArray());
+            }
+
+            return RedisClient.create(builder.build());
+        }
 
         if (!redisPassword.isBlank()) {
             builder.withPassword(redisPassword.toCharArray());
