@@ -1,6 +1,6 @@
 # TinyRoute
 
-TinyRoute is a backend-focused URL shortening platform built with Spring Boot. It provides authenticated URL management, public redirects, QR code generation, link previews, public bio pages, rate limiting, and detailed click analytics.
+TinyRoute is a full-stack URL shortening platform built with Spring Boot and React. It provides authenticated URL management, public redirects, QR code generation, link previews, public bio pages, rate limiting, and detailed click analytics.
 
 The repository also includes a React + Vite frontend client for interacting with the API.
 
@@ -37,6 +37,7 @@ The repository also includes a React + Vite frontend client for interacting with
 - Jsoup for URL preview metadata
 - ua-parser for device/browser parsing
 - Springdoc OpenAPI
+- Docker and Docker Compose for local backend infrastructure
 - JUnit, Spring MVC Test, H2, and Mockito for tests
 
 ## Project Structure
@@ -44,6 +45,8 @@ The repository also includes a React + Vite frontend client for interacting with
 ```txt
 TinyRoute/
 ├── backend/
+│   ├── Dockerfile
+│   ├── docker-compose.yml
 │   ├── src/main/java/com/tinyroute/
 │   │   ├── common/       # shared URL, time, and code-generation utilities
 │   │   ├── config/       # application, async, Redis, Swagger, and blacklist config
@@ -140,7 +143,51 @@ Rate limiting is handled with Redis and Bucket4j. Plans are grouped by endpoint 
 
 Rate-limited responses use HTTP `429`.
 
+## Docker Setup
+
+The backend is Dockerized with a Compose setup that starts the Spring Boot API, PostgreSQL, and Redis.
+
+Prerequisites:
+
+- Docker
+- Docker Compose
+
+Run the backend stack:
+
+```bash
+cd backend
+docker compose up --build
+```
+
+The API runs at:
+
+```txt
+http://localhost:8080
+```
+
+Swagger UI is available at:
+
+```txt
+http://localhost:8080/swagger-ui.html
+```
+
+Stop the stack:
+
+```bash
+docker compose down
+```
+
+PostgreSQL data is stored in the `postgres_data` Docker volume. To stop the stack and remove local database data:
+
+```bash
+docker compose down -v
+```
+
+The Compose file is intended for local development. It includes development database credentials and a development JWT secret; replace those values before deploying or sharing production configuration.
+
 ## Backend Setup
+
+Use this path if you want to run the backend directly on your machine instead of Docker.
 
 ### Prerequisites
 
@@ -154,22 +201,16 @@ Create the database:
 createdb tinyroute
 ```
 
-Update `backend/src/main/resources/application.properties`:
+Set the environment variables consumed by `backend/src/main/resources/application.properties`:
 
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/tinyroute
-spring.datasource.username=YOUR_DB_USERNAME
-spring.datasource.password=YOUR_DB_PASSWORD
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
-
-jwt.secret=YOUR_LONG_JWT_SECRET
-jwt.expiration=172800000
-
-frontend.url=http://localhost:5173/
-
-spring.data.redis.host=localhost
-spring.data.redis.port=6379
+```bash
+export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/tinyroute
+export SPRING_DATASOURCE_USERNAME=YOUR_DB_USERNAME
+export SPRING_DATASOURCE_PASSWORD=YOUR_DB_PASSWORD
+export JWT_SECRET=YOUR_LONG_JWT_SECRET
+export FRONTEND_URL=http://localhost:5173/
+export SPRING_DATA_REDIS_HOST=localhost
+export SPRING_DATA_REDIS_PORT=6379
 ```
 
 Start Redis, then run the backend:
@@ -205,7 +246,7 @@ The test profile uses H2 in memory. Current test coverage includes:
 
 ## Frontend Client
 
-The frontend is a React + Vite app that consumes the backend API.
+The frontend is a React + Vite app that consumes the backend API. It can be used with either the Dockerized backend or the manually started backend.
 
 Frontend stack:
 
@@ -254,6 +295,15 @@ cd backend
 ./mvnw test
 ```
 
+Docker:
+
+```bash
+cd backend
+docker compose up --build
+docker compose down
+docker compose down -v   # also removes the local PostgreSQL volume
+```
+
 Frontend:
 
 ```bash
@@ -268,4 +318,5 @@ npm run lint
 - Do not commit real JWT secrets, database credentials, or production environment values.
 - PostgreSQL is used for local backend runtime, while tests use H2.
 - Redis must be running for rate limiting.
+- Docker Compose starts PostgreSQL and Redis for local backend development and persists PostgreSQL data in a named Docker volume.
 - Public redirect analytics are recorded asynchronously after a valid link visit.

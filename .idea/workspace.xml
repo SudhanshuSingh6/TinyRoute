@@ -5,63 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="12b6e11e-18e5-4ca5-88fe-ac59d93ddba9" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/TinyRoute.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/material_theme_project_new.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/config/BucketConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/config/BucketConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/analytics/AnalyticsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/analytics/AnalyticsController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/url/UrlCreationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/url/UrlCreationController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/url/UrlManagementController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/url/UrlManagementController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/url/UrlRateLimitHelper.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/mapper/AnalyticsMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/mapper/AnalyticsMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlCreationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlCreationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/user/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/user/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/config/RedisConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/config/RedisConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/analytics/AnalyticsControllerWebMvcTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/analytics/AnalyticsControllerWebMvcTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/url/UrlCreationControllerWebMvcTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/url/UrlCreationControllerWebMvcTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/url/UrlManagementControllerWebMvcTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/url/UrlManagementControllerWebMvcTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/AppRouter.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/AppRouter.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/assets/react.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/AnalyticsLineChart.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Dashboard/CreateNewShorten.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Dashboard/CreateNewShorten.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Dashboard/ShortenItem.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Dashboard/ShortenItem.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/PeakActivityCard.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/analytics/ClicksLineChart.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/analytics/DimensionBar.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/analytics/DimensionCard.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/analytics/PeakActivityCard.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/analytics/VelocityBadge.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/analyticsHelper.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/Button.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/Card.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/ConfirmDialog.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/DateRangePicker.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/EmptyState copy.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/EmptyState.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/Footer.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/Loader.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/Logo.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/Navbar.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/StatBlock.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/StatusBadge.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/TextField.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/link/LinkPreviewCard.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/link/QRCodeDisplay.jsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/dummyData/data.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/index.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/AboutPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/AboutPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/AnalyticsPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/AnalyticsPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/BioPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/BioPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/DashboardLayout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/DashboardLayout.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/LandingPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/LandingPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/LinkDetailPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/LinkDetailPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/LinkHistoryPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/LinkHistoryPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/LoginPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/LoginPage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/ProfilePage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/ProfilePage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/RegisterPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/RegisterPage.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
