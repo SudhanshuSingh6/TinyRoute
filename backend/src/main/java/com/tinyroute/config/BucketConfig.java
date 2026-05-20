@@ -27,21 +27,12 @@ public class BucketConfig {
     private String redisPassword;
 
     @Bean
+    @Bean
     public RedisClient redisClient() {
 
-        @Bean
-        public RedisClient redisClient () {
-
-            RedisURI.Builder builder =
-                    RedisURI.Builder.redis(redisHost, redisPort)
-                            .withSsl(true);
-
-            if (!redisPassword.isBlank()) {
-                builder.withPassword(redisPassword.toCharArray());
-            }
-
-            return RedisClient.create(builder.build());
-        }
+        RedisURI.Builder builder =
+                RedisURI.Builder.redis(redisHost, redisPort)
+                        .withSsl(true);
 
         if (!redisPassword.isBlank()) {
             builder.withPassword(redisPassword.toCharArray());
