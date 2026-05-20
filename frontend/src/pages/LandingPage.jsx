@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import Card from "../components/common/Card";
+import Card from "../components/Common/Card";
 import { useStoreContext } from "../contextApi/ContextApi";
 import { FaLink, FaChartLine, FaShieldAlt, FaBolt } from "react-icons/fa";
-import Button from "../components/common/Button";
-import Logo from "../components/common/Logo";
+import Button from "../components/Common/Button";
+import Logo from "../components/Common/Logo";
 
 const FEATURES = [
   { title: "Simple URL Shortening", desc: "Create short, memorable links in seconds. Our intuitive interface makes URL shortening effortless — no technical knowledge required.", icon: <FaLink /> },

@@ -1,6 +1,5 @@
 package com.tinyroute.controller.analytics;
 
-import com.tinyroute.controller.url.UrlRateLimitHelper;
 import com.tinyroute.infra.ratelimit.RateLimitEndpoint;
 import com.tinyroute.dto.analytics.response.LinkAnalyticsResponse;
 import com.tinyroute.entity.Role;
@@ -8,6 +7,7 @@ import com.tinyroute.entity.User;
 import com.tinyroute.exception.ApiException;
 import com.tinyroute.exception.GlobalExceptionHandler;
 import com.tinyroute.exception.RateLimitExceededException;
+import com.tinyroute.infra.ratelimit.RateLimitHelper;
 import com.tinyroute.service.analytics.AnalyticsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,13 +39,10 @@ class AnalyticsControllerWebMvcTest {
     private AnalyticsService analyticsService;
 
     @MockitoBean
-    private UrlRateLimitHelper rateLimitHelper;
+    private RateLimitHelper rateLimitHelper;
 
-    /** Produces a non-rate-limited RateLimitResult for a given user. */
-    private UrlRateLimitHelper.RateLimitResult allowedResult(User user) {
-        // RateLimitResult record signature: (User user, boolean isAdmin, ConsumptionProbe probe, RateLimitPlan limit)
-        // isAdmin = true → controller short-circuits rate-limit check and adds empty headers
-        return new UrlRateLimitHelper.RateLimitResult(user, true, null, null);
+    private RateLimitHelper.RateLimitResult allowedResult(User user) {
+        return new RateLimitHelper.RateLimitResult(user, true, null, null);
     }
 
     private User testUser(String username) {
@@ -159,8 +156,8 @@ class AnalyticsControllerWebMvcTest {
 
         User alice = testUser("alice");
         // isAdmin = false → rate limit is enforced; probe shows not consumed
-        UrlRateLimitHelper.RateLimitResult rateLimited =
-                new UrlRateLimitHelper.RateLimitResult(alice, false, exhaustedProbe, null);
+        RateLimitHelper.RateLimitResult rateLimited =
+                new RateLimitHelper.RateLimitResult(alice, false, exhaustedProbe, null);
 
         when(rateLimitHelper.getRateLimitResult(any(Principal.class), eq(RateLimitEndpoint.ANALYTICS)))
                 .thenReturn(rateLimited);
@@ -185,8 +182,8 @@ class AnalyticsControllerWebMvcTest {
         org.mockito.Mockito.when(consumedProbe.getRemainingTokens()).thenReturn(4L);
 
         User alice = testUser("alice");
-        UrlRateLimitHelper.RateLimitResult allowedWithLimit =
-                new UrlRateLimitHelper.RateLimitResult(alice, false, consumedProbe, null);
+        RateLimitHelper.RateLimitResult allowedWithLimit =
+                new RateLimitHelper.RateLimitResult(alice, false, consumedProbe, null);
 
         when(rateLimitHelper.getRateLimitResult(any(Principal.class), eq(RateLimitEndpoint.ANALYTICS)))
                 .thenReturn(allowedWithLimit);

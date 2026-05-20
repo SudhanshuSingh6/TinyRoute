@@ -1,9 +1,9 @@
 package com.tinyroute.controller.analytics;
 
 import com.tinyroute.infra.ratelimit.RateLimitEndpoint;
-import com.tinyroute.controller.url.UrlRateLimitHelper;
 import com.tinyroute.dto.analytics.request.AnalyticsQueryRequest;
 import com.tinyroute.dto.analytics.response.LinkAnalyticsResponse;
+import com.tinyroute.infra.ratelimit.RateLimitHelper;
 import com.tinyroute.service.analytics.AnalyticsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -31,7 +31,7 @@ import java.security.Principal;
 public class AnalyticsController {
 
     private final AnalyticsService analyticsService;
-    private final UrlRateLimitHelper rateLimitHelper;
+    private final RateLimitHelper rateLimitHelper;
 
     @Operation(
             summary = "Get analytics for a specific URL",
@@ -48,7 +48,7 @@ public class AnalyticsController {
             @PathVariable String shortUrl,
             @Valid @ModelAttribute AnalyticsQueryRequest request,
             Principal principal) {
-        UrlRateLimitHelper.RateLimitResult result =
+        RateLimitHelper.RateLimitResult result =
                 rateLimitHelper.getRateLimitResult(principal, RateLimitEndpoint.ANALYTICS);
 
         rateLimitHelper.enforceLimit(result, RateLimitEndpoint.ANALYTICS);

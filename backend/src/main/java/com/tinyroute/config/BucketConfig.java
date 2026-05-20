@@ -10,14 +10,23 @@ import io.lettuce.core.codec.RedisCodec;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 
 @Configuration
 @RequiredArgsConstructor
 public class BucketConfig {
 
+    @Value("${spring.data.redis.host}")
+    private String redisHost;
+
+    @Value("${spring.data.redis.port}")
+    private int redisPort;
+
     @Bean
     public RedisClient redisClient() {
-        return RedisClient.create("redis://localhost:6379");
+        return RedisClient.create(
+                "redis://" + redisHost + ":" + redisPort
+        );
     }
 
     @Bean

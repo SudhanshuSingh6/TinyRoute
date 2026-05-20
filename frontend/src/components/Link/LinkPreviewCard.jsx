@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { FaExternalLinkAlt } from "react-icons/fa";
-import Loader from "../common/Loader";
+import Loader from "../Common/Loader";
 
 const LinkPreviewCard = ({ preview, fallbackUrl, loading, error }) => {
   if (loading) {

@@ -4,8 +4,8 @@ import { FaCopy, FaDownload, FaQrcode } from "react-icons/fa";
 import toast from "react-hot-toast";
 import api from "../../api/api";
 import { API } from "../../utils/apiRoutes";
-import Button from "../common/Button";
-import Loader from "../common/Loader";
+import Button from "../Common/Button";
+import Loader from "../Common/Loader";
 
 const QRCodeDisplay = ({ shortUrl, onNotFound }) => {
   const [qrBlobUrl, setQrBlobUrl] = useState("");

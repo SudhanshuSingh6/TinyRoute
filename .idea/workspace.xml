@@ -5,72 +5,63 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="12b6e11e-18e5-4ca5-88fe-ac59d93ddba9" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/ShortUrlGenerationFailedException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/TinyRoute.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/material_theme_project_new.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/common/generator/SecureCodeGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/common/generator/SecureCodeGenerator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/common/hash/HashUtil.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/common/network/IpUtil.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/common/ratelimit/RateLimitPlan.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/infra/ratelimit/RateLimitPlan.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/common/time/DateTimeUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/common/time/DateTimeUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/config/DomainBlacklistConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/config/DomainBlacklistConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/config/BucketConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/config/BucketConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/analytics/AnalyticsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/analytics/AnalyticsController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/preview/PreviewController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/preview/PreviewController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/redirect/RedirectController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/redirect/RedirectController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/url/UrlCreationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/url/UrlCreationController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/url/UrlManagementController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/url/UrlManagementController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/url/UrlRateLimitHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/url/UrlRateLimitHelper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/user/PublicProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/user/PublicProfileController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/user/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/user/UserController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/ApiException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/ApiException.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/DomainBlacklistedException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/DomainBlacklistedException.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/DuplicateAliasException.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/EmailAlreadyExistsException.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/GlobalExceptionHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/InvalidDestinationUrlException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/InvalidDestinationUrlException.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/InvalidUrlException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/InvalidUrlException.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/LinkException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/UrlException.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/RateLimitExceededException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/RateLimitExceededException.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/ShortCodeExhaustedException.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/UsernameAlreadyExistsException.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/repository/url/UrlMappingRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/repository/url/UrlMappingRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/analytics/AnalyticsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/analytics/AnalyticsService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/analytics/AsyncAnalyticsWorker.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/analytics/AsyncAnalyticsWorker.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/auth/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/auth/AuthService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/ratelimit/RateLimitService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/ratelimit/RateLimitService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/redirect/UrlRedirectService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/redirect/UrlRedirectService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/controller/url/UrlRateLimitHelper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/mapper/AnalyticsMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/mapper/AnalyticsMapper.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlCreationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlCreationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlLookupService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlLookupService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlManagementService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlManagementService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlSafetyValidator.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlValidationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/url/UrlValidationService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/user/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/service/user/UserService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/TinyRouteApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/TinyRouteApplicationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/analytics/AnalyticsControllerWebMvcTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/analytics/AnalyticsControllerWebMvcTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/url/UrlCreationControllerWebMvcTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/url/UrlCreationControllerWebMvcTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/url/UrlManagementControllerWebMvcTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/url/UrlManagementControllerWebMvcTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/user/UserControllerWebMvcTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/user/UserControllerWebMvcTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/integration/RedirectConcurrencyIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/integration/RedirectConcurrencyIntegrationTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/integration/RedirectFlowIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/integration/RedirectFlowIntegrationTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/repository/PersistenceRulesDataJpaTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/repository/PersistenceRulesDataJpaTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/analytics/AnalyticsServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/analytics/AnalyticsServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/url/UrlCreationServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/url/UrlCreationServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/url/UrlManagementServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/url/UrlManagementServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/url/UrlRedirectServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/url/UrlRedirectServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/AppRouter.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/AppRouter.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/assets/react.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/AnalyticsLineChart.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Dashboard/CreateNewShorten.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Dashboard/CreateNewShorten.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/Dashboard/ShortenItem.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Dashboard/ShortenItem.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/link/LinkPreviewCard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/link/LinkPreviewCard.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/link/QRCodeDisplay.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/link/QRCodeDisplay.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/hooks/useQuery.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/hooks/useQuery.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/PeakActivityCard.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/analytics/ClicksLineChart.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/analytics/DimensionBar.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/analytics/DimensionCard.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/analytics/PeakActivityCard.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/analytics/VelocityBadge.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/analyticsHelper.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/Button.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/Card.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/ConfirmDialog.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/DateRangePicker.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/EmptyState copy.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/EmptyState.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/Footer.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/Loader.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/Logo.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/Navbar.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/StatBlock.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/StatusBadge.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/common/TextField.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/link/LinkPreviewCard.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/link/QRCodeDisplay.jsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/dummyData/data.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/index.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/AboutPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/AboutPage.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/pages/AnalyticsPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/AnalyticsPage.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/pages/BioPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/BioPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/DashboardLayout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/DashboardLayout.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/LandingPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/LandingPage.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/pages/LinkDetailPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/LinkDetailPage.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/pages/LinkHistoryPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/LinkHistoryPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/LoginPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/LoginPage.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/pages/ProfilePage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/ProfilePage.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/utils/apiRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/utils/apiRoutes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/RegisterPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/RegisterPage.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -145,9 +136,10 @@
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;Spring Boot.TinyRouteApplication.executor&quot;: &quot;Run&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/sudhanshu/Documents/TinyRoute&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/sudhanshu/Documents/FileSeek&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -165,7 +157,7 @@
     ]
   }
 }</component>
-  <component name="RunManager" selected="JUnit.java in tinyroute">
+  <component name="RunManager" selected="Spring Boot.TinyRouteApplication">
     <configuration name="All in tinyroute" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="tinyroute" />
       <option name="PACKAGE_NAME" value="" />

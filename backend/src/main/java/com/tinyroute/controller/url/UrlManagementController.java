@@ -9,6 +9,7 @@ import com.tinyroute.entity.User;
 import com.tinyroute.exception.ApiException;
 import com.tinyroute.exception.ErrorCodes;
 import com.tinyroute.exception.ErrorMessages;
+import com.tinyroute.infra.ratelimit.RateLimitHelper;
 import com.tinyroute.service.analytics.AnalyticsService;
 import com.tinyroute.service.url.UrlManagementService;
 import com.tinyroute.service.user.UserService;
@@ -41,7 +42,7 @@ public class UrlManagementController {
         private final UrlManagementService urlManagementService;
         private final AnalyticsService analyticsService;
         private final UserService userService;
-        private final UrlRateLimitHelper rateLimitHelper;
+        private final RateLimitHelper rateLimitHelper;
 
         @Operation(summary = "Get all my URLs")
         @ApiResponse(responseCode = "200", description = "List of URLs returned")
@@ -207,7 +208,7 @@ public class UrlManagementController {
         }
 
         private HttpHeaders applyRateLimitOrThrow(Principal principal, RateLimitEndpoint endpoint) {
-                UrlRateLimitHelper.RateLimitResult result =
+                RateLimitHelper.RateLimitResult result =
                         rateLimitHelper.getRateLimitResult(principal, endpoint);
 
                 rateLimitHelper.enforceLimit(result, endpoint);

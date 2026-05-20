@@ -3,16 +3,22 @@ import { Link, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
 import CopyToClipboard from "react-copy-to-clipboard";
-import { FaExternalLinkAlt, FaChartBar, FaTrash, FaLink, FaRegEdit, FaRegCalendarAlt } from "react-icons/fa";
+import {
+  FaExternalLinkAlt,
+  FaChartBar,
+  FaTrash,
+  FaLink,
+  FaRegEdit,
+  FaRegCalendarAlt,
+} from "react-icons/fa";
 import { IoCopy } from "react-icons/io5";
 import { LiaCheckSolid } from "react-icons/lia";
 import { MdOutlineAdsClick, MdTimelapse } from "react-icons/md";
 
-import Loader from "../components/common/Loader";
-import EmptyState from "../components/common/EmptyState";
-import Button from "../components/common/Button";
-import StatBlock from "../components/common/StatBlock";
-import StatusBadge from "../components/common/StatusBadge";
+import Loader from "../components/Common/Loader";
+import Button from "../components/Common/Button";
+import StatBlock from "../components/Common/StatBlock";
+import StatusBadge from "../components/Common/StatusBadge";
 import { useStoreContext } from "../contextApi/ContextApi";
 import {
   useFetchProfile,
@@ -45,14 +51,25 @@ const AvatarDisplay = ({ src, initials, size = 80 }) => {
   const [errored, setErrored] = useState(false);
   const show = src && isValidHttpUrl(src) && !errored;
   const style = {
-    width: size, height: size, borderRadius: "50%",
-    border: "4px solid white", boxShadow: "0 4px 14px rgba(0,0,0,0.12)",
+    width: size,
+    height: size,
+    borderRadius: "50%",
+    border: "4px solid white",
+    boxShadow: "0 4px 14px rgba(0,0,0,0.12)",
     flexShrink: 0,
   };
   return show ? (
-    <img src={src} alt={initials} onError={() => setErrored(true)} style={{ ...style, objectFit: "cover" }} />
+    <img
+      src={src}
+      alt={initials}
+      onError={() => setErrored(true)}
+      style={{ ...style, objectFit: "cover" }}
+    />
   ) : (
-    <div className="bg-custom-gradient flex items-center justify-center text-white font-bold" style={{ ...style, fontSize: size * 0.3 }}>
+    <div
+      className="bg-custom-gradient flex items-center justify-center text-white font-bold"
+      style={{ ...style, fontSize: size * 0.3 }}
+    >
       {initials}
     </div>
   );
@@ -77,7 +94,10 @@ const ProfileHero = ({ profile, initials, onSaved }) => {
     setEditing(true);
   };
 
-  const cancelEdit = () => { setEditing(false); setAvatarError(""); };
+  const cancelEdit = () => {
+    setEditing(false);
+    setAvatarError("");
+  };
 
   const handleSave = async () => {
     const trimmed = avatarDraft.trim();
@@ -111,45 +131,81 @@ const ProfileHero = ({ profile, initials, onSaved }) => {
 
         {/* Username shown once — never in edit form */}
         <div className="text-center">
-          <h1 className="text-xl font-bold font-montserrat text-slate-900">{profile.username}</h1>
-          {profile.email && <p className="text-slate-400 text-sm mt-0.5">{profile.email}</p>}
+          <h1 className="text-xl font-bold font-montserrat text-slate-900">
+            {profile.username}
+          </h1>
+          {profile.email && (
+            <p className="text-slate-400 text-sm mt-0.5">{profile.email}</p>
+          )}
         </div>
 
         {/* Bio / edit form — mutually exclusive */}
         {editing ? (
           <div className="w-full max-w-sm space-y-3">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-1">Avatar URL</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-1">
+                Avatar URL
+              </label>
               <input
                 type="url"
                 value={avatarDraft}
-                onChange={(e) => { setAvatarDraft(e.target.value); setAvatarError(""); }}
+                onChange={(e) => {
+                  setAvatarDraft(e.target.value);
+                  setAvatarError("");
+                }}
                 placeholder="https://example.com/avatar.png"
                 className={`w-full px-3 py-2 border rounded-md outline-none text-slate-700 text-sm ${avatarError ? "border-red-400" : "border-slate-300 focus:border-btnColor"}`}
               />
-              {avatarError && <p className="text-xs text-red-500 mt-1">{avatarError}</p>}
+              {avatarError && (
+                <p className="text-xs text-red-500 mt-1">{avatarError}</p>
+              )}
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-1">Bio</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-1">
+                Bio
+              </label>
               <textarea
-                rows={3} value={bioDraft} maxLength={300}
+                rows={3}
+                value={bioDraft}
+                maxLength={300}
                 onChange={(e) => setBioDraft(e.target.value)}
                 placeholder="Write a short bio…"
                 className="w-full px-3 py-2 border border-slate-300 focus:border-btnColor rounded-md outline-none text-slate-700 text-sm resize-none"
               />
-              <p className="text-xs text-slate-400 text-right">{bioDraft.length}/300</p>
+              <p className="text-xs text-slate-400 text-right">
+                {bioDraft.length}/300
+              </p>
             </div>
             <div className="flex gap-2 justify-center">
-              <Button variant="primary" size="sm" loading={saving} onClick={handleSave}>Save</Button>
-              <Button variant="ghost" size="sm" disabled={saving} onClick={cancelEdit}>Cancel</Button>
+              <Button
+                variant="primary"
+                size="sm"
+                loading={saving}
+                onClick={handleSave}
+              >
+                Save
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={saving}
+                onClick={cancelEdit}
+              >
+                Cancel
+              </Button>
             </div>
           </div>
         ) : (
           <div className="text-center max-w-sm">
             <p className="text-slate-600 text-sm leading-relaxed">
-              {profile.bio?.trim() || <span className="text-slate-400 italic">No bio yet.</span>}
+              {profile.bio?.trim() || (
+                <span className="text-slate-400 italic">No bio yet.</span>
+              )}
             </p>
-            <button onClick={openEdit} className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-btnColor hover:opacity-75 transition-opacity">
+            <button
+              onClick={openEdit}
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-btnColor hover:opacity-75 transition-opacity"
+            >
               <FaRegEdit className="text-xs" /> Edit Profile
             </button>
           </div>
@@ -164,7 +220,8 @@ const ProfileHero = ({ profile, initials, onSaved }) => {
 const LinkCard = ({ item, token, refetch }) => {
   const [copied, setCopied] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const subDomain = import.meta.env.VITE_REACT_SUBDOMAIN?.replace(/^https?:\/\//, "") ?? "";
+  const subDomain =
+    import.meta.env.VITE_REACT_SUBDOMAIN?.replace(/^https?:\/\//, "") ?? "";
   const fullShortUrl = `${import.meta.env.VITE_REACT_SUBDOMAIN}/${item.shortUrl}`;
 
   const handleDelete = async () => {
@@ -186,32 +243,66 @@ const LinkCard = ({ item, token, refetch }) => {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           {item.title && (
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-0.5 truncate">{item.title}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-0.5 truncate">
+              {item.title}
+            </p>
           )}
           <div className="flex items-center gap-2 flex-wrap">
-            <a href={fullShortUrl} target="_blank" rel="noreferrer"
-              className="text-btnColor font-semibold text-sm font-montserrat hover:underline flex items-center gap-1.5 break-all">
+            <a
+              href={fullShortUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-btnColor font-semibold text-sm font-montserrat hover:underline flex items-center gap-1.5 break-all"
+            >
               {subDomain}/{item.shortUrl}
               <FaExternalLinkAlt className="text-xs shrink-0" />
             </a>
             <StatusBadge status={item.status} />
           </div>
-          <p className="text-slate-500 text-xs mt-1 truncate" title={item.originalUrl}>{item.originalUrl}</p>
+          <p
+            className="text-slate-500 text-xs mt-1 truncate"
+            title={item.originalUrl}
+          >
+            {item.originalUrl}
+          </p>
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
-          <CopyToClipboard text={fullShortUrl} onCopy={() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }}>
-            <button className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold shadow-sm transition-all ${copied ? "bg-green-600 text-white" : "bg-btnColor text-white hover:opacity-90"}`}>
+          <CopyToClipboard
+            text={fullShortUrl}
+            onCopy={() => {
+              setCopied(true);
+
+              setTimeout(() => {
+                setCopied(false);
+              }, 1500);
+            }}
+          >
+            <button
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-semibold shadow-sm transition-all duration-200 ${
+                copied
+                  ? "bg-green-600 text-white"
+                  : "bg-white text-slate-600 border border-slate-300 hover:bg-slate-50 hover:border-slate-400"
+              }`}
+            >
               {copied ? <LiaCheckSolid /> : <IoCopy />}
+
               {copied ? "Copied" : "Copy"}
             </button>
           </CopyToClipboard>
-          <Link to={`/analytics/${item.shortUrl}`} title="Analytics"
-            className="p-2 rounded-md bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-600 transition-all">
+          <Link
+            to={`/analytics/${item.shortUrl}`}
+            title="Analytics"
+            className="p-2 rounded-md bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-600 transition-all"
+          >
             <FaChartBar className="text-sm" />
           </Link>
-          <button onClick={handleDelete} disabled={deleting} title="Delete"
-            className="p-2 rounded-md bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-all disabled:opacity-40">
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            title="Delete"
+            className="p-2 rounded-md bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500 transition-all disabled:opacity-40"
+          >
             <FaTrash className="text-sm" />
           </button>
         </div>
@@ -221,7 +312,9 @@ const LinkCard = ({ item, token, refetch }) => {
         <div className="flex items-center gap-1.5 text-green-700 font-semibold">
           <MdOutlineAdsClick className="text-base" />
           <span className="text-sm">{item.clickCount}</span>
-          <span className="text-xs text-slate-400 font-normal">{item.clickCount === 1 ? "click" : "clicks"}</span>
+          <span className="text-xs text-slate-400 font-normal">
+            {item.clickCount === 1 ? "click" : "clicks"}
+          </span>
         </div>
         <div className="flex items-center gap-1.5 text-slate-500 text-xs">
           <FaRegCalendarAlt />
@@ -234,7 +327,9 @@ const LinkCard = ({ item, token, refetch }) => {
           </div>
         )}
         {item.maxClicks && (
-          <span className="text-xs text-slate-400">Limit: {item.maxClicks.toLocaleString()}</span>
+          <span className="text-xs text-slate-400">
+            Limit: {item.maxClicks.toLocaleString()}
+          </span>
         )}
       </div>
     </div>
@@ -264,15 +359,24 @@ const ProfilePage = () => {
     navigate("/error");
   };
 
-  const { isLoading: profileLoading, data: profile, refetch: refetchProfile } =
-    useFetchProfile(token, handleAuthError);
+  const {
+    isLoading: profileLoading,
+    data: profile,
+    refetch: refetchProfile,
+  } = useFetchProfile(token, handleAuthError);
 
-  const { isLoading: linksLoading, data: links = [], refetch: refetchLinks } =
-    useFetchMyShortUrls(token, () => {});
+  const {
+    isLoading: linksLoading,
+    data: links = [],
+    refetch: refetchLinks,
+  } = useFetchMyShortUrls(token, () => {});
 
   const username = profile?.username ?? "User";
   const initials = useMemo(() => getInitials(username), [username]);
-  const totalClicks = useMemo(() => links.reduce((s, l) => s + (l.clickCount ?? 0), 0), [links]);
+  const totalClicks = useMemo(
+    () => links.reduce((s, l) => s + (l.clickCount ?? 0), 0),
+    [links],
+  );
 
   // Don't render anything until token check resolves
   if (!token) return null;
@@ -290,24 +394,38 @@ const ProfilePage = () => {
   return (
     <div className="min-h-page bg-slate-50 lg:px-14 sm:px-8 px-4 py-8">
       <div className="max-w-4xl mx-auto space-y-6">
-
         {/* Profile hero — avatar / username / bio / edit */}
-        <ProfileHero profile={profile} initials={initials} onSaved={refetchProfile} />
+        <ProfileHero
+          profile={profile}
+          initials={initials}
+          onSaved={refetchProfile}
+        />
 
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-4">
           <StatBlock label="Total Links" value={links.length} color="blue" />
-          <StatBlock label="Total Clicks" value={totalClicks.toLocaleString()} color="green" />
-          <StatBlock label="Bio Views" value={profile.bioPageViews ?? 0} color="purple" />
+          <StatBlock
+            label="Total Clicks"
+            value={totalClicks.toLocaleString()}
+            color="green"
+          />
+          <StatBlock
+            label="Bio Views"
+            value={profile.bioPageViews ?? 0}
+            color="purple"
+          />
         </div>
 
         {/* Links section */}
         <div>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-bold font-montserrat text-slate-900">My Links</h2>
+              <h2 className="text-lg font-bold font-montserrat text-slate-900">
+                My Links
+              </h2>
               <p className="text-xs text-slate-400 mt-0.5">
-                {links.length} {links.length === 1 ? "link" : "links"} · {totalClicks.toLocaleString()} total clicks
+                {links.length} {links.length === 1 ? "link" : "links"} ·{" "}
+                {totalClicks.toLocaleString()} total clicks
               </p>
             </div>
             <Link to="/dashboard">
@@ -330,7 +448,12 @@ const ProfilePage = () => {
           ) : (
             <div className="space-y-3">
               {links.map((item) => (
-                <LinkCard key={item.id} item={item} token={token} refetch={refetchLinks} />
+                <LinkCard
+                  key={item.id}
+                  item={item}
+                  token={token}
+                  refetch={refetchLinks}
+                />
               ))}
             </div>
           )}
@@ -339,8 +462,12 @@ const ProfilePage = () => {
         {/* Public bio page shortcut */}
         <div className="bg-white border border-slate-200 rounded-xl shadow-card px-5 py-4 flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-slate-700">Your public bio page</p>
-            <p className="text-xs text-slate-400 mt-0.5">Anyone can view this — it shows your bio and links.</p>
+            <p className="text-sm font-semibold text-slate-700">
+              Your public bio page
+            </p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Anyone can view this — it shows your bio and links.
+            </p>
           </div>
           <Link to={`/bio/${username}`} target="_blank" rel="noreferrer">
             <Button variant="secondary" size="sm">
@@ -348,7 +475,6 @@ const ProfilePage = () => {
             </Button>
           </Link>
         </div>
-
       </div>
     </div>
   );

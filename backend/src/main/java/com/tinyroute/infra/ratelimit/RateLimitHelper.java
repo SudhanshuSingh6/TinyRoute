@@ -1,7 +1,6 @@
-package com.tinyroute.controller.url;
+package com.tinyroute.infra.ratelimit;
 
-import com.tinyroute.infra.ratelimit.RateLimitEndpoint;
-import com.tinyroute.infra.ratelimit.RateLimitPlan;
+
 import com.tinyroute.entity.Role;
 import com.tinyroute.entity.User;
 import com.tinyroute.exception.ApiException;
@@ -21,7 +20,7 @@ import java.security.Principal;
 
 @Component
 @RequiredArgsConstructor
-public class UrlRateLimitHelper {
+public class RateLimitHelper {
 
     private final UserService userService;
     private final RateLimitService rateLimitService;
@@ -60,10 +59,6 @@ public class UrlRateLimitHelper {
         }
     }
 
-    private String buildRateLimitKey(RateLimitEndpoint endpoint, Long userId) {
-        return "rate_limit:" + endpoint.name() + ":" + userId;
-    }
-
     public HttpHeaders buildRateLimitHeaders(ConsumptionProbe probe, RateLimitPlan plan) {
         HttpHeaders headers = new HttpHeaders();
 
@@ -79,10 +74,12 @@ public class UrlRateLimitHelper {
     }
 
     public long extractRetryAfterSeconds(ConsumptionProbe probe) {
-        if (probe == null) {
-            return 0;
-        }
+        if (probe == null) return 0;
         return Math.max(1, probe.getNanosToWaitForRefill() / 1_000_000_000);
+    }
+
+    private String buildRateLimitKey(RateLimitEndpoint endpoint, Long userId) {
+        return "rate_limit:" + endpoint.name() + ":" + userId;
     }
 
     public record RateLimitResult(
@@ -90,5 +87,6 @@ public class UrlRateLimitHelper {
             boolean isAdmin,
             ConsumptionProbe probe,
             RateLimitPlan plan
-    ) {}
+    ) {
+    }
 }

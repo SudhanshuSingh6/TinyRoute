@@ -4,8 +4,8 @@ import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import TextField from "../components/common/TextField";
-import Button from "../components/common/Button";
+import TextField from "../components/Common/TextField";
+import Button from "../components/Common/Button";
 import api from "../api/api";
 
 const RegisterPage = () => {

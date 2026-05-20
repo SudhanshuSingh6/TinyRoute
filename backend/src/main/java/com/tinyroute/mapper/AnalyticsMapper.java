@@ -125,13 +125,27 @@ public class AnalyticsMapper {
                             Collectors.counting()
                     )));
         } else if (type == TimeBucketType.WEEK) {
+
+            LocalDate startDate =
+                    start.toLocalDate();
+
             grouped = new TreeMap<>(clicks.stream()
                     .collect(Collectors.groupingBy(
                             click -> {
-                                LocalDate weekStart = click.getClickDate()
-                                        .toLocalDate()
-                                        .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-                                return "Week of " + weekStart;
+                                long days =
+                                        Duration.between(
+                                                startDate.atStartOfDay(),
+                                                click.getClickDate()
+                                        ).toDays();
+                                long bucketIndex =
+                                        Math.max(0, days / 7);
+
+                                LocalDate bucketStart =
+                                        startDate.plusDays(
+                                                bucketIndex * 7
+                                        );
+                                return "Week of " +
+                                        bucketStart;
                             },
                             Collectors.counting()
                     )));
@@ -144,8 +158,55 @@ public class AnalyticsMapper {
                     )));
         }
 
-        return grouped.entrySet().stream()
-                .map(entry -> new ClickTimeBucketDTO(type, entry.getKey(), entry.getValue()))
+        Map<String, Long> completed = new TreeMap<>();
+
+        LocalDateTime current = start;
+
+        while (!current.isAfter(end)) {
+
+            String key = switch (type) {
+                case HOUR -> current.withMinute(0)
+                        .withSecond(0)
+                        .withNano(0)
+                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:00"));
+
+                case DAY -> current.toLocalDate().toString();
+
+                case WEEK -> "Week of " +
+                        current.toLocalDate();
+
+                case MONTH -> current.format(
+                        DateTimeFormatter.ofPattern("yyyy-MM")
+                );
+            };
+
+            completed.put(
+                    key,
+                    grouped.getOrDefault(key, 0L)
+            );
+
+            current = switch (type) {
+                case HOUR -> current.plusHours(1);
+                case DAY -> current.plusDays(1);
+                case WEEK -> {
+                    LocalDateTime next =
+                            current.plusDays(7);
+
+                    yield next.isAfter(end)
+                            ? end.plusSeconds(1)
+                            : next;
+                }
+                case MONTH -> current.plusMonths(1);
+            };
+        }
+
+        return completed.entrySet()
+                .stream()
+                .map(e -> new ClickTimeBucketDTO(
+                        type,
+                        e.getKey(),
+                        e.getValue()
+                ))
                 .toList();
     }
 

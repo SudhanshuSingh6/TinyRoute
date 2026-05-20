@@ -1,6 +1,7 @@
 package com.tinyroute.service.url;
 
 import com.tinyroute.common.generator.SecureCodeGenerator;
+import com.tinyroute.config.RoleLimitConfig;
 import com.tinyroute.dto.url.request.CreateShortUrlRequest;
 import com.tinyroute.dto.url.response.UrlDetailsResponse;
 import com.tinyroute.entity.Role;
@@ -41,6 +42,7 @@ public class UrlCreationService {
     private final UrlMappingRepository urlMappingRepository;
     private final UrlValidationService urlValidationService;
     private final UrlMapper urlMapper;
+    private final RoleLimitConfig roleLimits;
 
     public UrlDetailsResponse createShortUrl(User user,CreateShortUrlRequest request) {
         LocalDateTime now = LocalDateTime.now();
@@ -141,12 +143,11 @@ public class UrlCreationService {
     }
 
     private Integer determineMaxClicks(User user) {
-        if (user.getRole() == Role.ROLE_ADMIN) {
-            return 100000;
-        }
-        if (user.getRole() == Role.ROLE_PREMIUM) {
-            return 10000;
-        }
-        return 1000;
+        return switch (user.getRole()) {
+            case ROLE_ADMIN   -> roleLimits.getAdmin();
+            case ROLE_PREMIUM -> roleLimits.getPremium();
+            default           -> roleLimits.getUser();
+        };
     }
+
 }

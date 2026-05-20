@@ -10,6 +10,7 @@ import com.tinyroute.entity.UrlStatus;
 import com.tinyroute.entity.User;
 import com.tinyroute.exception.ApiException;
 import com.tinyroute.exception.GlobalExceptionHandler;
+import com.tinyroute.infra.ratelimit.RateLimitHelper;
 import com.tinyroute.service.analytics.AnalyticsService;
 import com.tinyroute.service.url.UrlManagementService;
 import com.tinyroute.service.user.UserService;
@@ -59,12 +60,12 @@ class UrlManagementControllerWebMvcTest {
     private UserService userService;
 
     @MockitoBean
-    private UrlRateLimitHelper rateLimitHelper;
+    private RateLimitHelper rateLimitHelper;
 
     @BeforeEach
     void setUpRateLimit() {
         when(rateLimitHelper.getRateLimitResult(any(java.security.Principal.class), any()))
-                .thenReturn(new UrlRateLimitHelper.RateLimitResult(testUser(), true, null, null));
+                .thenReturn(new RateLimitHelper.RateLimitResult(testUser(), true, null, null));
         when(userService.findByUsername("alice")).thenReturn(testUser());
     }
 

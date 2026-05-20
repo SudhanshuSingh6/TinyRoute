@@ -1,0 +1,43 @@
+services:
+
+  app:
+    build: .
+    container_name: tinyroute-app
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      - postgres
+      - redis
+
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tinyroute
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 12345678
+
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+
+      JWT_SECRET: 2a01ca2a04be21235364e7d0a8f501546734294d53237236532f0294f566038f179c86baa53c8253ff183a18d920b8e7b42ab79abee0a64d35d831c944517842
+
+      FRONTEND_URL: http://localhost:5173/
+
+  postgres:
+    image: postgres:15
+    container_name: tinyroute-postgres
+
+    environment:
+      POSTGRES_DB: tinyroute
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 12345678
+
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: tinyroute-redis
+
+    ports:
+      - "6379:6379"

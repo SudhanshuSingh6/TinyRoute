@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaLink } from "react-icons/fa";
-import Graph from "../components/dashboard/Graph";
-import ShortenPopUp from "../components/dashboard/ShortenPopUp";
-import ShortenUrlList from "../components/dashboard/ShortenUrlList";
-import Loader from "../components/common/Loader";
-import EmptyState from "../components/common/EmptyState";
-import Button from "../components/common/Button";
-import DateRangePicker from "../components/common/DateRangePicker";
+import Graph from "../components/Dashboard/Graph";
+import ShortenPopUp from "../components/Dashboard/ShortenPopUp";
+import ShortenUrlList from "../components/Dashboard/ShortenUrlList";
+import Loader from "../components/Common/Loader";
+import Button from "../components/Common/Button";
+import DateRangePicker from "../components/Common/DateRangePicker";
 import { useStoreContext } from "../contextApi/ContextApi";
 import { useFetchMyShortUrls, useFetchTotalClicks } from "../hooks/useQuery";
 

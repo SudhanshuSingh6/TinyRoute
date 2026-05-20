@@ -3,6 +3,7 @@ package com.tinyroute.controller.url;
 import com.tinyroute.infra.ratelimit.RateLimitEndpoint;
 import com.tinyroute.dto.url.request.CreateShortUrlRequest;
 import com.tinyroute.dto.url.response.UrlDetailsResponse;
+import com.tinyroute.infra.ratelimit.RateLimitHelper;
 import com.tinyroute.service.url.UrlCreationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -25,7 +26,7 @@ import java.security.Principal;
 public class UrlCreationController {
 
         private final UrlCreationService urlCreationService;
-        private final UrlRateLimitHelper rateLimitHelper;
+        private final RateLimitHelper rateLimitHelper;
 
         @Operation(summary = "Shorten a URL", description = "Creates a short URL. Supports custom alias, expiry date, click limit and title. Rate limited per role.")
         @ApiResponse(responseCode = "200", description = "URL shortened successfully")
@@ -38,7 +39,7 @@ public class UrlCreationController {
                 @Valid @RequestBody CreateShortUrlRequest request,
                 Principal principal
         ) {
-                UrlRateLimitHelper.RateLimitResult result =
+                RateLimitHelper.RateLimitResult result =
                         rateLimitHelper.getRateLimitResult(principal, RateLimitEndpoint.SHORTEN);
 
                 rateLimitHelper.enforceLimit(result, RateLimitEndpoint.SHORTEN);

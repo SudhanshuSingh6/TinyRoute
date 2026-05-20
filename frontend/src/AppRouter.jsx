@@ -1,8 +1,8 @@
 import { Outlet, Route, Routes } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
-import Navbar from "./components/common/Navbar";
-import Footer from "./components/common/Footer";
+import Navbar from "./components/Common/Navbar";
+import Footer from "./components/Common/Footer";
 import PrivateRoute from "./PrivateRoute";
 
 // Pages
@@ -35,12 +35,11 @@ const AppRouter = () => {
       <Toaster position="bottom-center" />
 
       <Routes>
-        <Route path="/bio/:username" element={<BioPage />} />
-
         <Route element={<MainLayout />}>
           {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/bio/:username" element={<BioPage />} />
           <Route path="/link/:shortUrl" element={<LinkDetailPage />} />
 
           {/* Auth routes */}

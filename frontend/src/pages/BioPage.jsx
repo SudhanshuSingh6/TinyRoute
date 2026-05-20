@@ -5,9 +5,8 @@ import { FaExternalLinkAlt, FaQrcode, FaLink } from "react-icons/fa";
 import { IoCopy } from "react-icons/io5";
 import { LiaCheckSolid } from "react-icons/lia";
 
-import Loader from "../components/common/Loader";
-import EmptyState from "../components/common/EmptyState";
-import Logo from "../components/common/Logo";
+import Loader from "../components/Common/Loader";
+import Logo from "../components/Common/Logo";
 import { useFetchBioPage } from "../hooks/useQuery";
 import api from "../api/api";
 import { API } from "../utils/apiRoutes";

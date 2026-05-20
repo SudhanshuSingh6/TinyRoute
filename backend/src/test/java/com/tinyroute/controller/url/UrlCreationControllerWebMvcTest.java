@@ -7,6 +7,7 @@ import com.tinyroute.dto.url.response.UrlDetailsResponse;
 import com.tinyroute.entity.Role;
 import com.tinyroute.entity.User;
 import com.tinyroute.exception.GlobalExceptionHandler;
+import com.tinyroute.infra.ratelimit.RateLimitHelper;
 import com.tinyroute.service.url.UrlCreationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,7 +46,7 @@ class UrlCreationControllerWebMvcTest {
     private UrlCreationService urlCreationService;
 
     @MockitoBean
-    private UrlRateLimitHelper rateLimitHelper;
+    private RateLimitHelper rateLimitHelper;
 
     private User principalUser;
 
@@ -53,7 +54,7 @@ class UrlCreationControllerWebMvcTest {
     void rateLimitAllowsRequests() {
         principalUser = testUser();
         when(rateLimitHelper.getRateLimitResult(any(Principal.class), eq(RateLimitEndpoint.SHORTEN)))
-                .thenReturn(new UrlRateLimitHelper.RateLimitResult(principalUser, true, null, null));
+                .thenReturn(new RateLimitHelper.RateLimitResult(principalUser, true, null, null));
     }
 
     @Test

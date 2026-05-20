@@ -26,12 +26,12 @@ import {
   useFetchAnalytics,
 } from "../../hooks/useQuery";
 import { useStoreContext } from "../../contextApi/ContextApi";
-import StatusBadge from "../common/StatusBadge";
-import ConfirmDialog from "../common/ConfirmDialog";
+import StatusBadge from "../Common/StatusBadge";
+import ConfirmDialog from "../Common/ConfirmDialog";
 import Graph from "./Graph";
-import DateRangePicker, { daysAgo, today } from "../common/DateRangePicker";
-import Button from "../common/Button";
-import Loader from "../common/Loader";
+import DateRangePicker, { daysAgo, today } from "../Common/DateRangePicker";
+import Button from "../Common/Button";
+import Loader from "../Common/Loader";
 
 const TERMINAL_STATUSES = ["EXPIRED", "CLICK_LIMIT_REACHED"];
 

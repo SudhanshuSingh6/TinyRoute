@@ -69,6 +69,7 @@ public class UserService {
 
     @Transactional
     public PublicProfileResponse getPublicProfile(String username) {
+
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> UrlException.notFound("Public profile not found."));
 
@@ -86,8 +87,10 @@ public class UserService {
         dto.setBio(profile.getBio());
         dto.setAvatarUrl(profile.getAvatarUrl());
         dto.setUrls(publicUrls);
+
         return dto;
     }
+
 
     public UserProfileDTO getProfile(String username) {
         return toProfileDto(findByUsername(username));

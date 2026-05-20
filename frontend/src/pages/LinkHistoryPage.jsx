@@ -2,8 +2,8 @@ import { useMemo } from "react";
 import dayjs from "dayjs";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaHistory } from "react-icons/fa";
-import Loader from "../components/common/Loader";
-import EmptyState from "../components/common/EmptyState";
+import Loader from "../components/Common/Loader";
+import EmptyState from "../components/Common/EmptyState";
 import { useStoreContext } from "../contextApi/ContextApi";
 import { useFetchLinkHistory } from "../hooks/useQuery";
 
