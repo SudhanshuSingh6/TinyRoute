@@ -6,6 +6,7 @@ import com.tinyroute.repository.url.UrlMappingRepository;
 import com.tinyroute.service.analytics.AsyncAnalyticsWorker;
 import com.tinyroute.service.analytics.UniqueVisitorRegistrationService;
 import com.tinyroute.infra.network.ClientIpService;
+import com.tinyroute.infra.cache.RedirectCacheService;
 import com.tinyroute.service.redirect.UrlRedirectService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +32,8 @@ class UrlRedirectServiceTest {
     private AsyncAnalyticsWorker asyncAnalyticsWorker;
     @Mock
     private ClientIpService clientIpService;
+    @Mock
+    private RedirectCacheService redirectCacheService;
 
     @InjectMocks
     private UrlRedirectService urlRedirectService;
@@ -64,7 +67,7 @@ class UrlRedirectServiceTest {
         UrlMapping result = urlRedirectService.getOriginalUrl("missing", requestFrom("1.1.1.1"));
 
         assertNull(result);
-        verify(asyncAnalyticsWorker, never()).recordClickEvent(any(UrlMapping.class), any(), any(), any(), any(), any());
+        verify(asyncAnalyticsWorker, never()).recordClickEvent(anyLong(), any(), any(), any(), any(), any());
         verifyNoInteractions(uniqueVisitorRegistrationService);
     }
 
@@ -80,7 +83,7 @@ class UrlRedirectServiceTest {
 
         assertEquals(UrlStatus.DISABLED, result.getStatus());
         verifyNoInteractions(uniqueVisitorRegistrationService);
-        verify(asyncAnalyticsWorker, never()).recordClickEvent(any(UrlMapping.class), any(), any(), any(), any(), any());
+        verify(asyncAnalyticsWorker, never()).recordClickEvent(anyLong(), any(), any(), any(), any(), any());
     }
 
     // ─── Expired link ───────────────────────────────────────────────────────────
@@ -97,7 +100,7 @@ class UrlRedirectServiceTest {
         assertEquals(UrlStatus.EXPIRED, result.getStatus());
         verify(urlMappingRepository).updateStatus(eq(20L), eq(UrlStatus.EXPIRED));
         verifyNoInteractions(uniqueVisitorRegistrationService);
-        verify(asyncAnalyticsWorker, never()).recordClickEvent(any(UrlMapping.class), any(), any(), any(), any(), any());
+        verify(asyncAnalyticsWorker, never()).recordClickEvent(anyLong(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -113,7 +116,7 @@ class UrlRedirectServiceTest {
         // Already EXPIRED — no redundant status update
         verify(urlMappingRepository, never()).updateStatus(anyLong(), any());
         verifyNoInteractions(uniqueVisitorRegistrationService);
-        verify(asyncAnalyticsWorker, never()).recordClickEvent(any(UrlMapping.class), any(), any(), any(), any(), any());
+        verify(asyncAnalyticsWorker, never()).recordClickEvent(anyLong(), any(), any(), any(), any(), any());
     }
 
     // ─── Click limit already reached ────────────────────────────────────────────
@@ -133,7 +136,7 @@ class UrlRedirectServiceTest {
         verify(urlMappingRepository).updateStatus(eq(30L), eq(UrlStatus.CLICK_LIMIT_REACHED));
         verify(urlMappingRepository, never()).save(any());
         verifyNoInteractions(uniqueVisitorRegistrationService);
-        verify(asyncAnalyticsWorker, never()).recordClickEvent(any(UrlMapping.class), any(), any(), any(), any(), any());
+        verify(asyncAnalyticsWorker, never()).recordClickEvent(anyLong(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -149,7 +152,7 @@ class UrlRedirectServiceTest {
 
         verify(urlMappingRepository, never()).updateStatus(anyLong(), any());
         verifyNoInteractions(uniqueVisitorRegistrationService);
-        verify(asyncAnalyticsWorker, never()).recordClickEvent(any(UrlMapping.class), any(), any(), any(), any(), any());
+        verify(asyncAnalyticsWorker, never()).recordClickEvent(anyLong(), any(), any(), any(), any(), any());
     }
 
     // ─── First (unique) visitor ─────────────────────────────────────────────────
@@ -172,7 +175,7 @@ class UrlRedirectServiceTest {
         verify(urlMappingRepository).updateLastClickedAt(eq(100L), any(LocalDateTime.class));
         // recordClickEvent first arg is the UrlMapping entity, not its ID
         verify(asyncAnalyticsWorker).recordClickEvent(
-                eq(mapping), eq("1.1.1.1"), eq("Mozilla/5.0"), eq("https://openai.com"),
+                eq(100L), eq("1.1.1.1"), eq("Mozilla/5.0"), eq("https://openai.com"),
                 eq("en-US,en;q=0.9"), any(LocalDateTime.class)
         );
     }
@@ -201,7 +204,7 @@ class UrlRedirectServiceTest {
         // lastClickedAt is still updated even for non-unique visits
         verify(urlMappingRepository).updateLastClickedAt(eq(200L), any(LocalDateTime.class));
         verify(asyncAnalyticsWorker).recordClickEvent(
-                eq(mapping), eq("8.8.8.8"), eq("Mozilla/5.0"), isNull(), isNull(), any(LocalDateTime.class)
+                eq(200L), eq("8.8.8.8"), eq("Mozilla/5.0"), isNull(), isNull(), any(LocalDateTime.class)
         );
     }
 

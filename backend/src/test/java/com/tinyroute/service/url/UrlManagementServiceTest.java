@@ -10,6 +10,7 @@ import com.tinyroute.entity.User;
 import com.tinyroute.exception.ApiException;
 import com.tinyroute.exception.InvalidUrlException;
 import com.tinyroute.exception.UrlException;
+import com.tinyroute.infra.cache.RedirectCacheService;
 import com.tinyroute.mapper.UrlMapper;
 import com.tinyroute.repository.analytics.ClickEventRepository;
 import com.tinyroute.repository.analytics.UrlUniqueVisitorRepository;
@@ -47,6 +48,8 @@ class UrlManagementServiceTest {
     private UrlValidationService urlValidationService;
     @Mock
     private UrlMapper urlMapper;
+    @Mock
+    private RedirectCacheService redirectCacheService;
 
     @InjectMocks
     private UrlManagementService urlManagementService;

@@ -72,7 +72,7 @@ class RedirectConcurrencyIntegrationTest {
         userRepository.deleteAll();
 
         doNothing().when(asyncAnalyticsWorker).recordClickEvent(
-                any(com.tinyroute.entity.UrlMapping.class),
+                anyLong(),
                 anyString(),
                 any(),
                 any(),

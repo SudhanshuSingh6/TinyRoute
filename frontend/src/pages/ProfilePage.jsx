@@ -352,7 +352,6 @@ const ProfilePage = () => {
   const handleAuthError = (err) => {
     if ([401, 403].includes(err?.response?.status)) {
       setToken(null);
-      localStorage.removeItem("JWT_TOKEN");
       navigate("/register", { replace: true });
       return;
     }

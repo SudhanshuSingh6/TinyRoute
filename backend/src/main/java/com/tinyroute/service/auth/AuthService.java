@@ -17,6 +17,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,11 +28,13 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final UserRepository       userRepository;
+    private final PasswordEncoder      passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final JwtService jwtService;
+    private final JwtService           jwtService;
+    private final RefreshTokenService  refreshTokenService;    // NEW
 
+    @Transactional
     public JwtAuthenticationResponse authenticateUser(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -43,10 +46,19 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        String jwt = jwtService.generateToken(userDetails);
 
-        return new JwtAuthenticationResponse(jwt);
+        String accessToken = jwtService.generateAccessToken(userDetails);
+
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "User not found after authentication: " + userDetails.getUsername()
+                ));
+
+        String rawRefreshToken = refreshTokenService.createRefreshToken(user);
+
+        return new JwtAuthenticationResponse(accessToken, rawRefreshToken);
     }
+
 
     @Transactional
     public void registerUser(RegisterRequest request) {
@@ -69,19 +81,19 @@ public class AuthService {
         try {
             userRepository.save(user);
         } catch (DataIntegrityViolationException ex) {
-            if (userRepository.existsByUsername(username)) {
-                throw AlreadyExistsException.username();
-            }
-            if (userRepository.existsByEmail(email)) {
-                throw AlreadyExistsException.email();
-            }
-            throw new ApiException(
-                    HttpStatus.CONFLICT,
-                    "REGISTRATION_FAILED",
-                    "Could not complete registration."
-            );
+            if (userRepository.existsByUsername(username)) throw AlreadyExistsException.username();
+            if (userRepository.existsByEmail(email))    throw AlreadyExistsException.email();
+            throw new ApiException(HttpStatus.CONFLICT, "REGISTRATION_FAILED",
+                    "Could not complete registration.");
         }
     }
+
+
+    @Transactional
+    public void logout(String rawRefreshToken) {
+        refreshTokenService.revoke(rawRefreshToken);
+    }
+
 
     private String normalizeUsername(String username) {
         return username == null ? null : username.trim();

@@ -1,6 +1,8 @@
 package com.tinyroute.service.redirect;
 
 import com.tinyroute.common.time.DateTimeUtil;
+import com.tinyroute.infra.cache.RedirectCacheEntry;
+import com.tinyroute.infra.cache.RedirectCacheService;
 import com.tinyroute.infra.network.ClientIpService;
 import com.tinyroute.entity.UrlMapping;
 import com.tinyroute.entity.UrlStatus;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -24,21 +27,33 @@ public class UrlRedirectService {
     private final UniqueVisitorRegistrationService uniqueVisitorRegistrationService;
     private final AsyncAnalyticsWorker asyncAnalyticsWorker;
     private final ClientIpService clientIpService;
+    private final RedirectCacheService redirectCacheService;
 
     @Transactional
     public UrlMapping getOriginalUrl(String shortUrl, HttpServletRequest request) {
-        UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
-        if (urlMapping == null) {
-            return null;
+
+        UrlMapping urlMapping;
+
+        Optional<RedirectCacheEntry> cached = redirectCacheService.get(shortUrl);
+
+        if (cached.isPresent()) {
+            urlMapping = redirectCacheService.toUrlMapping(cached.get());
+            log.debug("Cache HIT for '{}'", shortUrl);
+        } else {
+            urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
+            if (urlMapping == null) {
+                return null;
+            }
+            redirectCacheService.put(shortUrl, urlMapping);
+            log.debug("Cache MISS for '{}' — populated from Postgres", shortUrl);
         }
 
         LocalDateTime now = LocalDateTime.now();
-
         UrlStatus resolvedStatus = resolveStatus(urlMapping);
 
         if (urlMapping.getStatus() != resolvedStatus) {
             urlMappingRepository.updateStatus(urlMapping.getId(), resolvedStatus);
-            urlMapping.setStatus(resolvedStatus);
+            redirectCacheService.evict(shortUrl);
         }
 
         if (resolvedStatus != UrlStatus.ACTIVE) {
@@ -48,22 +63,24 @@ public class UrlRedirectService {
         String ip = clientIpService.resolveClientIp(request);
         String ipHash = clientIpService.hashIp(ip);
 
-        boolean isFirstVisit = uniqueVisitorRegistrationService.registerIfFirstVisit(
-                urlMapping.getId(), ipHash, now
-        );
+        boolean isFirstVisit = uniqueVisitorRegistrationService
+                .registerIfFirstVisit(urlMapping.getId(), ipHash, now);
 
-        // Always update last clicked
         urlMappingRepository.updateLastClickedAt(urlMapping.getId(), now);
-        urlMapping.setLastClickedAt(now);
 
-        // Only unique visitor increments clickCount
         if (isFirstVisit) {
             urlMappingRepository.incrementClickCount(urlMapping.getId());
-            urlMapping.setClickCount(urlMapping.getClickCount() + 1);
+
+            int newClickCount = urlMapping.getClickCount() + 1;
+
+            if (urlMapping.getMaxClicks() != null
+                    && newClickCount >= urlMapping.getMaxClicks()) {
+                redirectCacheService.evict(shortUrl);
+            }
         }
 
         asyncAnalyticsWorker.recordClickEvent(
-                urlMapping,
+                urlMapping.getId(),                      // ← ID only, not entity
                 ip,
                 request.getHeader("User-Agent"),
                 request.getHeader("Referer"),
@@ -73,20 +90,19 @@ public class UrlRedirectService {
 
         return urlMapping;
     }
+
+
     private UrlStatus resolveStatus(UrlMapping urlMapping) {
         if (urlMapping.getStatus() == UrlStatus.DISABLED) {
             return UrlStatus.DISABLED;
         }
-
         if (DateTimeUtil.isExpired(urlMapping.getExpiresAt())) {
             return UrlStatus.EXPIRED;
         }
-
         if (urlMapping.getMaxClicks() != null
                 && urlMapping.getClickCount() >= urlMapping.getMaxClicks()) {
             return UrlStatus.CLICK_LIMIT_REACHED;
         }
-
         return UrlStatus.ACTIVE;
     }
 }

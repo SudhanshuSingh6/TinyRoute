@@ -2,39 +2,27 @@ import { useQuery } from "react-query";
 import api from "../api/api";
 import { API } from "../utils/apiRoutes";
 
-const authHeaders = (token) => ({
-  "Content-Type": "application/json",
-  Accept: "application/json",
-  Authorization: "Bearer " + token,
-});
-
-export const useFetchMyShortUrls = (token, onError) => {
-  return useQuery(
-    "my-shortenurls",
-    async () => api.get(API.MY_URLS, { headers: authHeaders(token) }),
-    {
-      select: (data) =>
-        (data.data ?? []).sort(
-          (a, b) => new Date(b.createdDate) - new Date(a.createdDate)
-        ),
-      onError,
-      staleTime: 5000,
-      enabled: !!token,
-    }
-  );
+export const useFetchMyShortUrls = (onError) => {
+  return useQuery("my-shortenurls", async () => api.get(API.MY_URLS), {
+    select: (data) =>
+      (data.data ?? []).sort(
+        (a, b) => new Date(b.createdDate) - new Date(a.createdDate),
+      ),
+    onError,
+    staleTime: 5000,
+  });
 };
 
-export const useFetchTotalClicks = (token, onError, startDate, endDate) => {
+export const useFetchTotalClicks = (onError, startDate, endDate) => {
   const year = new Date().getFullYear();
   const from = startDate || `${year}-01-01`;
   const to = endDate || `${year}-12-31`;
 
   return useQuery(
     ["url-totalclick", from, to],
-    async () =>
-      api.get(`${API.TOTAL_CLICKS}?startDate=${from}&endDate=${to}`, {
-        headers: authHeaders(token),
-      }),
+
+    async () => api.get(`${API.TOTAL_CLICKS}?startDate=${from}&endDate=${to}`),
+
     {
       select: (data) =>
         Object.entries(data.data ?? {})
@@ -45,58 +33,53 @@ export const useFetchTotalClicks = (token, onError, startDate, endDate) => {
           })),
       onError,
       staleTime: 5000,
-      enabled: !!token && !!from && !!to,
-    }
+      enabled: !!from && !!to,
+    },
   );
 };
 
-export const useFetchProfile = (token, onError) => {
-  return useQuery(
-    "profile",
-    async () => api.get(API.PROFILE, { headers: authHeaders(token) }),
-    {
-      select: (data) => data.data,
-      onError,
-      staleTime: 10000,
-      enabled: !!token,
-    }
-  );
+export const useFetchProfile = (onError) => {
+  return useQuery("profile", async () => api.get(API.PROFILE), {
+    select: (data) => data.data,
+    onError,
+    staleTime: 10000,
+  });
 };
 
 export const useFetchAnalytics = (
-  token,
   shortUrl,
   startDate,
   endDate,
   onError,
-  enabled = true
+  enabled = true,
 ) => {
   return useQuery(
     ["analytics", shortUrl, startDate, endDate],
     async () =>
       api.get(
         `${API.ANALYTICS(shortUrl)}?startDate=${startDate}&endDate=${endDate}`,
-        { headers: authHeaders(token) }
       ),
     {
       select: (data) => data.data,
       onError,
       staleTime: 0,
-      enabled: enabled && !!token && !!shortUrl && !!startDate && !!endDate,
-    }
+      enabled: enabled && !!shortUrl && !!startDate && !!endDate,
+    },
   );
 };
 
-export const useFetchLinkHistory = (token, shortUrl, onError) => {
+export const useFetchLinkHistory = (shortUrl, onError) => {
   return useQuery(
     ["link-history", shortUrl],
-    async () => api.get(API.HISTORY(shortUrl), { headers: authHeaders(token) }),
+    async () => api.get(API.HISTORY(shortUrl)),
+
     {
       select: (data) => data.data,
       onError,
       staleTime: 0,
-      enabled: !!token && !!shortUrl,
-    }
+
+      enabled: !!shortUrl,
+    },
   );
 };
 
@@ -109,7 +92,7 @@ export const useFetchLinkPreview = (shortUrl, onError) => {
       onError,
       staleTime: 60000,
       enabled: !!shortUrl,
-    }
+    },
   );
 };
 
@@ -122,45 +105,40 @@ export const useFetchBioPage = (username, onError) => {
       onError,
       staleTime: 30000,
       enabled: !!username,
-    }
+    },
   );
 };
 
-export const createShortUrl = async (token, data) => {
-  const response = await api.post(API.SHORTEN, data, {
-    headers: authHeaders(token),
-  });
+export const createShortUrl = async (data) => {
+  const response = await api.post(API.SHORTEN, data);
+
   return response.data;
 };
 
-export const deleteShortUrl = async (token, shortUrl) => {
-  await api.delete(API.DELETE(shortUrl), { headers: authHeaders(token) });
+export const deleteShortUrl = async (shortUrl) => {
+  await api.delete(API.DELETE(shortUrl));
 };
 
-export const disableShortUrl = async (token, shortUrl) => {
-  const response = await api.patch(API.DISABLE(shortUrl), null, {
-    headers: authHeaders(token),
-  });
+export const disableShortUrl = async (shortUrl) => {
+  const response = await api.patch(API.DISABLE(shortUrl), null);
+
   return response.data;
 };
 
-export const enableShortUrl = async (token, shortUrl) => {
-  const response = await api.patch(API.ENABLE(shortUrl), null, {
-    headers: authHeaders(token),
-  });
+export const enableShortUrl = async (shortUrl) => {
+  const response = await api.patch(API.ENABLE(shortUrl), null);
+
   return response.data;
 };
 
-export const editShortUrl = async (token, shortUrl, data) => {
-  const response = await api.put(API.EDIT(shortUrl), data, {
-    headers: authHeaders(token),
-  });
+export const editShortUrl = async (shortUrl, data) => {
+  const response = await api.put(API.EDIT(shortUrl), data);
+
   return response.data;
 };
 
-export const updateProfile = async (token, data) => {
-  const response = await api.put(API.PROFILE, data, {
-    headers: authHeaders(token),
-  });
+export const updateProfile = async (data) => {
+  const response = await api.put(API.PROFILE, data);
+
   return response.data;
 };

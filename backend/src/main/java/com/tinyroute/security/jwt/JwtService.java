@@ -1,11 +1,13 @@
 package com.tinyroute.security.jwt;
 
 import com.tinyroute.security.UserDetailsImpl;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +27,12 @@ import java.util.stream.Collectors;
 public class JwtService {
 
     private static final String ROLES_CLAIM = "roles";
-    private static final int    MIN_SECRET_BYTES = 32; // 256 bits
+    private static final int MIN_SECRET_BYTES = 32; // 256 bits
+
+    private static final String TYPE_CLAIM = "type";
+
+    public static final String ACCESS_TOKEN = "access";
+    public static final String REFRESH_TOKEN = "refresh";
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -56,15 +63,42 @@ public class JwtService {
         }
     }
 
-    public String getJwtFromHeader(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+    public Claims parseClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(signingKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    public String getJwtFromCookies(HttpServletRequest request) {
+        if (request.getCookies() == null) {
+            return null;
+        }
+        for (Cookie cookie : request.getCookies()) {
+            if ("accessToken".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
         }
         return null;
     }
 
-    public String generateToken(UserDetailsImpl userDetails) {
+    public String getRefreshTokenFromCookies(
+            HttpServletRequest request) {
+
+        if (request.getCookies() == null) {
+            return null;
+        }
+        for (Cookie cookie : request.getCookies()) {
+            if ("refreshToken".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+
+        return null;
+    }
+
+    public String generateAccessToken(UserDetailsImpl userDetails) {
         String roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
@@ -72,6 +106,7 @@ public class JwtService {
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .claim(ROLES_CLAIM, roles)
+                .claim(TYPE_CLAIM,ACCESS_TOKEN)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + jwtExpirationMs))
                 .signWith(signingKey)
@@ -79,20 +114,11 @@ public class JwtService {
     }
 
     public String getUsernameFromJwtToken(String token) {
-        return Jwts.parser()
-                .verifyWith(signingKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
+        return parseClaims(token).getSubject();
     }
 
     public List<GrantedAuthority> getAuthoritiesFromJwtToken(String token) {
-        String roles = Jwts.parser()
-                .verifyWith(signingKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
+        String roles = parseClaims(token)
                 .get(ROLES_CLAIM, String.class);
 
         if (roles == null || roles.isBlank()) {
@@ -122,5 +148,17 @@ public class JwtService {
             log.error("Unexpected JWT validation error: {}", e.getMessage());
         }
         return false;
+    }
+
+    public boolean isAccessToken(String token) {
+        try {
+            String type = parseClaims(token)
+                    .get(TYPE_CLAIM, String.class);
+
+            return ACCESS_TOKEN.equals(type);
+
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

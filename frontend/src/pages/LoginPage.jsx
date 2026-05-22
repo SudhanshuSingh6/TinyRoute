@@ -30,7 +30,6 @@ const LoginPage = () => {
     try {
       const { data: response } = await api.post(API.LOGIN, data);
       setToken(response.token);
-      localStorage.setItem("JWT_TOKEN", JSON.stringify(response.token));
       toast.success("Login successful!");
       reset();
       navigate("/dashboard");

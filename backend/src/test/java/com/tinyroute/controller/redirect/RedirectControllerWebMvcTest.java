@@ -2,6 +2,8 @@ package com.tinyroute.controller.redirect;
 
 import com.tinyroute.entity.UrlMapping;
 import com.tinyroute.entity.UrlStatus;
+import com.tinyroute.infra.network.ClientIpService;
+import com.tinyroute.service.ratelimit.RateLimitService;
 import com.tinyroute.service.redirect.UrlRedirectService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,13 @@ class RedirectControllerWebMvcTest {
 
     @MockitoBean
     private UrlRedirectService urlRedirectService;
+
+    @MockitoBean
+    private RateLimitService rateLimitService;
+
+    @MockitoBean
+    private ClientIpService clientIpService;
+
 
     @Test
     void redirect_activeLink_returns302WithLocation() throws Exception {

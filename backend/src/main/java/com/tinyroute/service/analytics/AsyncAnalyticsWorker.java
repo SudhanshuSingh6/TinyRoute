@@ -6,10 +6,12 @@ import com.tinyroute.infra.geo.GeoLocationService;
 import com.tinyroute.infra.network.ClientIpService;
 import com.tinyroute.infra.ua.UserAgentParsingService;
 import com.tinyroute.repository.analytics.ClickEventRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -18,13 +20,15 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class AsyncAnalyticsWorker {
 
-    private final ClickEventRepository clickEventRepository;
-    private final GeoLocationService geoLocationService;
-    private final UserAgentParsingService userAgentParsingService;
-    private final ClientIpService clientIpService;
+    private final ClickEventRepository      clickEventRepository;
+    private final GeoLocationService        geoLocationService;
+    private final UserAgentParsingService   userAgentParsingService;
+    private final ClientIpService           clientIpService;
+    private final EntityManager             entityManager;
 
     @Async
-    public void recordClickEvent(UrlMapping urlMapping,
+    @Transactional
+    public void recordClickEvent(Long urlMappingId,
                                  String ip,
                                  String userAgentHeader,
                                  String referrerHeader,
@@ -33,12 +37,14 @@ public class AsyncAnalyticsWorker {
         try {
             ClickEvent clickEvent = new ClickEvent();
             clickEvent.setClickDate(clickDate);
-            clickEvent.setUrlMapping(urlMapping);
+
+            // getReference() returns a proxy — no SELECT issued, FK constraint satisfied
+            clickEvent.setUrlMapping(entityManager.getReference(UrlMapping.class, urlMappingId));
 
             String ipHash = clientIpService.hashIp(ip);
             clickEvent.setIpHash(ipHash);
 
-            // Geo (safe)
+            // Geo (safe — timeouts configured in AppConfig RestTemplate)
             GeoLocationService.GeoLocation geo = geoLocationService.lookup(ip);
             if (geo != null) {
                 clickEvent.setCountry(geo.country());
@@ -48,32 +54,28 @@ public class AsyncAnalyticsWorker {
                 clickEvent.setCity("Unknown");
             }
 
-            // UA (safe)
-            UserAgentParsingService.ParsedUserAgent parsedUserAgent =
+            // UA parsing (safe — never throws)
+            UserAgentParsingService.ParsedUserAgent parsedUa =
                     userAgentParsingService.parse(userAgentHeader);
-
-            if (parsedUserAgent != null) {
-                clickEvent.setBrowser(parsedUserAgent.browser());
-                clickEvent.setOs(parsedUserAgent.os());
-                clickEvent.setDeviceType(parsedUserAgent.deviceType());
+            if (parsedUa != null) {
+                clickEvent.setBrowser(parsedUa.browser());
+                clickEvent.setOs(parsedUa.os());
+                clickEvent.setDeviceType(parsedUa.deviceType());
             } else {
                 clickEvent.setBrowser("Unknown");
                 clickEvent.setOs("Unknown");
                 clickEvent.setDeviceType("Unknown");
             }
 
-            // Referrer
             clickEvent.setReferrer(referrerHeader != null ? referrerHeader : "Direct");
-
-            // Language
-            clickEvent.setLanguage(languageHeader != null ? languageHeader.split(",")[0] : "Unknown");
+            clickEvent.setLanguage(
+                    languageHeader != null ? languageHeader.split(",")[0] : "Unknown");
 
             clickEventRepository.save(clickEvent);
 
         } catch (Exception e) {
-            log.warn("Failed to record async click event for urlMappingId {}: {}",
-                    urlMapping.getId(),
-                    e.getMessage());
+            log.warn("Failed to record async click event for urlMappingId={}: {}",
+                    urlMappingId, e.getMessage());
         }
     }
 }

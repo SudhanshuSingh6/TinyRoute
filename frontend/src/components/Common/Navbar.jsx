@@ -4,8 +4,10 @@ import { IoIosMenu } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
 import { ChevronDown, Eye, LogOut, User } from "lucide-react";
 
-import { useStoreContext } from "../../contextApi/ContextApi";
 import { useFetchProfile } from "../../hooks/useQuery";
+import api from "../../api/api";
+import { API } from "../../utils/apiRoutes";
+
 import Logo from "./Logo";
 
 const NAV_LINKS = [
@@ -15,25 +17,38 @@ const NAV_LINKS = [
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { token, setToken } = useStoreContext();
+
   const path = useLocation().pathname;
 
   const [navbarOpen, setNavbarOpen] = useState(false);
+
   const [profileOpen, setProfileOpen] = useState(false);
+
   const profileMenuRef = useRef(null);
 
-  const { data: profile } = useFetchProfile(token);
+  const { data: profile, isError } = useFetchProfile();
+
+  const isAuthenticated = !!profile && !isError;
 
   const username = profile?.username;
+
   const avatarUrl = profile?.avatarUrl;
+
   const publicProfilePath = username ? `/bio/${username}` : "/profile";
+
   const initials = username?.charAt(0)?.toUpperCase() || "U";
 
-  const onLogOutHandler = () => {
-    setToken(null);
-    localStorage.removeItem("JWT_TOKEN");
+  const onLogOutHandler = async () => {
+    try {
+      await api.post(API.LOGOUT);
+    } catch (error) {
+      console.error(error);
+    }
+
     setProfileOpen(false);
+
     setNavbarOpen(false);
+
     navigate("/login");
   };
 
@@ -50,11 +65,13 @@ const Navbar = () => {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
+
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
     setProfileOpen(false);
+
     setNavbarOpen(false);
   }, [path]);
 
@@ -80,7 +97,7 @@ const Navbar = () => {
             </Link>
           ))}
 
-          {token && (
+          {isAuthenticated && (
             <Link
               to="/dashboard"
               className={`font-medium transition-all duration-150 ${
@@ -93,7 +110,7 @@ const Navbar = () => {
             </Link>
           )}
 
-          {!token ? (
+          {!isAuthenticated ? (
             <div className="flex items-center gap-2">
               <Link
                 to="/login"
@@ -101,6 +118,7 @@ const Navbar = () => {
               >
                 Sign In
               </Link>
+
               <Link
                 to="/register"
                 className="bg-white text-btnColor font-semibold px-4 py-1.5 rounded-md hover:bg-slate-100 transition-all duration-150 text-sm"
@@ -132,6 +150,7 @@ const Navbar = () => {
                 <span className="max-w-28 truncate">
                   {username || "Profile"}
                 </span>
+
                 <ChevronDown
                   size={16}
                   className={`transition-transform ${
@@ -205,7 +224,7 @@ const Navbar = () => {
             </Link>
           ))}
 
-          {token && (
+          {isAuthenticated && (
             <>
               <Link
                 to="/dashboard"
@@ -253,7 +272,7 @@ const Navbar = () => {
             </>
           )}
 
-          {!token && (
+          {!isAuthenticated && (
             <>
               <Link
                 to="/login"
@@ -261,6 +280,7 @@ const Navbar = () => {
               >
                 Sign In
               </Link>
+
               <Link
                 to="/register"
                 className="inline-block bg-white text-btnColor font-semibold px-4 py-1.5 rounded-md text-sm w-fit"
