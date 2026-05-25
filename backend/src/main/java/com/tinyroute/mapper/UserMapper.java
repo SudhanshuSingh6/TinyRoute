@@ -1,7 +1,7 @@
 package com.tinyroute.mapper;
 
 import com.tinyroute.dto.user.UserProfileDTO;
-import com.tinyroute.entity.User;
+import com.tinyroute.user.entity.User;
 import org.springframework.stereotype.Component;
 
 @Component

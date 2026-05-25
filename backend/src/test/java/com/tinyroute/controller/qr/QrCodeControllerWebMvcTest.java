@@ -2,7 +2,7 @@ package com.tinyroute.controller.qr;
 
 import com.tinyroute.exception.GlobalExceptionHandler;
 import com.tinyroute.exception.UrlException;
-import com.tinyroute.service.url.UrlLookupService;
+import com.tinyroute.url.service.UrlLookupService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

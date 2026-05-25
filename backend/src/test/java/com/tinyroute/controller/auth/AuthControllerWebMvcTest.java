@@ -1,18 +1,19 @@
 package com.tinyroute.controller.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tinyroute.dto.auth.request.LoginRequest;
-import com.tinyroute.dto.auth.request.RefreshTokenRequest;
-import com.tinyroute.dto.auth.request.RegisterRequest;
-import com.tinyroute.dto.auth.response.JwtAuthenticationResponse;
-import com.tinyroute.entity.Role;
-import com.tinyroute.entity.User;
+import com.tinyroute.auth.controller.AuthController;
+import com.tinyroute.auth.dto.LoginRequest;
+import com.tinyroute.auth.dto.RefreshTokenRequest;
+import com.tinyroute.auth.dto.RegisterRequest;
+import com.tinyroute.auth.dto.JwtAuthenticationResponse;
+import com.tinyroute.user.entity.Role;
+import com.tinyroute.user.entity.User;
 import com.tinyroute.exception.AlreadyExistsException;
 import com.tinyroute.exception.ApiException;
 import com.tinyroute.exception.GlobalExceptionHandler;
 import com.tinyroute.security.jwt.JwtService;
-import com.tinyroute.service.auth.AuthService;
-import com.tinyroute.service.auth.RefreshTokenService;
+import com.tinyroute.auth.service.AuthService;
+import com.tinyroute.auth.service.RefreshTokenService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

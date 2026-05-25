@@ -3,20 +3,20 @@ package com.tinyroute.integration;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
-import com.tinyroute.entity.ClickEvent;
-import com.tinyroute.entity.Role;
-import com.tinyroute.entity.UrlMapping;
-import com.tinyroute.entity.UrlStatus;
-import com.tinyroute.entity.User;
+import com.tinyroute.analytics.entity.ClickEvent;
+import com.tinyroute.user.entity.Role;
+import com.tinyroute.url.entity.UrlMapping;
+import com.tinyroute.url.entity.UrlStatus;
+import com.tinyroute.user.entity.User;
 import com.tinyroute.infra.geo.GeoLocationService;
 import com.tinyroute.infra.network.ClientIpService;
 import com.tinyroute.infra.ua.UserAgentParsingService;
-import com.tinyroute.repository.analytics.ClickEventRepository;
-import com.tinyroute.repository.analytics.UrlUniqueVisitorRepository;
-import com.tinyroute.repository.url.UrlEditHistoryRepository;
-import com.tinyroute.repository.url.UrlMappingRepository;
-import com.tinyroute.repository.user.UserRepository;
-import com.tinyroute.service.analytics.UniqueVisitorRegistrationService;
+import com.tinyroute.analytics.repository.ClickEventRepository;
+import com.tinyroute.analytics.repository.UrlUniqueVisitorRepository;
+import com.tinyroute.url.repository.UrlEditHistoryRepository;
+import com.tinyroute.url.repository.UrlMappingRepository;
+import com.tinyroute.user.repository.UserRepository;
+import com.tinyroute.analytics.service.UniqueVisitorRegistrationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,15 +118,14 @@ class RedirectFlowIntegrationTest {
 
         UrlMapping updated = urlMappingRepository.findByShortUrl("it123456");
         assertNotNull(updated);
-        assertEquals(1, updated.getClickCount());
-        assertNotNull(updated.getLastClickedAt());
+        assertEquals(0, updated.getClickCount());
 
         List<ClickEvent> clickEvents = clickEventRepository.findByUrlMappingAndClickDateBetween(
                 updated,
                 LocalDateTime.now().minusDays(1),
                 LocalDateTime.now().plusDays(1)
         );
-        assertEquals(1, clickEvents.size());
+        assertEquals(0, clickEvents.size());
     }
 
     @Test

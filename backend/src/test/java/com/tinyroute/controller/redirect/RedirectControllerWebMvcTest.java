@@ -1,7 +1,7 @@
 package com.tinyroute.controller.redirect;
 
-import com.tinyroute.entity.UrlMapping;
-import com.tinyroute.entity.UrlStatus;
+import com.tinyroute.url.entity.UrlMapping;
+import com.tinyroute.url.entity.UrlStatus;
 import com.tinyroute.infra.network.ClientIpService;
 import com.tinyroute.service.ratelimit.RateLimitService;
 import com.tinyroute.service.redirect.UrlRedirectService;

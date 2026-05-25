@@ -1,7 +1,7 @@
 package com.tinyroute.service;
 
-import com.tinyroute.entity.User;
-import com.tinyroute.repository.user.UserRepository;
+import com.tinyroute.user.entity.User;
+import com.tinyroute.user.repository.UserRepository;
 import com.tinyroute.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

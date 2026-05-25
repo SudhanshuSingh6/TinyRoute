@@ -1,14 +1,15 @@
 package com.tinyroute.service.redirect;
 
+import com.tinyroute.analytics.dto.ClickEventData;
+import com.tinyroute.analytics.infra.ClickEventDataBuilder;
+import com.tinyroute.analytics.service.RedisAnalyticsService;
 import com.tinyroute.common.time.DateTimeUtil;
 import com.tinyroute.infra.cache.RedirectCacheEntry;
 import com.tinyroute.infra.cache.RedirectCacheService;
 import com.tinyroute.infra.network.ClientIpService;
-import com.tinyroute.entity.UrlMapping;
-import com.tinyroute.entity.UrlStatus;
-import com.tinyroute.repository.url.UrlMappingRepository;
-import com.tinyroute.service.analytics.AsyncAnalyticsWorker;
-import com.tinyroute.service.analytics.UniqueVisitorRegistrationService;
+import com.tinyroute.url.entity.UrlMapping;
+import com.tinyroute.url.entity.UrlStatus;
+import com.tinyroute.url.repository.UrlMappingRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,10 +25,10 @@ import java.util.Optional;
 public class UrlRedirectService {
 
     private final UrlMappingRepository urlMappingRepository;
-    private final UniqueVisitorRegistrationService uniqueVisitorRegistrationService;
-    private final AsyncAnalyticsWorker asyncAnalyticsWorker;
     private final ClientIpService clientIpService;
     private final RedirectCacheService redirectCacheService;
+    private final RedisAnalyticsService redisAnalyticsService;
+    private final ClickEventDataBuilder clickEventDataBuilder;
 
     @Transactional
     public UrlMapping getOriginalUrl(String shortUrl, HttpServletRequest request) {
@@ -53,6 +54,7 @@ public class UrlRedirectService {
 
         if (urlMapping.getStatus() != resolvedStatus) {
             urlMappingRepository.updateStatus(urlMapping.getId(), resolvedStatus);
+            urlMapping.setStatus(resolvedStatus);
             redirectCacheService.evict(shortUrl);
         }
 
@@ -63,30 +65,16 @@ public class UrlRedirectService {
         String ip = clientIpService.resolveClientIp(request);
         String ipHash = clientIpService.hashIp(ip);
 
-        boolean isFirstVisit = uniqueVisitorRegistrationService
-                .registerIfFirstVisit(urlMapping.getId(), ipHash, now);
-
-        urlMappingRepository.updateLastClickedAt(urlMapping.getId(), now);
-
-        if (isFirstVisit) {
-            urlMappingRepository.incrementClickCount(urlMapping.getId());
-
-            int newClickCount = urlMapping.getClickCount() + 1;
-
-            if (urlMapping.getMaxClicks() != null
-                    && newClickCount >= urlMapping.getMaxClicks()) {
-                redirectCacheService.evict(shortUrl);
-            }
-        }
-
-        asyncAnalyticsWorker.recordClickEvent(
-                urlMapping.getId(),                      // ← ID only, not entity
+        ClickEventData clickEvent = clickEventDataBuilder.buildFromRequest(
+                urlMapping.getId(),
+                request,
                 ip,
+                ipHash,
                 request.getHeader("User-Agent"),
-                request.getHeader("Referer"),
-                request.getHeader("Accept-Language"),
                 now
         );
+
+        redisAnalyticsService.recordClick(clickEvent);
 
         return urlMapping;
     }
@@ -99,9 +87,17 @@ public class UrlRedirectService {
         if (DateTimeUtil.isExpired(urlMapping.getExpiresAt())) {
             return UrlStatus.EXPIRED;
         }
-        if (urlMapping.getMaxClicks() != null
-                && urlMapping.getClickCount() >= urlMapping.getMaxClicks()) {
-            return UrlStatus.CLICK_LIMIT_REACHED;
+        if (urlMapping.getMaxClicks() != null) {
+            long dbClicks = urlMapping.getClickCount();
+            long redisClicks = 0L;
+            try {
+                redisClicks = redisAnalyticsService.getUrlTotalClicks(urlMapping.getId());
+            } catch (Exception e) {
+                log.warn("Failed to read Redis clicks for urlId={}", urlMapping.getId(), e);
+            }
+            if (dbClicks + redisClicks >= urlMapping.getMaxClicks()) {
+                return UrlStatus.CLICK_LIMIT_REACHED;
+            }
         }
         return UrlStatus.ACTIVE;
     }

@@ -1,6 +1,6 @@
 package com.tinyroute.dto.error;
 
-import com.tinyroute.entity.UrlStatus;
+import com.tinyroute.url.entity.UrlStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

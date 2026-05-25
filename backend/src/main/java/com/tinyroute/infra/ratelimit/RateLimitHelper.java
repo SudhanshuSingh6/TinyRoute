@@ -1,14 +1,14 @@
 package com.tinyroute.infra.ratelimit;
 
 
-import com.tinyroute.entity.Role;
-import com.tinyroute.entity.User;
+import com.tinyroute.user.entity.Role;
+import com.tinyroute.user.entity.User;
 import com.tinyroute.exception.ApiException;
 import com.tinyroute.exception.ErrorCodes;
 import com.tinyroute.exception.ErrorMessages;
 import com.tinyroute.exception.RateLimitExceededException;
 import com.tinyroute.service.ratelimit.RateLimitService;
-import com.tinyroute.service.user.UserService;
+import com.tinyroute.user.service.UserService;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
 import lombok.RequiredArgsConstructor;

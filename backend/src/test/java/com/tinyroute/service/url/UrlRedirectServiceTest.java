@@ -1,13 +1,15 @@
 package com.tinyroute.service.url;
 
-import com.tinyroute.entity.UrlMapping;
-import com.tinyroute.entity.UrlStatus;
-import com.tinyroute.repository.url.UrlMappingRepository;
-import com.tinyroute.service.analytics.AsyncAnalyticsWorker;
-import com.tinyroute.service.analytics.UniqueVisitorRegistrationService;
+import com.tinyroute.analytics.dto.ClickEventData;
+import com.tinyroute.analytics.infra.ClickEventDataBuilder;
+import com.tinyroute.analytics.service.RedisAnalyticsService;
+import com.tinyroute.url.entity.UrlMapping;
+import com.tinyroute.url.entity.UrlStatus;
+import com.tinyroute.url.repository.UrlMappingRepository;
 import com.tinyroute.infra.network.ClientIpService;
 import com.tinyroute.infra.cache.RedirectCacheService;
 import com.tinyroute.service.redirect.UrlRedirectService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -27,18 +30,23 @@ class UrlRedirectServiceTest {
     @Mock
     private UrlMappingRepository urlMappingRepository;
     @Mock
-    private UniqueVisitorRegistrationService uniqueVisitorRegistrationService;
-    @Mock
-    private AsyncAnalyticsWorker asyncAnalyticsWorker;
-    @Mock
     private ClientIpService clientIpService;
     @Mock
     private RedirectCacheService redirectCacheService;
+    @Mock
+    private RedisAnalyticsService redisAnalyticsService;
+    @Mock
+    private ClickEventDataBuilder clickEventDataBuilder;
 
     @InjectMocks
     private UrlRedirectService urlRedirectService;
 
     // ─── helper ────────────────────────────────────────────────────────────────
+
+    @BeforeEach
+    void setUp() {
+        when(redirectCacheService.get(anyString())).thenReturn(Optional.empty());
+    }
 
     private MockHttpServletRequest requestFrom(String ip) {
         MockHttpServletRequest req = new MockHttpServletRequest();
@@ -58,6 +66,34 @@ class UrlRedirectServiceTest {
         return m;
     }
 
+    private ClickEventData stubRecordedClick(UrlMapping mapping, MockHttpServletRequest request) {
+        String ip = request.getRemoteAddr();
+        String ipHash = "hash-" + ip;
+        ClickEventData event = ClickEventData.builder()
+                .urlMappingId(mapping.getId())
+                .ip(ip)
+                .ipHash(ipHash)
+                .userAgent(request.getHeader("User-Agent"))
+                .referer(request.getHeader("Referer"))
+                .language(request.getHeader("Accept-Language"))
+                .clickTime(LocalDateTime.now())
+                .build();
+
+        when(clientIpService.resolveClientIp(request)).thenReturn(ip);
+        when(clientIpService.hashIp(ip)).thenReturn(ipHash);
+        when(clickEventDataBuilder.buildFromRequest(
+                eq(mapping.getId()),
+                eq(request),
+                eq(ip),
+                eq(ipHash),
+                eq(request.getHeader("User-Agent")),
+                any(LocalDateTime.class)
+        )).thenReturn(event);
+        when(redisAnalyticsService.recordClick(mapping, event)).thenReturn(true);
+
+        return event;
+    }
+
     // ─── Short URL not found ────────────────────────────────────────────────────
 
     @Test
@@ -67,8 +103,8 @@ class UrlRedirectServiceTest {
         UrlMapping result = urlRedirectService.getOriginalUrl("missing", requestFrom("1.1.1.1"));
 
         assertNull(result);
-        verify(asyncAnalyticsWorker, never()).recordClickEvent(anyLong(), any(), any(), any(), any(), any());
-        verifyNoInteractions(uniqueVisitorRegistrationService);
+        verifyNoInteractions(clickEventDataBuilder);
+        verify(redisAnalyticsService, never()).recordClick(any(), any());
     }
 
     // ─── Disabled link ──────────────────────────────────────────────────────────
@@ -82,8 +118,8 @@ class UrlRedirectServiceTest {
         UrlMapping result = urlRedirectService.getOriginalUrl("dis12345", requestFrom("1.1.1.1"));
 
         assertEquals(UrlStatus.DISABLED, result.getStatus());
-        verifyNoInteractions(uniqueVisitorRegistrationService);
-        verify(asyncAnalyticsWorker, never()).recordClickEvent(anyLong(), any(), any(), any(), any(), any());
+        verifyNoInteractions(clickEventDataBuilder);
+        verify(redisAnalyticsService, never()).recordClick(any(), any());
     }
 
     // ─── Expired link ───────────────────────────────────────────────────────────
@@ -99,8 +135,8 @@ class UrlRedirectServiceTest {
 
         assertEquals(UrlStatus.EXPIRED, result.getStatus());
         verify(urlMappingRepository).updateStatus(eq(20L), eq(UrlStatus.EXPIRED));
-        verifyNoInteractions(uniqueVisitorRegistrationService);
-        verify(asyncAnalyticsWorker, never()).recordClickEvent(anyLong(), any(), any(), any(), any(), any());
+        verifyNoInteractions(clickEventDataBuilder);
+        verify(redisAnalyticsService, never()).recordClick(any(), any());
     }
 
     @Test
@@ -115,8 +151,8 @@ class UrlRedirectServiceTest {
 
         // Already EXPIRED — no redundant status update
         verify(urlMappingRepository, never()).updateStatus(anyLong(), any());
-        verifyNoInteractions(uniqueVisitorRegistrationService);
-        verify(asyncAnalyticsWorker, never()).recordClickEvent(anyLong(), any(), any(), any(), any(), any());
+        verifyNoInteractions(clickEventDataBuilder);
+        verify(redisAnalyticsService, never()).recordClick(any(), any());
     }
 
     // ─── Click limit already reached ────────────────────────────────────────────
@@ -128,6 +164,7 @@ class UrlRedirectServiceTest {
         mapping.setMaxClicks(5);
 
         when(urlMappingRepository.findByShortUrl("limit123")).thenReturn(mapping);
+        when(redisAnalyticsService.getUrlTotalClicks(30L)).thenReturn(0L);
 
         UrlMapping result = urlRedirectService.getOriginalUrl("limit123", new MockHttpServletRequest());
 
@@ -135,8 +172,8 @@ class UrlRedirectServiceTest {
         // Service must call updateStatus — NOT save()
         verify(urlMappingRepository).updateStatus(eq(30L), eq(UrlStatus.CLICK_LIMIT_REACHED));
         verify(urlMappingRepository, never()).save(any());
-        verifyNoInteractions(uniqueVisitorRegistrationService);
-        verify(asyncAnalyticsWorker, never()).recordClickEvent(anyLong(), any(), any(), any(), any(), any());
+        verifyNoInteractions(clickEventDataBuilder);
+        verify(redisAnalyticsService, never()).recordClick(any(), any());
     }
 
     @Test
@@ -147,12 +184,13 @@ class UrlRedirectServiceTest {
         mapping.setMaxClicks(10);
 
         when(urlMappingRepository.findByShortUrl("limitx22")).thenReturn(mapping);
+        when(redisAnalyticsService.getUrlTotalClicks(31L)).thenReturn(0L);
 
         urlRedirectService.getOriginalUrl("limitx22", new MockHttpServletRequest());
 
         verify(urlMappingRepository, never()).updateStatus(anyLong(), any());
-        verifyNoInteractions(uniqueVisitorRegistrationService);
-        verify(asyncAnalyticsWorker, never()).recordClickEvent(anyLong(), any(), any(), any(), any(), any());
+        verifyNoInteractions(clickEventDataBuilder);
+        verify(redisAnalyticsService, never()).recordClick(any(), any());
     }
 
     // ─── First (unique) visitor ─────────────────────────────────────────────────
@@ -162,22 +200,15 @@ class UrlRedirectServiceTest {
         UrlMapping mapping = activeMapping(100L, "abc12345");
 
         when(urlMappingRepository.findByShortUrl("abc12345")).thenReturn(mapping);
-        when(uniqueVisitorRegistrationService.registerIfFirstVisit(
-                eq(100L), any(), any(LocalDateTime.class)
-        )).thenReturn(true);
 
         MockHttpServletRequest request = requestFrom("1.1.1.1");
-        when(clientIpService.resolveClientIp(request)).thenReturn("1.1.1.1");
+        ClickEventData event = stubRecordedClick(mapping, request);
         UrlMapping result = urlRedirectService.getOriginalUrl("abc12345", request);
 
         assertNotNull(result);
-        verify(urlMappingRepository).incrementClickCount(eq(100L));
-        verify(urlMappingRepository).updateLastClickedAt(eq(100L), any(LocalDateTime.class));
-        // recordClickEvent first arg is the UrlMapping entity, not its ID
-        verify(asyncAnalyticsWorker).recordClickEvent(
-                eq(100L), eq("1.1.1.1"), eq("Mozilla/5.0"), eq("https://openai.com"),
-                eq("en-US,en;q=0.9"), any(LocalDateTime.class)
-        );
+        verify(redisAnalyticsService).recordClick(mapping, event);
+        verify(urlMappingRepository, never()).incrementClickCount(anyLong());
+        verify(urlMappingRepository, never()).updateStatus(eq(100L), eq(UrlStatus.CLICK_LIMIT_REACHED));
     }
 
     // ─── Duplicate (non-unique) visitor ─────────────────────────────────────────
@@ -188,24 +219,17 @@ class UrlRedirectServiceTest {
         mapping.setClickCount(10);
 
         when(urlMappingRepository.findByShortUrl("dup12345")).thenReturn(mapping);
-        when(uniqueVisitorRegistrationService.registerIfFirstVisit(
-                eq(200L), any(), any(LocalDateTime.class)
-        )).thenReturn(false);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRemoteAddr("8.8.8.8");
         request.addHeader("User-Agent", "Mozilla/5.0");
 
-        when(clientIpService.resolveClientIp(request)).thenReturn("8.8.8.8");
+        ClickEventData event = stubRecordedClick(mapping, request);
 
         urlRedirectService.getOriginalUrl("dup12345", request);
 
+        verify(redisAnalyticsService).recordClick(mapping, event);
         verify(urlMappingRepository, never()).incrementClickCount(anyLong());
-        // lastClickedAt is still updated even for non-unique visits
-        verify(urlMappingRepository).updateLastClickedAt(eq(200L), any(LocalDateTime.class));
-        verify(asyncAnalyticsWorker).recordClickEvent(
-                eq(200L), eq("8.8.8.8"), eq("Mozilla/5.0"), isNull(), isNull(), any(LocalDateTime.class)
-        );
     }
 
     // ─── Click limit reached on THIS unique visit ────────────────────────────────
@@ -217,19 +241,17 @@ class UrlRedirectServiceTest {
         mapping.setMaxClicks(5);
 
         when(urlMappingRepository.findByShortUrl("edge1234")).thenReturn(mapping);
-        when(uniqueVisitorRegistrationService.registerIfFirstVisit(
-                eq(300L), any(), any(LocalDateTime.class)
-        )).thenReturn(true); // this IS the 5th unique visitor
+        when(redisAnalyticsService.getUrlTotalClicks(300L)).thenReturn(0L);
 
         MockHttpServletRequest req = requestFrom("5.5.5.5");
-        when(clientIpService.resolveClientIp(req)).thenReturn("5.5.5.5");
+        ClickEventData event = stubRecordedClick(mapping, req);
         urlRedirectService.getOriginalUrl("edge1234", req);
 
-        verify(urlMappingRepository).incrementClickCount(eq(300L));
+        verify(redisAnalyticsService).recordClick(mapping, event);
         // Boundary rule: reaching max on this click still allows current redirect.
         // Blocking should start from the next request.
         verify(urlMappingRepository, never()).updateStatus(eq(300L), eq(UrlStatus.CLICK_LIMIT_REACHED));
-        assertEquals(5, mapping.getClickCount());
+        assertEquals(4, mapping.getClickCount());
         assertEquals(UrlStatus.ACTIVE, mapping.getStatus());
     }
 
@@ -243,12 +265,9 @@ class UrlRedirectServiceTest {
         mapping.setExpiresAt(null);
 
         when(urlMappingRepository.findByShortUrl("free1234")).thenReturn(mapping);
-        when(uniqueVisitorRegistrationService.registerIfFirstVisit(
-                eq(400L), any(), any(LocalDateTime.class)
-        )).thenReturn(true);
 
         MockHttpServletRequest req = requestFrom("2.2.2.2");
-        when(clientIpService.resolveClientIp(req)).thenReturn("2.2.2.2");
+        stubRecordedClick(mapping, req);
         UrlMapping result = urlRedirectService.getOriginalUrl("free1234", req);
 
         assertEquals(UrlStatus.ACTIVE, result.getStatus());
@@ -263,12 +282,9 @@ class UrlRedirectServiceTest {
         mapping.setExpiresAt(LocalDateTime.now().plusDays(7));
 
         when(urlMappingRepository.findByShortUrl("futx1234")).thenReturn(mapping);
-        when(uniqueVisitorRegistrationService.registerIfFirstVisit(
-                eq(500L), any(), any(LocalDateTime.class)
-        )).thenReturn(true);
 
         MockHttpServletRequest req = requestFrom("3.3.3.3");
-        when(clientIpService.resolveClientIp(req)).thenReturn("3.3.3.3");
+        stubRecordedClick(mapping, req);
         UrlMapping result = urlRedirectService.getOriginalUrl("futx1234", req);
 
         assertEquals(UrlStatus.ACTIVE, result.getStatus());

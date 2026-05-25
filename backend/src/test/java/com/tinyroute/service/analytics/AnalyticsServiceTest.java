@@ -1,15 +1,16 @@
 package com.tinyroute.service.analytics;
 
-import com.tinyroute.dto.analytics.request.AnalyticsQueryRequest;
-import com.tinyroute.dto.analytics.response.LinkAnalyticsResponse;
-import com.tinyroute.entity.ClickEvent;
-import com.tinyroute.entity.UrlMapping;
-import com.tinyroute.entity.User;
+import com.tinyroute.analytics.service.AnalyticsService;
+import com.tinyroute.analytics.dto.AnalyticsQueryRequest;
+import com.tinyroute.analytics.dto.LinkAnalyticsResponse;
+import com.tinyroute.analytics.entity.ClickEvent;
+import com.tinyroute.url.entity.UrlMapping;
+import com.tinyroute.user.entity.User;
 import com.tinyroute.exception.ApiException;
-import com.tinyroute.mapper.AnalyticsMapper;
-import com.tinyroute.repository.analytics.ClickEventRepository;
-import com.tinyroute.repository.analytics.UrlUniqueVisitorRepository;
-import com.tinyroute.repository.url.UrlMappingRepository;
+import com.tinyroute.analytics.mapper.AnalyticsMapper;
+import com.tinyroute.analytics.repository.ClickEventRepository;
+import com.tinyroute.analytics.repository.UrlUniqueVisitorRepository;
+import com.tinyroute.url.repository.UrlMappingRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

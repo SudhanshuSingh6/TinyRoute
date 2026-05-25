@@ -1,9 +1,9 @@
 package com.tinyroute.repository;
 
-import com.tinyroute.entity.UrlMapping;
-import com.tinyroute.entity.User;
-import com.tinyroute.repository.url.UrlMappingRepository;
-import com.tinyroute.repository.user.UserRepository;
+import com.tinyroute.url.entity.UrlMapping;
+import com.tinyroute.user.entity.User;
+import com.tinyroute.url.repository.UrlMappingRepository;
+import com.tinyroute.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

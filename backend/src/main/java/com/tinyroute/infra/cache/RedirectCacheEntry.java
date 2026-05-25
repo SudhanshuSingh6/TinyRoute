@@ -1,6 +1,6 @@
 package com.tinyroute.infra.cache;
 
-import com.tinyroute.entity.UrlStatus;
+import com.tinyroute.url.entity.UrlStatus;
 
 import java.time.LocalDateTime;
 

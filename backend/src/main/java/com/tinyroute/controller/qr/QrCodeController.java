@@ -1,6 +1,6 @@
 package com.tinyroute.controller.qr;
 
-import com.tinyroute.service.url.UrlLookupService;
+import com.tinyroute.url.service.UrlLookupService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

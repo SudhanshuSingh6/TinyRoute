@@ -1,10 +1,10 @@
 package com.tinyroute.mapper;
 
-import com.tinyroute.dto.url.response.EditHistoryDTO;
-import com.tinyroute.dto.url.response.UrlDetailsResponse;
-import com.tinyroute.dto.user.response.PublicUrlDTO;
-import com.tinyroute.entity.UrlEditHistory;
-import com.tinyroute.entity.UrlMapping;
+import com.tinyroute.url.dto.EditHistoryDTO;
+import com.tinyroute.url.dto.UrlDetailsResponse;
+import com.tinyroute.user.dto.PublicUrlDTO;
+import com.tinyroute.url.entity.UrlEditHistory;
+import com.tinyroute.url.entity.UrlMapping;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,7 +19,6 @@ public class UrlMapper {
         dto.setClickCount(urlMapping.getClickCount());
         dto.setCreatedDate(urlMapping.getCreatedDate());
         dto.setExpiresAt(urlMapping.getExpiresAt());
-        dto.setLastClickedAt(urlMapping.getLastClickedAt());
         dto.setMaxClicks(urlMapping.getMaxClicks());
         dto.setStatus(urlMapping.getStatus());
         return dto;

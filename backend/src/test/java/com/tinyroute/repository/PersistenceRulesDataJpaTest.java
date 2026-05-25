@@ -1,17 +1,17 @@
 package com.tinyroute.repository;
 
-import com.tinyroute.entity.ClickEvent;
-import com.tinyroute.entity.Role;
-import com.tinyroute.entity.UrlEditHistory;
-import com.tinyroute.entity.UrlMapping;
-import com.tinyroute.entity.UrlStatus;
-import com.tinyroute.entity.UrlUniqueVisitor;
-import com.tinyroute.entity.User;
-import com.tinyroute.repository.analytics.ClickEventRepository;
-import com.tinyroute.repository.analytics.UrlUniqueVisitorRepository;
-import com.tinyroute.repository.url.UrlEditHistoryRepository;
-import com.tinyroute.repository.url.UrlMappingRepository;
-import com.tinyroute.repository.user.UserRepository;
+import com.tinyroute.analytics.entity.ClickEvent;
+import com.tinyroute.user.entity.Role;
+import com.tinyroute.url.entity.UrlEditHistory;
+import com.tinyroute.url.entity.UrlMapping;
+import com.tinyroute.url.entity.UrlStatus;
+import com.tinyroute.analytics.entity.UrlUniqueVisitor;
+import com.tinyroute.user.entity.User;
+import com.tinyroute.analytics.repository.ClickEventRepository;
+import com.tinyroute.analytics.repository.UrlUniqueVisitorRepository;
+import com.tinyroute.url.repository.UrlEditHistoryRepository;
+import com.tinyroute.url.repository.UrlMappingRepository;
+import com.tinyroute.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -82,7 +82,6 @@ class PersistenceRulesDataJpaTest {
     @Test
     void incrementClickCount_incrementsCountByOne() {
         // incrementClickCount is a dedicated JPQL UPDATE — it only touches clickCount.
-        // lastClickedAt is updated by a separate updateLastClickedAt() query.
         int updated = urlMappingRepository.incrementClickCount(urlMapping.getId());
 
         assertEquals(1, updated, "Should return 1 row affected");
@@ -91,23 +90,6 @@ class PersistenceRulesDataJpaTest {
         entityManager.clear();
         UrlMapping refreshed = urlMappingRepository.findById(urlMapping.getId()).orElseThrow();
         assertEquals(1, refreshed.getClickCount());
-        // lastClickedAt is NOT updated by this query — it should still be null (default)
-        assertNull(refreshed.getLastClickedAt());
-    }
-
-    @Test
-    void updateLastClickedAt_updatesTimestampOnly() {
-        LocalDateTime clickTime = LocalDateTime.now().withNano(0); // truncate nanos for comparison
-        int updated = urlMappingRepository.updateLastClickedAt(urlMapping.getId(), clickTime);
-
-        assertEquals(1, updated, "Should return 1 row affected");
-
-        entityManager.flush();
-        entityManager.clear();
-        UrlMapping refreshed = urlMappingRepository.findById(urlMapping.getId()).orElseThrow();
-        // lastClickedAt is updated; clickCount is unchanged
-        assertEquals(clickTime.toLocalDate(), refreshed.getLastClickedAt().toLocalDate());
-        assertEquals(0, refreshed.getClickCount());
     }
 
     @Test

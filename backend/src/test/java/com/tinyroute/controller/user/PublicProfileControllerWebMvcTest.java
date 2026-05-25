@@ -1,10 +1,11 @@
 package com.tinyroute.controller.user;
 
-import com.tinyroute.dto.user.response.PublicProfileResponse;
-import com.tinyroute.dto.user.response.PublicUrlDTO;
+import com.tinyroute.user.dto.PublicProfileResponse;
+import com.tinyroute.user.dto.PublicUrlDTO;
 import com.tinyroute.exception.ApiException;
 import com.tinyroute.exception.GlobalExceptionHandler;
-import com.tinyroute.service.user.UserService;
+import com.tinyroute.user.service.UserService;
+import com.tinyroute.user.controller.PublicProfileController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

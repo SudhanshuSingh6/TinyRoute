@@ -1,28 +1,19 @@
 package com.tinyroute.service.url;
 
-import com.tinyroute.dto.url.response.UrlDetailsResponse;
-import com.tinyroute.entity.Role;
-import com.tinyroute.entity.UrlMapping;
-import com.tinyroute.entity.UrlStatus;
-import com.tinyroute.entity.User;
-import com.tinyroute.exception.ApiException;
-import com.tinyroute.exception.InvalidUrlException;
+import com.tinyroute.url.dto.UrlDetailsResponse;
+import com.tinyroute.user.entity.Role;
+import com.tinyroute.url.entity.UrlMapping;
+import com.tinyroute.user.entity.User;
 import com.tinyroute.mapper.UrlMapper;
-import com.tinyroute.repository.url.UrlMappingRepository;
-import org.junit.jupiter.api.Test;
+import com.tinyroute.url.repository.UrlMappingRepository;
+import com.tinyroute.url.service.UrlCreationService;
+import com.tinyroute.url.service.UrlValidationService;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
 
-import java.time.LocalDateTime;
-
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,7 +52,6 @@ class UrlCreationServiceTest {
             dto.setStatus(m.getStatus());
             dto.setClickCount(m.getClickCount());
             dto.setTitle(m.getTitle());
-            dto.setMaxClicks(m.getMaxClicks());
             dto.setExpiresAt(m.getExpiresAt());
             return dto;
         });

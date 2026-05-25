@@ -2,8 +2,8 @@ package com.tinyroute.controller.redirect;
 
 import com.tinyroute.dto.error.RateLimitErrorResponse;
 import com.tinyroute.dto.error.RedirectErrorResponse;
-import com.tinyroute.entity.UrlMapping;
-import com.tinyroute.entity.UrlStatus;
+import com.tinyroute.url.entity.UrlMapping;
+import com.tinyroute.url.entity.UrlStatus;
 import com.tinyroute.infra.network.ClientIpService;
 import com.tinyroute.infra.ratelimit.RateLimitPlan;
 import com.tinyroute.service.ratelimit.RateLimitService;
@@ -45,7 +45,7 @@ public class RedirectController {
     @Operation(
             summary     = "Redirect to original URL",
             description = "Resolves a short URL and redirects. "
-                    + "Tracks geo, device, browser, referrer and unique clicks. "
+                    + "Queues raw analytics for asynchronous enrichment. "
                     + "Rate limited to 60 requests per minute per IP."
     )
     @ApiResponse(responseCode = "302", description = "Redirect to original URL")

@@ -1,7 +1,7 @@
 package com.tinyroute.infra.cache;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tinyroute.entity.UrlMapping;
+import com.tinyroute.url.entity.UrlMapping;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;

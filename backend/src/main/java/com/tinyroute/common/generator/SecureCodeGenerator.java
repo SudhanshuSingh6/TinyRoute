@@ -1,7 +1,5 @@
 package com.tinyroute.common.generator;
 
-import com.tinyroute.exception.ShortUrlGenerationFailedException;
-import com.tinyroute.repository.url.UrlMappingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
