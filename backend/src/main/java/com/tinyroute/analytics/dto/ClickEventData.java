@@ -7,16 +7,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-/**
- * Lightweight DTO for queuing click events
- * Contains raw metadata only (not enriched)
- *
- * Flow:
- * 1. Created in redirect thread (fast)
- * 2. Queued for async processing
- * 3. Background worker enriches this data
- * 4. Saved to database as ClickEvent entity
- */
 @Data
 @Builder
 @NoArgsConstructor
@@ -35,17 +25,12 @@ public class ClickEventData {
     private LocalDateTime clickTime;
 
     // Device parsing (will be enriched in background)
-    private String deviceType;  // MOBILE, DESKTOP, TABLET
-    private String browser;     // CHROME, FIREFOX, SAFARI, etc
-    private String os;          // WINDOWS, ANDROID, IOS, etc
+    private String deviceType;
+    private String browser;
+    private String os;
 
-    // Geo lookup (will be enriched in background)
     private String country;
     private String city;
 
-    /**
-     * Flag: whether enrichment is complete
-     * Used by background worker
-     */
     private boolean enriched = false;
 }

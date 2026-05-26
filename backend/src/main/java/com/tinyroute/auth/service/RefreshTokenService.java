@@ -3,7 +3,7 @@ package com.tinyroute.auth.service;
 import com.tinyroute.auth.entity.RefreshToken;
 import com.tinyroute.user.entity.User;
 import com.tinyroute.exception.ApiException;
-import com.tinyroute.user.repository.RefreshTokenRepository;
+import com.tinyroute.auth.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

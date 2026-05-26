@@ -4,7 +4,7 @@ import com.tinyroute.url.dto.UrlDetailsResponse;
 import com.tinyroute.user.entity.Role;
 import com.tinyroute.url.entity.UrlMapping;
 import com.tinyroute.user.entity.User;
-import com.tinyroute.mapper.UrlMapper;
+import com.tinyroute.url.mapper.UrlMapper;
 import com.tinyroute.url.repository.UrlMappingRepository;
 import com.tinyroute.url.service.UrlCreationService;
 import com.tinyroute.url.service.UrlValidationService;

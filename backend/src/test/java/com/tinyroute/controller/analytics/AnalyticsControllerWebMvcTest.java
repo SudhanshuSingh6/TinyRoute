@@ -6,7 +6,7 @@ import com.tinyroute.analytics.dto.LinkAnalyticsResponse;
 import com.tinyroute.user.entity.Role;
 import com.tinyroute.user.entity.User;
 import com.tinyroute.exception.ApiException;
-import com.tinyroute.exception.GlobalExceptionHandler;
+import com.tinyroute.exception.handler.GlobalExceptionHandler;
 import com.tinyroute.exception.RateLimitExceededException;
 import com.tinyroute.infra.ratelimit.RateLimitHelper;
 import com.tinyroute.analytics.service.AnalyticsService;

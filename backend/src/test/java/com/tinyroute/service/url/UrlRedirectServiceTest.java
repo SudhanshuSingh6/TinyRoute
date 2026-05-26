@@ -8,7 +8,7 @@ import com.tinyroute.url.entity.UrlStatus;
 import com.tinyroute.url.repository.UrlMappingRepository;
 import com.tinyroute.infra.network.ClientIpService;
 import com.tinyroute.infra.cache.RedirectCacheService;
-import com.tinyroute.service.redirect.UrlRedirectService;
+import com.tinyroute.redirect.service.UrlRedirectService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -14,6 +14,6 @@ public class UrlDetailsResponse {
     private Integer maxClicks;
     private int clickCount;
     private UrlStatus status;
-    private LocalDateTime createdDate;
+    private LocalDateTime createdAt;
     private LocalDateTime expiresAt;
 }

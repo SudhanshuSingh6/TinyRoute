@@ -4,7 +4,7 @@ import com.tinyroute.analytics.dto.ClickEventData;
 import com.tinyroute.analytics.entity.ClickEvent;
 import com.tinyroute.analytics.infra.RedisAnalyticsEventQueue;
 import com.tinyroute.analytics.repository.ClickEventRepository;
-import com.tinyroute.infra.geo.GeoLocationService;
+import com.tinyroute.analytics.infra.GeoLocationService;
 import com.tinyroute.infra.network.ClientIpService;
 import com.tinyroute.infra.ua.UserAgentParsingService;
 import com.tinyroute.url.entity.UrlMapping;

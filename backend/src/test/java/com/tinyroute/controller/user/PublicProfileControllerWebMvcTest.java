@@ -3,7 +3,7 @@ package com.tinyroute.controller.user;
 import com.tinyroute.user.dto.PublicProfileResponse;
 import com.tinyroute.user.dto.PublicUrlDTO;
 import com.tinyroute.exception.ApiException;
-import com.tinyroute.exception.GlobalExceptionHandler;
+import com.tinyroute.exception.handler.GlobalExceptionHandler;
 import com.tinyroute.user.service.UserService;
 import com.tinyroute.user.controller.PublicProfileController;
 import org.junit.jupiter.api.Test;

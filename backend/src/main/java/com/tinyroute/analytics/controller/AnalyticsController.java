@@ -39,10 +39,7 @@ public class AnalyticsController {
     /**
      * Historical analytics from PostgreSQL.
      */
-    @Operation(
-            summary = "Get historical analytics",
-            description = "Returns analytics for a short URL using PostgreSQL historical data."
-    )
+    @Operation(summary = "Get historical analytics", description = "Returns analytics for a short URL using PostgreSQL historical data.")
     @ApiResponse(responseCode = "200", description = "Analytics returned successfully")
     @ApiResponse(responseCode = "400", description = "Invalid date range")
     @ApiResponse(responseCode = "404", description = "URL not found")
@@ -119,7 +116,7 @@ public class AnalyticsController {
     /**
      * Queue monitoring endpoint.
      */
-    @GetMapping("/admin/analytics/queue-status")
+    /*@GetMapping("/admin/analytics/queue-status")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get analytics queue status")
     public ResponseEntity<Map<String, Object>> getQueueStatus() {
@@ -133,5 +130,5 @@ public class AnalyticsController {
                         LocalDateTime.now()
                 )
         );
-    }
+    }*/
 }

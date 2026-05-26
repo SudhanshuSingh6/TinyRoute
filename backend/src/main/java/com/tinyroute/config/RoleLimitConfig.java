@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "role.limits")
 public class RoleLimitConfig {
 
-    private int user = 1000;
-    private int premium = 10000;
+    private int user = 10000;
+    private int premium = 100000;
     private int admin = 100000;
 }

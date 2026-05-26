@@ -3,13 +3,13 @@ package com.tinyroute.controller.url;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tinyroute.url.dto.UpdateExpiryRequest;
 import com.tinyroute.url.dto.UpdateShortUrlRequest;
-import com.tinyroute.url.dto.EditHistoryDTO;
+import com.tinyroute.url.dto.EditHistoryResponse;
 import com.tinyroute.url.dto.UrlDetailsResponse;
 import com.tinyroute.user.entity.Role;
 import com.tinyroute.url.entity.UrlStatus;
 import com.tinyroute.user.entity.User;
 import com.tinyroute.exception.ApiException;
-import com.tinyroute.exception.GlobalExceptionHandler;
+import com.tinyroute.exception.handler.GlobalExceptionHandler;
 import com.tinyroute.infra.ratelimit.RateLimitHelper;
 import com.tinyroute.analytics.service.AnalyticsService;
 import com.tinyroute.url.controller.UrlManagementController;
@@ -185,12 +185,12 @@ class UrlManagementControllerWebMvcTest {
 
     @Test
     void getEditHistory_validOwner_returns200WithHistory() throws Exception {
-        EditHistoryDTO entry1 = new EditHistoryDTO();
+        EditHistoryResponse entry1 = new EditHistoryResponse();
         entry1.setId(10L);
         entry1.setOldUrl("https://old-url.com");
         entry1.setChangedAt(LocalDateTime.of(2026, 1, 1, 12, 0));
 
-        EditHistoryDTO entry2 = new EditHistoryDTO();
+        EditHistoryResponse entry2 = new EditHistoryResponse();
         entry2.setId(11L);
         entry2.setOldUrl("https://even-older-url.com");
         entry2.setChangedAt(LocalDateTime.of(2025, 12, 1, 8, 0));

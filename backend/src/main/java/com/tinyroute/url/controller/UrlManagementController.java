@@ -3,7 +3,7 @@ package com.tinyroute.url.controller;
 import com.tinyroute.infra.ratelimit.RateLimitEndpoint;
 import com.tinyroute.url.dto.UpdateExpiryRequest;
 import com.tinyroute.url.dto.UpdateShortUrlRequest;
-import com.tinyroute.url.dto.EditHistoryDTO;
+import com.tinyroute.url.dto.EditHistoryResponse;
 import com.tinyroute.url.dto.UrlDetailsResponse;
 import com.tinyroute.user.entity.User;
 import com.tinyroute.exception.ApiException;
@@ -147,13 +147,13 @@ public class UrlManagementController {
         @ApiResponse(responseCode = "200", description = "Edit history returned")
         @GetMapping("/{shortUrl}/history")
         @PreAuthorize("hasRole('USER')")
-        public ResponseEntity<List<EditHistoryDTO>> getEditHistory(
+        public ResponseEntity<List<EditHistoryResponse>> getEditHistory(
                 @Parameter(description = "Short URL code") @PathVariable String shortUrl,
                 Principal principal) {
 
                 HttpHeaders headers = applyRateLimitOrThrow(principal, RateLimitEndpoint.URL_MANAGEMENT);
 
-                List<EditHistoryDTO> response =
+                List<EditHistoryResponse> response =
                         urlManagementService.getEditHistory(shortUrl, getCurrentUserId(principal));
 
                 return ResponseEntity.ok().headers(headers).body(response);

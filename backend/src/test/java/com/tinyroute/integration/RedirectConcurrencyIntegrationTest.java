@@ -12,7 +12,7 @@ import com.tinyroute.url.repository.UrlMappingRepository;
 import com.tinyroute.user.repository.UserRepository;
 import com.tinyroute.analytics.service.AsyncAnalyticsWorker;
 import com.tinyroute.analytics.service.UniqueVisitorRegistrationService;
-import com.tinyroute.service.redirect.UrlRedirectService;
+import com.tinyroute.redirect.service.UrlRedirectService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

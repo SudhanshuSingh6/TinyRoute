@@ -1,8 +1,9 @@
 package com.tinyroute.controller.qr;
 
-import com.tinyroute.exception.GlobalExceptionHandler;
+import com.tinyroute.exception.handler.GlobalExceptionHandler;
 import com.tinyroute.exception.UrlException;
-import com.tinyroute.url.service.UrlLookupService;
+import com.tinyroute.url.controller.QrCodeController;
+import com.tinyroute.url.service.UrlPreviewService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -28,12 +29,12 @@ class QrCodeControllerWebMvcTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private UrlLookupService urlLookupService;
+    private UrlPreviewService urlPreviewService;
 
     @Test
     void getQrCode_validShortUrl_returns200AndPngImage() throws Exception {
         byte[] mockPng = new byte[]{1, 2, 3, 4, 5};
-        when(urlLookupService.generateQr(eq("abc12345"), anyString())).thenReturn(mockPng);
+        when(urlPreviewService.generateQr(eq("abc12345"), anyString())).thenReturn(mockPng);
 
         mockMvc.perform(get("/api/urls/abc12345/qr"))
                 .andExpect(status().isOk())
@@ -43,7 +44,7 @@ class QrCodeControllerWebMvcTest {
 
     @Test
     void getQrCode_invalidOrMissingShortUrl_returns404() throws Exception {
-        when(urlLookupService.generateQr(eq("missing"), anyString())).thenReturn(null);
+        when(urlPreviewService.generateQr(eq("missing"), anyString())).thenReturn(null);
 
         mockMvc.perform(get("/api/urls/missing/qr"))
                 .andExpect(status().isNotFound());
@@ -51,7 +52,7 @@ class QrCodeControllerWebMvcTest {
 
     @Test
     void getQrCode_urlLookupServiceThrowsNotFound_returns404() throws Exception {
-        when(urlLookupService.generateQr(eq("inactive"), anyString()))
+        when(urlPreviewService.generateQr(eq("inactive"), anyString()))
                 .thenThrow(UrlException.notFound());
 
         mockMvc.perform(get("/api/urls/inactive/qr"))

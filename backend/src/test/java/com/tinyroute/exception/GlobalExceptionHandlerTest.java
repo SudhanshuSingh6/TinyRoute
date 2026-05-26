@@ -1,6 +1,7 @@
 package com.tinyroute.exception;
 
-import com.tinyroute.dto.error.ApiErrorResponse;
+import com.tinyroute.exception.handler.GlobalExceptionHandler;
+import com.tinyroute.exception.response.ApiErrorResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

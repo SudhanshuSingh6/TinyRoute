@@ -1,7 +1,5 @@
 package com.tinyroute.url.service;
 
-import com.tinyroute.common.url.DomainNormalizer;
-import com.tinyroute.config.DomainBlacklistConfig;
 import com.tinyroute.exception.DomainBlacklistedException;
 import com.tinyroute.exception.ErrorMessages;
 import com.tinyroute.exception.InvalidDestinationUrlException;

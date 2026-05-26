@@ -5,12 +5,12 @@ import com.tinyroute.auth.controller.AuthController;
 import com.tinyroute.auth.dto.LoginRequest;
 import com.tinyroute.auth.dto.RefreshTokenRequest;
 import com.tinyroute.auth.dto.RegisterRequest;
-import com.tinyroute.auth.dto.JwtAuthenticationResponse;
+import com.tinyroute.auth.dto.AuthResponse;
 import com.tinyroute.user.entity.Role;
 import com.tinyroute.user.entity.User;
 import com.tinyroute.exception.AlreadyExistsException;
 import com.tinyroute.exception.ApiException;
-import com.tinyroute.exception.GlobalExceptionHandler;
+import com.tinyroute.exception.handler.GlobalExceptionHandler;
 import com.tinyroute.security.jwt.JwtService;
 import com.tinyroute.auth.service.AuthService;
 import com.tinyroute.auth.service.RefreshTokenService;
@@ -64,7 +64,7 @@ class AuthControllerWebMvcTest {
         request.setUsername("alice");
         request.setPassword("password123");
 
-        JwtAuthenticationResponse response = new JwtAuthenticationResponse("access-token-123", "refresh-token-123");
+        AuthResponse response = new AuthResponse("access-token-123", "refresh-token-123");
         when(authService.authenticateUser(any(LoginRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/auth/public/login")

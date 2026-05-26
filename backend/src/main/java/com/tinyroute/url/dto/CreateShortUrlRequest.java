@@ -18,8 +18,7 @@ public class CreateShortUrlRequest {
     @Size(max = 2048, message = "originalUrl must be 2048 characters or fewer")
     private String originalUrl;
 
-    @Size(min = 3, max = 50, message = "customAlias must be between 3 and 50 characters")
-    @Pattern(regexp = "^[a-zA-Z0-9_-]+$", message = "customAlias may only contain letters, numbers, hyphens, and underscores")
+    @Pattern(regexp = "^$|^[a-zA-Z0-9_-]{3,50}$", message = "customAlias must be 3-50 characters and may only contain letters, numbers, hyphens, and underscores")
     private String customAlias;
 
     @Future(message = "expiresAt must be a future date and time")

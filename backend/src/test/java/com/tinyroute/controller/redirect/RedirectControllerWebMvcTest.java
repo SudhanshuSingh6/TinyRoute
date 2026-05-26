@@ -1,10 +1,11 @@
 package com.tinyroute.controller.redirect;
 
+import com.tinyroute.redirect.controller.RedirectController;
 import com.tinyroute.url.entity.UrlMapping;
 import com.tinyroute.url.entity.UrlStatus;
 import com.tinyroute.infra.network.ClientIpService;
-import com.tinyroute.service.ratelimit.RateLimitService;
-import com.tinyroute.service.redirect.UrlRedirectService;
+import com.tinyroute.ratelimit.RateLimitService;
+import com.tinyroute.redirect.service.UrlRedirectService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

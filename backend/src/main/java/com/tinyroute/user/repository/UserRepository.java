@@ -11,13 +11,7 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
-    Optional<User> findByEmail(String email);
 
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
-
-    @Transactional
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE User u SET u.bioPageViews = u.bioPageViews + 1 WHERE u.username = :username")
-    void incrementBioPageViews(@Param("username") String username);
 }

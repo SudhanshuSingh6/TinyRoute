@@ -2,9 +2,9 @@ package com.tinyroute.controller.preview;
 
 import com.tinyroute.url.controller.PreviewController;
 import com.tinyroute.url.dto.UrlPreviewResponse;
-import com.tinyroute.exception.GlobalExceptionHandler;
+import com.tinyroute.exception.handler.GlobalExceptionHandler;
 import com.tinyroute.exception.UrlException;
-import com.tinyroute.url.service.UrlLookupService;
+import com.tinyroute.url.service.UrlPreviewService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -29,7 +29,7 @@ class PreviewControllerWebMvcTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private UrlLookupService urlLookupService;
+    private UrlPreviewService urlPreviewService;
 
     @Test
     void getPreview_validShortUrl_returns200AndPreviewData() throws Exception {
@@ -39,7 +39,7 @@ class PreviewControllerWebMvcTest {
         mockResponse.setImageUrl("https://openai.com/logo.png");
         mockResponse.setOriginalUrl("https://openai.com");
 
-        when(urlLookupService.getPreview(eq("abc12345"))).thenReturn(mockResponse);
+        when(urlPreviewService.getPreview(eq("abc12345"))).thenReturn(mockResponse);
 
         mockMvc.perform(get("/api/urls/abc12345/preview")
                         .accept(MediaType.APPLICATION_JSON))
@@ -52,7 +52,7 @@ class PreviewControllerWebMvcTest {
 
     @Test
     void getPreview_invalidOrMissingShortUrl_returns404() throws Exception {
-        when(urlLookupService.getPreview(eq("missing")))
+        when(urlPreviewService.getPreview(eq("missing")))
                 .thenThrow(UrlException.notFound());
 
         mockMvc.perform(get("/api/urls/missing/preview")

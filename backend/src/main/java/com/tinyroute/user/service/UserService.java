@@ -1,18 +1,20 @@
 package com.tinyroute.user.service;
 
-import com.tinyroute.dto.user.UserProfileDTO;
+import com.tinyroute.exception.ApiException;
+import com.tinyroute.exception.ErrorCodes;
+import com.tinyroute.user.dto.UserProfileDTO;
 import com.tinyroute.user.dto.PublicProfileResponse;
 import com.tinyroute.user.dto.PublicUrlDTO;
 import com.tinyroute.url.entity.UrlMapping;
 import com.tinyroute.url.entity.UrlStatus;
 import com.tinyroute.user.entity.User;
 import com.tinyroute.exception.ErrorMessages;
-import com.tinyroute.exception.UrlException;
-import com.tinyroute.mapper.UrlMapper;
-import com.tinyroute.mapper.UserMapper;
+import com.tinyroute.url.mapper.UrlMapper;
+import com.tinyroute.user.mapper.UserMapper;
 import com.tinyroute.url.repository.UrlMappingRepository;
 import com.tinyroute.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +40,6 @@ public class UserService {
     @Transactional
     public UserProfileDTO updateProfile(String username, String bio, String avatarUrl) {
         User user = findByUsername(username);
-        boolean updated = false;
 
         if (bio != null) {
             String newBio = bio.trim();
@@ -46,7 +47,6 @@ public class UserService {
 
             if (!Objects.equals(user.getBio(), newBio)) {
                 user.setBio(newBio);
-                updated = true;
             }
         }
 
@@ -56,12 +56,7 @@ public class UserService {
 
             if (!Objects.equals(user.getAvatarUrl(), newAvatar)) {
                 user.setAvatarUrl(newAvatar);
-                updated = true;
             }
-        }
-
-        if (updated) {
-            userRepository.save(user);
         }
 
         return toProfileDto(user);
@@ -71,7 +66,11 @@ public class UserService {
     public PublicProfileResponse getPublicProfile(String username) {
 
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> UrlException.notFound("Public profile not found."));
+                .orElseThrow(() -> new ApiException(
+                        HttpStatus.NOT_FOUND,
+                        ErrorCodes.USER_NOT_FOUND,
+                        ErrorMessages.USER_NOT_FOUND
+                ));
 
         user.setBioPageViews(user.getBioPageViews() + 1);
 
@@ -79,7 +78,7 @@ public class UserService {
 
         List<PublicUrlDTO> publicUrls = urlMappingRepository.findByUser(user).stream()
                 .filter(this::isPubliclyAccessible)
-                .map(urlMapper::toPublicBioLinkResponse)
+                .map(userMapper::toPublicBioLinkResponse)
                 .toList();
 
         PublicProfileResponse dto = new PublicProfileResponse();

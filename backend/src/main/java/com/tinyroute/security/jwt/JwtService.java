@@ -98,6 +98,25 @@ public class JwtService {
         return null;
     }
 
+    public String resolveAccessToken(HttpServletRequest request) {
+
+        String header = request.getHeader("Authorization");
+
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7);
+        }
+
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("accessToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+
+        return null;
+    }
+
     public String generateAccessToken(UserDetailsImpl userDetails) {
         String roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -141,7 +160,7 @@ public class JwtService {
                     .parseSignedClaims(token);
             return true;
         } catch (JwtException e) {
-            log.warn("Invalid JWT token: {}", e.getMessage());
+            log.warn("Invalid JWT token");
         } catch (IllegalArgumentException e) {
             log.warn("JWT token is null or empty: {}", e.getMessage());
         } catch (Exception e) {

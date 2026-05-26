@@ -136,8 +136,6 @@ public class WebSecurityConfig {
                         ).permitAll()
                         .requestMatchers("/api/auth/public/**"
                         ).permitAll()
-                        .requestMatchers("/api/urls/bio/**")
-                        .permitAll()
                         .requestMatchers("/api/public/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.GET,

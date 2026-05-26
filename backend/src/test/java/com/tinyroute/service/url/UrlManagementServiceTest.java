@@ -1,7 +1,7 @@
 package com.tinyroute.service.url;
 
 import com.tinyroute.url.dto.UpdateShortUrlRequest;
-import com.tinyroute.url.dto.EditHistoryDTO;
+import com.tinyroute.url.dto.EditHistoryResponse;
 import com.tinyroute.url.dto.UrlDetailsResponse;
 import com.tinyroute.url.entity.UrlEditHistory;
 import com.tinyroute.url.entity.UrlMapping;
@@ -11,7 +11,7 @@ import com.tinyroute.exception.ApiException;
 import com.tinyroute.exception.InvalidUrlException;
 import com.tinyroute.exception.UrlException;
 import com.tinyroute.infra.cache.RedirectCacheService;
-import com.tinyroute.mapper.UrlMapper;
+import com.tinyroute.url.mapper.UrlMapper;
 import com.tinyroute.analytics.repository.ClickEventRepository;
 import com.tinyroute.analytics.repository.UrlUniqueVisitorRepository;
 import com.tinyroute.url.repository.UrlEditHistoryRepository;
@@ -362,7 +362,7 @@ class UrlManagementServiceTest {
     void getEditHistory_returnsMappedNewestFirst() {
         when(urlMapper.toEditHistoryResponse(any(UrlEditHistory.class))).thenAnswer(inv -> {
             UrlEditHistory h = inv.getArgument(0);
-            EditHistoryDTO dto = new EditHistoryDTO();
+            EditHistoryResponse dto = new EditHistoryResponse();
             dto.setId(h.getId());
             dto.setOldUrl(h.getOldUrl());
             return dto;
@@ -379,7 +379,7 @@ class UrlManagementServiceTest {
         when(urlEditHistoryRepository.findByUrlMappingOrderByChangedAtDesc(mapping))
                 .thenReturn(List.of(h1, h2));
 
-        List<EditHistoryDTO> result = urlManagementService.getEditHistory("s17", owner.getId());
+        List<EditHistoryResponse> result = urlManagementService.getEditHistory("s17", owner.getId());
 
         assertEquals(2, result.size());
         assertEquals("https://a.com", result.get(0).getOldUrl());

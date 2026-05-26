@@ -5,7 +5,7 @@ import com.tinyroute.analytics.entity.ClickEvent;
 import com.tinyroute.analytics.infra.RedisAnalyticsEventQueue;
 import com.tinyroute.analytics.repository.ClickEventRepository;
 import com.tinyroute.url.entity.UrlMapping;
-import com.tinyroute.infra.geo.GeoLocationService;
+import com.tinyroute.analytics.infra.GeoLocationService;
 import com.tinyroute.infra.network.ClientIpService;
 import com.tinyroute.infra.ua.UserAgentParsingService;
 import jakarta.persistence.EntityManager;
@@ -42,11 +42,15 @@ public class AnalyticsEventBackgroundWorker {
         if (!analyticsEventQueue.hasEvents()) {
             return;
         }
+        long queueSizeBefore = analyticsEventQueue.size();
+        //log.info("Queue size before drain: {}", queueSizeBefore);
 
         List<ClickEventData> batch = analyticsEventQueue.drainBatch(MAX_BATCH_SIZE);
         if (batch.isEmpty()) {
             return;
         }
+
+        //log.info("Drained {} events from queue", batch.size());
 
         List<ClickEvent> persistedEvents = new ArrayList<>(batch.size());
 

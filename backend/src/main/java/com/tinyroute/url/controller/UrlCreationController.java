@@ -37,10 +37,8 @@ public class UrlCreationController {
         @PreAuthorize("hasRole('USER')")
         public ResponseEntity<UrlDetailsResponse> createShortUrl(
                 @Valid @RequestBody CreateShortUrlRequest request,
-                Principal principal
-        ) {
-                RateLimitHelper.RateLimitResult result =
-                        rateLimitHelper.getRateLimitResult(principal, RateLimitEndpoint.SHORTEN);
+                Principal principal) {
+                RateLimitHelper.RateLimitResult result = rateLimitHelper.getRateLimitResult(principal, RateLimitEndpoint.SHORTEN);
 
                 rateLimitHelper.enforceLimit(result, RateLimitEndpoint.SHORTEN);
 

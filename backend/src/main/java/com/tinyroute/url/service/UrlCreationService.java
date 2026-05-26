@@ -1,6 +1,5 @@
 package com.tinyroute.url.service;
 
-import com.tinyroute.common.generator.SecureCodeGenerator;
 import com.tinyroute.config.RoleLimitConfig;
 import com.tinyroute.url.dto.CreateShortUrlRequest;
 import com.tinyroute.url.dto.UrlDetailsResponse;
@@ -8,13 +7,14 @@ import com.tinyroute.url.entity.UrlMapping;
 import com.tinyroute.url.entity.UrlStatus;
 import com.tinyroute.user.entity.User;
 import com.tinyroute.exception.*;
-import com.tinyroute.mapper.UrlMapper;
+import com.tinyroute.url.mapper.UrlMapper;
 import com.tinyroute.url.repository.UrlMappingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -25,6 +25,11 @@ public class UrlCreationService {
 
     private static final int SHORT_URL_LENGTH = 8;
     private static final int MAX_ALIAS_ATTEMPTS = 10;
+
+    private static final String CHARACTERS =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private static final Set<String> RESERVED_ALIASES = Set.of(
             "api",
@@ -64,10 +69,14 @@ public class UrlCreationService {
                 user,
                 now
         );
-        String customAlias = request.getCustomAlias().trim();
+        String customAlias = request.getCustomAlias();
 
-        if (!customAlias.isBlank()) {
-            return createWithCustomAlias(urlMapping, customAlias);
+        if (customAlias != null) {
+            customAlias = customAlias.trim();
+
+            if (!customAlias.isBlank()) {
+                return createWithCustomAlias(urlMapping, customAlias);
+            }
         }
 
         return createWithGeneratedAlias(urlMapping);
@@ -93,7 +102,7 @@ public class UrlCreationService {
 
     private UrlDetailsResponse createWithGeneratedAlias(UrlMapping urlMapping) {
         for (int attempt = 1; attempt <= MAX_ALIAS_ATTEMPTS; attempt++) {
-            String candidate = SecureCodeGenerator.generateShortCode(SHORT_URL_LENGTH);
+            String candidate = generateShortCode(SHORT_URL_LENGTH);
             urlMapping.setShortUrl(candidate);
 
             try {
@@ -106,6 +115,19 @@ public class UrlCreationService {
         throw new ShortUrlGenerationFailedException(
                 "Could not generate a unique short URL after " + MAX_ALIAS_ATTEMPTS + " attempts."
         );
+    }
+
+    private String generateShortCode(int length) {
+        StringBuilder sb = new StringBuilder(length);
+
+        for (int i = 0; i < length; i++) {
+            sb.append(
+                    CHARACTERS.charAt(
+                            SECURE_RANDOM.nextInt(CHARACTERS.length())
+                    )
+            );
+        }
+        return sb.toString();
     }
 
     private UrlMapping buildUrlMapping(String normalizedOriginalUrl,

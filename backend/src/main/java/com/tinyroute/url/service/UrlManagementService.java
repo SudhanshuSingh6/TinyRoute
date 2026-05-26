@@ -1,7 +1,7 @@
 package com.tinyroute.url.service;
 
 import com.tinyroute.url.dto.UpdateShortUrlRequest;
-import com.tinyroute.url.dto.EditHistoryDTO;
+import com.tinyroute.url.dto.EditHistoryResponse;
 import com.tinyroute.url.dto.UrlDetailsResponse;
 import com.tinyroute.url.entity.UrlEditHistory;
 import com.tinyroute.url.entity.UrlMapping;
@@ -13,7 +13,7 @@ import com.tinyroute.exception.ErrorMessages;
 import com.tinyroute.exception.InvalidUrlException;
 import com.tinyroute.exception.UrlException;
 import com.tinyroute.infra.cache.RedirectCacheService;
-import com.tinyroute.mapper.UrlMapper;
+import com.tinyroute.url.mapper.UrlMapper;
 import com.tinyroute.analytics.repository.ClickEventRepository;
 import com.tinyroute.analytics.repository.UrlUniqueVisitorRepository;
 import com.tinyroute.url.repository.UrlEditHistoryRepository;
@@ -51,7 +51,7 @@ public class UrlManagementService {
         return urlMapper.toUrlDetailsResponse(getOwnedUrlOrThrow(shortUrl, userId));
     }
 
-    public List<EditHistoryDTO> getEditHistory(String shortUrl, Long userId) {
+    public List<EditHistoryResponse> getEditHistory(String shortUrl, Long userId) {
         return urlEditHistoryRepository
                 .findByUrlMappingOrderByChangedAtDesc(getOwnedUrlOrThrow(shortUrl, userId))
                 .stream()

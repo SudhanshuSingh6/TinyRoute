@@ -17,10 +17,7 @@ public class PublicProfileController {
 
     private final UserService userService;
 
-    @Operation(
-            summary = "Get public user profile",
-            description = "Returns public profile details and all publicly accessible links for a given username."
-    )
+    @Operation(summary = "Get public user profile", description = "Returns public profile details and all publicly accessible links for a given username.")
     @ApiResponse(responseCode = "200", description = "Public profile returned successfully")
     @ApiResponse(responseCode = "404", description = "User not found")
     @GetMapping("/{username}")

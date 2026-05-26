@@ -2,7 +2,7 @@ package com.tinyroute.auth.service;
 
 import com.tinyroute.auth.dto.LoginRequest;
 import com.tinyroute.auth.dto.RegisterRequest;
-import com.tinyroute.auth.dto.JwtAuthenticationResponse;
+import com.tinyroute.auth.dto.AuthResponse;
 import com.tinyroute.user.entity.Role;
 import com.tinyroute.user.entity.User;
 import com.tinyroute.exception.AlreadyExistsException;
@@ -35,7 +35,7 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;    // NEW
 
     @Transactional
-    public JwtAuthenticationResponse authenticateUser(LoginRequest request) {
+    public AuthResponse authenticateUser(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getUsername(),
@@ -56,7 +56,7 @@ public class AuthService {
 
         String rawRefreshToken = refreshTokenService.createRefreshToken(user);
 
-        return new JwtAuthenticationResponse(accessToken, rawRefreshToken);
+        return new AuthResponse(accessToken, rawRefreshToken);
     }
 
 

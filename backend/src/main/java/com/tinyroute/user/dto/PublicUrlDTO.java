@@ -9,5 +9,5 @@ public class PublicUrlDTO {
     private String shortUrl;
     private String title;
     private String originalUrl;
-    private LocalDateTime createdDate;
+    private LocalDateTime createdAt;
 }

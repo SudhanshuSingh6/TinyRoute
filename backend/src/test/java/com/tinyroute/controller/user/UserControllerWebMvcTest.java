@@ -1,9 +1,9 @@
 package com.tinyroute.controller.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tinyroute.dto.user.UserProfileDTO;
-import com.tinyroute.exception.GlobalExceptionHandler;
-import com.tinyroute.url.service.UrlLookupService;
+import com.tinyroute.user.dto.UserProfileDTO;
+import com.tinyroute.exception.handler.GlobalExceptionHandler;
+import com.tinyroute.url.service.UrlPreviewService;
 import com.tinyroute.user.service.UserService;
 import com.tinyroute.user.controller.UserController;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,7 @@ class UserControllerWebMvcTest {
     private UserService userService;
 
     @MockitoBean
-    private UrlLookupService urlLookupService;
+    private UrlPreviewService urlPreviewService;
 
     @Test
     void getProfile_validPrincipal_returns200() throws Exception {

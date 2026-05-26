@@ -7,7 +7,7 @@ import com.tinyroute.exception.ApiException;
 import com.tinyroute.exception.ErrorCodes;
 import com.tinyroute.exception.ErrorMessages;
 import com.tinyroute.exception.RateLimitExceededException;
-import com.tinyroute.service.ratelimit.RateLimitService;
+import com.tinyroute.ratelimit.RateLimitService;
 import com.tinyroute.user.service.UserService;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
