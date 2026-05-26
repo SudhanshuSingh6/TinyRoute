@@ -1,4 +1,4 @@
-package com.tinyroute.url.service;
+package com.tinyroute.url.validation;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -7,7 +7,7 @@ import java.util.Set;
 
 @Slf4j
 @Component
-public class DomainBlacklistConfig {
+public class DomainBlacklistValidator {
 
     private static final Set<String> BLACKLISTED_DOMAINS = Set.of(
             "malware.com",

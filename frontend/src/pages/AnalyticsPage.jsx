@@ -9,6 +9,7 @@ import DateRangePicker, {
   daysAgo,
   today,
 } from "../components/Common/DateRangePicker";
+import { useFetchAnalytics, useFetchLiveAnalytics } from "../hooks/useQuery";
 
 // ── analytics components ──────────────────────────────────────────────────────
 import VelocityBadge from "../components/Analytics/VelocityBadge";
@@ -16,10 +17,6 @@ import DimensionCard from "../components/Analytics/DimensionCard";
 import DimensionBar from "../components/Analytics/DimensionBar";
 import ClicksLineChart from "../components/Analytics/ClicksLineChart";
 import PeakActivityCard from "../components/Analytics/PeakActivityCard";
-
-// ── data / context ────────────────────────────────────────────────────────────
-import { useStoreContext } from "../contextApi/ContextApi";
-import { useFetchAnalytics } from "../hooks/useQuery";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -140,8 +137,6 @@ const AnalyticsPage = () => {
 
   const navigate = useNavigate();
 
-  const { token } = useStoreContext();
-
   const [startDate, setStartDate] = useState(daysAgo(30));
 
   const [endDate, setEndDate] = useState(today());
@@ -150,13 +145,16 @@ const AnalyticsPage = () => {
 
   const endDateTime = `${endDate}T23:59:59`;
 
-  const { isLoading, data: analytics } = useFetchAnalytics(
-    token,
+  const { isLoading, data: analytics } = useFetchAnalytics({
     shortUrl,
-    startDateTime,
-    endDateTime,
-    () => navigate("/error"),
-  );
+    startDate: startDateTime,
+    endDate: endDateTime,
+    onError: () => navigate("/error"),
+  });
+  const { data: liveAnalytics } = useFetchLiveAnalytics({
+    shortUrl,
+    onError: () => {},
+  });
 
   // ────────────────────────────────────────────────────────────────────────────
   // Derived Data
@@ -187,14 +185,78 @@ const AnalyticsPage = () => {
     [analytics],
   );
 
-  const chart = useMemo(
-    () => buildChartData(analytics?.clicksByTimeBucket),
-    [analytics],
+  const chart = useMemo(() => {
+    const built = buildChartData(analytics?.clicksByTimeBucket);
+
+    const buckets = analytics?.clicksByTimeBucket;
+
+    if (!buckets?.length || !liveAnalytics?.todayClicks) {
+      return built;
+    }
+
+    const patchedValues = [...built.values];
+
+    const now = new Date();
+
+    const localDate = now.toLocaleDateString("en-CA");
+
+    const currentHour = `${localDate} ${String(now.getHours()).padStart(
+      2,
+      "0",
+    )}`;
+
+    const currentIndex = buckets.findIndex((bucket) => {
+      switch (bucket.type) {
+        case "DAY":
+          return bucket.bucket === localDate;
+
+        case "MONTH": {
+          const monthKey = localDate.slice(0, 7);
+
+          return bucket.bucket === monthKey;
+        }
+
+        case "WEEK": {
+          const start = new Date(bucket.bucket.replace("Week of ", ""));
+
+          const end = new Date(start);
+
+          end.setDate(end.getDate() + 6);
+
+          return now >= start && now <= end;
+        }
+
+        case "HOUR":
+          return bucket.bucket.startsWith(currentHour);
+
+        default:
+          return false;
+      }
+    });
+
+    if (currentIndex !== -1) {
+      const historicalValue = built.values[currentIndex];
+
+      const liveValue = liveAnalytics.todayClicks;
+
+      if (liveValue > historicalValue) {
+        patchedValues[currentIndex] = liveValue;
+      }
+    }
+
+    return {
+      ...built,
+      values: patchedValues,
+    };
+  }, [analytics, liveAnalytics]);
+
+  const totalClicks = toNum(
+    liveAnalytics?.totalClicks ?? analytics?.totalClicks,
   );
 
-  const totalClicks = toNum(analytics?.totalClicks);
-
-  const uniqueClicks = toNum(analytics?.uniqueClicks);
+  const uniqueClicks = toNum(
+    liveAnalytics?.uniqueClicks ?? analytics?.uniqueClicks,
+  );
 
   const returnRate =
     totalClicks > 0

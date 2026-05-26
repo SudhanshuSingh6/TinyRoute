@@ -17,7 +17,10 @@ const LogoIcon = ({ size }) => (
     <defs>
       <linearGradient
         id="logo-gradient"
-        x1="0" y1="0" x2="40" y2="40"
+        x1="0"
+        y1="0"
+        x2="40"
+        y2="40"
         gradientUnits="userSpaceOnUse"
       >
         <stop offset="0%" stopColor="#10b981" />
@@ -52,7 +55,7 @@ LogoIcon.propTypes = {
   size: PropTypes.number.isRequired,
 };
 
-const Logo = ({ size, variant, iconOnly }) => {
+const Logo = ({ size = "md", variant = "light", iconOnly = false }) => {
   const { icon: iconSize, text: textClass } = SIZE_MAP[size] || SIZE_MAP.md;
   const textColor = variant === "light" ? "text-white" : "text-slate-800";
 
@@ -74,12 +77,6 @@ Logo.propTypes = {
   size: PropTypes.oneOf(["sm", "md", "lg"]),
   variant: PropTypes.oneOf(["light", "dark"]),
   iconOnly: PropTypes.bool,
-};
-
-Logo.defaultProps = {
-  size: "md",
-  variant: "light",
-  iconOnly: false,
 };
 
 export default Logo;

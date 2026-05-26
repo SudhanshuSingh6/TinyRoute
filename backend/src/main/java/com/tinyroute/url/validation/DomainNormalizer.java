@@ -1,4 +1,4 @@
-package com.tinyroute.url.service;
+package com.tinyroute.url.validation;
 
 import com.tinyroute.exception.InvalidDestinationUrlException;
 

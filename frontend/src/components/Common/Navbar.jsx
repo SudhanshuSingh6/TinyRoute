@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { IoIosMenu } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
 import { ChevronDown, Eye, LogOut, User } from "lucide-react";
@@ -7,6 +7,7 @@ import { ChevronDown, Eye, LogOut, User } from "lucide-react";
 import { useFetchProfile } from "../../hooks/useQuery";
 import api from "../../api/api";
 import { API } from "../../utils/apiRoutes";
+import { handleLogout } from "../../utils/authUtils";
 
 import Logo from "./Logo";
 
@@ -16,8 +17,6 @@ const NAV_LINKS = [
 ];
 
 const Navbar = () => {
-  const navigate = useNavigate();
-
   const path = useLocation().pathname;
 
   const [navbarOpen, setNavbarOpen] = useState(false);
@@ -46,10 +45,10 @@ const Navbar = () => {
     }
 
     setProfileOpen(false);
-
     setNavbarOpen(false);
 
-    navigate("/login");
+    // Clear cache and redirect to login
+    handleLogout();
   };
 
   const isActive = (linkPath) => path === linkPath;

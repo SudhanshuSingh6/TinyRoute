@@ -3,6 +3,8 @@ package com.tinyroute.url.service;
 import com.tinyroute.exception.DomainBlacklistedException;
 import com.tinyroute.exception.ErrorMessages;
 import com.tinyroute.exception.InvalidDestinationUrlException;
+import com.tinyroute.url.validation.DomainBlacklistValidator;
+import com.tinyroute.url.validation.DomainNormalizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -21,7 +23,7 @@ public class UrlValidationService {
 
     private static final Set<String> ALLOWED_URL_SCHEMES = Set.of("http", "https");
 
-    private final DomainBlacklistConfig domainBlacklistConfig;
+    private final DomainBlacklistValidator domainBlacklistValidator;
 
     public String validateAndNormalizeDestinationUrl(String rawUrl) {
         if (rawUrl == null || rawUrl.isBlank()) {
@@ -60,7 +62,7 @@ public class UrlValidationService {
 
         String normalizedHost = DomainNormalizer.normalize(host);
 
-        if (domainBlacklistConfig.isBlacklisted(normalizedHost) || isInternalHostname(normalizedHost)) {
+        if (domainBlacklistValidator.isBlacklisted(normalizedHost) || isInternalHostname(normalizedHost)) {
             throw new DomainBlacklistedException();
         }
 

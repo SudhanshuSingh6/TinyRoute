@@ -6,12 +6,11 @@ import ShortenPopUp from "../components/Dashboard/ShortenPopUp";
 import ShortenUrlList from "../components/Dashboard/ShortenUrlList";
 import Loader from "../components/Common/Loader";
 import Button from "../components/Common/Button";
+import EmptyState from "../components/Common/EmptyState";
 import DateRangePicker from "../components/Common/DateRangePicker";
-import { useStoreContext } from "../contextApi/ContextApi";
 import { useFetchMyShortUrls, useFetchTotalClicks } from "../hooks/useQuery";
 
 const DashboardLayout = () => {
-  const { token } = useStoreContext();
   const navigate = useNavigate();
   const [shortenPopUp, setShortenPopUp] = useState(false);
 
@@ -27,14 +26,13 @@ const DashboardLayout = () => {
     isLoading,
     data: myShortenUrls = [],
     refetch,
-  } = useFetchMyShortUrls(token, onError);
+  } = useFetchMyShortUrls(onError);
 
-  const { isLoading: loader, data: totalClicks = [] } = useFetchTotalClicks(
-    token,
+  const { isLoading: loader, data: totalClicks = [] } = useFetchTotalClicks({
     onError,
     startDate,
-    endDate
-  );
+    endDate,
+  });
 
   const onDateChange = (start, end) => {
     setStartDate(start);

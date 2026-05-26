@@ -1,12 +1,19 @@
 import { Navigate } from "react-router-dom";
-import { useStoreContext } from "./contextApi/ContextApi";
+import { useFetchProfile } from "./hooks/useQuery";
+import Loader from "./components/Common/Loader";
 
-export default function PrivateRoute({ children, publicPage }) {
-  const { token } = useStoreContext();
+export default function PrivateRoute({ children, publicPage = false }) {
+  const { data: profile, isLoading, isError } = useFetchProfile();
 
-  if (publicPage) {
-    return token ? <Navigate to="/dashboard" /> : children;
+  if (isLoading) {
+    return <Loader fullPage message="Verifying access..." />;
   }
 
-  return !token ? <Navigate to="/login" /> : children;
+  const isAuthenticated = !!profile && !isError;
+
+  if (publicPage) {
+    return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
+  }
+
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
 }

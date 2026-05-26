@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
@@ -19,7 +19,6 @@ import Loader from "../components/Common/Loader";
 import Button from "../components/Common/Button";
 import StatBlock from "../components/Common/StatBlock";
 import StatusBadge from "../components/Common/StatusBadge";
-import { useStoreContext } from "../contextApi/ContextApi";
 import {
   useFetchProfile,
   useFetchMyShortUrls,
@@ -80,7 +79,6 @@ const AvatarDisplay = ({ src, initials, size = 80 }) => {
 // Toggling edit replaces the display — never both at same time.
 
 const ProfileHero = ({ profile, initials, onSaved }) => {
-  const { token } = useStoreContext();
   const [editing, setEditing] = useState(false);
   const [avatarDraft, setAvatarDraft] = useState("");
   const [bioDraft, setBioDraft] = useState("");
@@ -107,7 +105,7 @@ const ProfileHero = ({ profile, initials, onSaved }) => {
     }
     setSaving(true);
     try {
-      await updateProfile(token, { bio: bioDraft.trim(), avatarUrl: trimmed });
+      await updateProfile({ bio: bioDraft.trim(), avatarUrl: trimmed });
       toast.success("Profile updated.");
       setEditing(false);
       setAvatarError("");
@@ -217,7 +215,7 @@ const ProfileHero = ({ profile, initials, onSaved }) => {
 
 // ─── LinkCard ─────────────────────────────────────────────────────────────────
 
-const LinkCard = ({ item, token, refetch }) => {
+const LinkCard = ({ item, refetch }) => {
   const [copied, setCopied] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const subDomain =
@@ -228,7 +226,7 @@ const LinkCard = ({ item, token, refetch }) => {
     if (!window.confirm("Delete this link? This cannot be undone.")) return;
     setDeleting(true);
     try {
-      await deleteShortUrl(token, item.id);
+      await deleteShortUrl(item.id);
       toast.success("Link deleted.");
       refetch?.();
     } catch {
@@ -340,35 +338,18 @@ const LinkCard = ({ item, token, refetch }) => {
 
 const ProfilePage = () => {
   const navigate = useNavigate();
-  const { token, setToken } = useStoreContext();
-
-  // Redirect to /register if not logged in
-  useEffect(() => {
-    if (!token) {
-      navigate("/register", { replace: true });
-    }
-  }, [token, navigate]);
-
-  const handleAuthError = (err) => {
-    if ([401, 403].includes(err?.response?.status)) {
-      setToken(null);
-      navigate("/register", { replace: true });
-      return;
-    }
-    navigate("/error");
-  };
 
   const {
     isLoading: profileLoading,
     data: profile,
     refetch: refetchProfile,
-  } = useFetchProfile(token, handleAuthError);
+  } = useFetchProfile();
 
   const {
     isLoading: linksLoading,
     data: links = [],
     refetch: refetchLinks,
-  } = useFetchMyShortUrls(token, () => {});
+  } = useFetchMyShortUrls(() => {});
 
   const username = profile?.username ?? "User";
   const initials = useMemo(() => getInitials(username), [username]);
@@ -377,9 +358,7 @@ const ProfilePage = () => {
     [links],
   );
 
-  // Don't render anything until token check resolves
-  if (!token) return null;
-
+  // Don't render anything until profile loads
   if (profileLoading) return <Loader fullPage message="Loading profile…" />;
 
   if (!profile) {
@@ -450,7 +429,6 @@ const ProfilePage = () => {
                 <LinkCard
                   key={item.id}
                   item={item}
-                  token={token}
                   refetch={refetchLinks}
                 />
               ))}

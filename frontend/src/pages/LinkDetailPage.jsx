@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import QRCodeDisplay from "../components/Link/QRCodeDisplay";
 import LinkPreviewCard from "../components/Link/LinkPreviewCard";
+import EmptyState from "../components/Common/EmptyState";
 import { useFetchLinkPreview } from "../hooks/useQuery";
 
 const LinkDetailPage = () => {

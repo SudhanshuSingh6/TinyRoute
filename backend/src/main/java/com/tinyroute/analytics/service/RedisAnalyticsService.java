@@ -268,6 +268,12 @@ public class RedisAnalyticsService {
         );
     }
 
+    public Long getUniqueVisitorCount(Long urlMappingId,LocalDate now) {
+        return redisHelper.getSetSize(RedisAnalyticsConstants.urlUniqueVisitorsKey(
+                urlMappingId,now
+        ));
+    }
+
     private LocalDate clickDate(ClickEventData event) {
 
         return event.getClickTime() != null

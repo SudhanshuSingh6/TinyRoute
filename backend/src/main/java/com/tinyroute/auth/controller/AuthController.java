@@ -143,7 +143,7 @@ public class AuthController {
 
     @Operation(summary = "Logout", description = "Revoke refresh token and clear authentication cookies." )
     @ApiResponse(responseCode = "204", description = "Logged out successfully" )
-    @PostMapping("/public/logout")
+    @PostMapping("/logout")
     public ResponseEntity<Void> logout(
             HttpServletRequest request,
             HttpServletResponse response

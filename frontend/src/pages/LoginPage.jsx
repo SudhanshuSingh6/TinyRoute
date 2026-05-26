@@ -7,13 +7,11 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import TextField from "../components/Common/TextField";
 import Button from "../components/Common/Button";
 import api from "../api/api";
-import { useStoreContext } from "../contextApi/ContextApi";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const [loader, setLoader] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { setToken } = useStoreContext();
 
   const {
     register,
@@ -28,8 +26,7 @@ const LoginPage = () => {
   const loginHandler = async (data) => {
     setLoader(true);
     try {
-      const { data: response } = await api.post(API.LOGIN, data);
-      setToken(response.token);
+      await api.post(API.LOGIN, data);
       toast.success("Login successful!");
       reset();
       navigate("/dashboard");

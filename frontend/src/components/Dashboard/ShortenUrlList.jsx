@@ -24,7 +24,7 @@ const ShortenUrlList = ({ data, refetch }) => {
 };
 
 ShortenUrlList.propTypes = {
-  data:    PropTypes.array.isRequired,
+  data: PropTypes.array.isRequired,
   refetch: PropTypes.func.isRequired,
 };
 

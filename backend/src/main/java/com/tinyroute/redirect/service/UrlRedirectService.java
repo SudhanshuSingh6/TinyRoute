@@ -83,13 +83,13 @@ public class UrlRedirectService {
         if (urlMapping.getStatus() == UrlStatus.DISABLED) {
             return UrlStatus.DISABLED;
         }
-        if (now != null&&now.isBefore(LocalDateTime.now()))
+        if (now != null && now.isAfter(LocalDateTime.now()))
             return UrlStatus.EXPIRED;
         if (urlMapping.getMaxClicks() != null) {
             long dbClicks = urlMapping.getClickCount();
             long redisClicks = 0L;
             try {
-                redisClicks = redisAnalyticsService.getUrlTotalClicks(urlMapping.getId());
+                redisClicks = redisAnalyticsService.getUniqueVisitorCount(urlMapping.getId(),now.toLocalDate());
             } catch (Exception e) {
                 log.warn("Failed to read Redis clicks for urlId={}", urlMapping.getId(), e);
             }

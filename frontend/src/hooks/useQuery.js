@@ -1,113 +1,269 @@
+// queries.js
+
 import { useQuery } from "react-query";
+
 import api from "../api/api";
+
 import { API } from "../utils/apiRoutes";
 
+// ─────────────────────────────────────────────
+// My URLs
+// ─────────────────────────────────────────────
+
 export const useFetchMyShortUrls = (onError) => {
-  return useQuery("my-shortenurls", async () => api.get(API.MY_URLS), {
-    select: (data) =>
-      (data.data ?? []).sort(
-        (a, b) => new Date(b.createdDate) - new Date(a.createdDate),
-      ),
-    onError,
-    staleTime: 5000,
-  });
+  return useQuery(
+    "my-shortenurls",
+
+    async () => {
+      const response = await api.get(API.MY_URLS);
+
+      return response.data;
+    },
+
+    {
+      select: (data) =>
+        (data ?? []).sort(
+          (a, b) => new Date(b.createdDate) - new Date(a.createdDate),
+        ),
+
+      onError,
+
+      retry: 1,
+
+      staleTime: 5000,
+
+      refetchOnWindowFocus: false,
+    },
+  );
 };
 
-export const useFetchTotalClicks = (onError, startDate, endDate) => {
+// ─────────────────────────────────────────────
+// Total Clicks
+// ─────────────────────────────────────────────
+
+export const useFetchTotalClicks = ({ onError, startDate, endDate }) => {
   const year = new Date().getFullYear();
+
   const from = startDate || `${year}-01-01`;
+
   const to = endDate || `${year}-12-31`;
 
   return useQuery(
     ["url-totalclick", from, to],
 
-    async () => api.get(`${API.TOTAL_CLICKS}?startDate=${from}&endDate=${to}`),
+    async () => {
+      const response = await api.get(
+        `${API.TOTAL_CLICKS}?startDate=${from}&endDate=${to}`,
+      );
+
+      return response.data;
+    },
 
     {
       select: (data) =>
-        Object.entries(data.data ?? {})
+        Object.entries(data ?? {})
           .sort(([a], [b]) => new Date(a) - new Date(b))
           .map(([clickDate, count]) => ({
             clickDate,
             count: Number(count) || 0,
           })),
+
       onError,
-      staleTime: 5000,
+
+      retry: 1,
+
+      staleTime: 30000,
+
+      refetchOnWindowFocus: false,
+
       enabled: !!from && !!to,
     },
   );
 };
 
-export const useFetchProfile = (onError) => {
-  return useQuery("profile", async () => api.get(API.PROFILE), {
-    select: (data) => data.data,
-    onError,
-    staleTime: 10000,
-  });
+// ─────────────────────────────────────────────
+// Profile
+// ─────────────────────────────────────────────
+
+export const useFetchProfile = (options = {}) => {
+  return useQuery(
+    "profile",
+
+    async () => {
+      const response = await api.get(API.PROFILE);
+
+      return response.data;
+    },
+
+    {
+      retry: 1,
+
+      staleTime: 10000,
+
+      refetchOnWindowFocus: false,
+
+      ...options,
+    },
+  );
 };
 
-export const useFetchAnalytics = (
+// ─────────────────────────────────────────────
+// Historical Analytics (PostgreSQL)
+// ─────────────────────────────────────────────
+
+export const useFetchAnalytics = ({
   shortUrl,
   startDate,
   endDate,
   onError,
   enabled = true,
-) => {
+}) => {
   return useQuery(
     ["analytics", shortUrl, startDate, endDate],
-    async () =>
-      api.get(
+
+    async () => {
+      const response = await api.get(
         `${API.ANALYTICS(shortUrl)}?startDate=${startDate}&endDate=${endDate}`,
-      ),
+      );
+
+      return response.data;
+    },
+
     {
-      select: (data) => data.data,
       onError,
-      staleTime: 0,
+
+      retry: 1,
+
+      staleTime: 30000,
+
+      refetchOnWindowFocus: false,
+
       enabled: enabled && !!shortUrl && !!startDate && !!endDate,
     },
   );
 };
 
+// ─────────────────────────────────────────────
+// Live Analytics (Redis)
+// ─────────────────────────────────────────────
+
+export const useFetchLiveAnalytics = ({
+  shortUrl,
+  onError,
+  enabled = true,
+}) => {
+  return useQuery(
+    ["live-analytics", shortUrl],
+
+    async () => {
+      const response = await api.get(API.LIVE_ANALYTICS(shortUrl));
+
+      return response.data;
+    },
+
+    {
+      onError,
+
+      retry: 1,
+
+      staleTime: 0,
+
+      refetchInterval: 3000,
+
+      refetchOnWindowFocus: false,
+
+      enabled: enabled && !!shortUrl,
+    },
+  );
+};
+
+// ─────────────────────────────────────────────
+// Link History
+// ─────────────────────────────────────────────
+
 export const useFetchLinkHistory = (shortUrl, onError) => {
   return useQuery(
     ["link-history", shortUrl],
-    async () => api.get(API.HISTORY(shortUrl)),
+
+    async () => {
+      const response = await api.get(API.HISTORY(shortUrl));
+
+      return response.data;
+    },
 
     {
-      select: (data) => data.data,
       onError,
-      staleTime: 0,
+
+      retry: 1,
+
+      staleTime: 30000,
+
+      refetchOnWindowFocus: false,
 
       enabled: !!shortUrl,
     },
   );
 };
+
+// ─────────────────────────────────────────────
+// Link Preview
+// ─────────────────────────────────────────────
 
 export const useFetchLinkPreview = (shortUrl, onError) => {
   return useQuery(
     ["link-preview", shortUrl],
-    async () => api.get(API.PREVIEW(shortUrl)),
+
+    async () => {
+      const response = await api.get(API.PREVIEW(shortUrl));
+
+      return response.data;
+    },
+
     {
-      select: (data) => data.data,
       onError,
+
+      retry: 1,
+
       staleTime: 60000,
+
+      refetchOnWindowFocus: false,
+
       enabled: !!shortUrl,
     },
   );
 };
 
+// ─────────────────────────────────────────────
+// Bio Page
+// ─────────────────────────────────────────────
+
 export const useFetchBioPage = (username, onError) => {
   return useQuery(
     ["bio-page", username],
-    async () => api.get(API.BIO(username)),
+
+    async () => {
+      const response = await api.get(API.BIO(username));
+
+      return response.data;
+    },
+
     {
-      select: (data) => data.data,
       onError,
+
+      retry: 1,
+
       staleTime: 30000,
+
+      refetchOnWindowFocus: false,
+
       enabled: !!username,
     },
   );
 };
+
+// ─────────────────────────────────────────────
+// Mutations
+// ─────────────────────────────────────────────
 
 export const createShortUrl = async (data) => {
   const response = await api.post(API.SHORTEN, data);

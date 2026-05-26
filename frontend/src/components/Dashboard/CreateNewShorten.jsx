@@ -5,13 +5,11 @@ import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { RxCross2 } from "react-icons/rx";
 import toast from "react-hot-toast";
 import Button from "../Common/Button";
-import { useStoreContext } from "../../contextApi/ContextApi";
 import { createShortUrl } from "../../hooks/useQuery";
 
 const aliasRegex = /^[a-zA-Z0-9_-]{3,32}$/;
 
 const CreateNewShorten = ({ setOpen, refetch }) => {
-  const { token } = useStoreContext();
   const [loading, setLoading] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -44,14 +42,16 @@ const CreateNewShorten = ({ setOpen, refetch }) => {
       customAlias: values.customAlias?.trim() || undefined,
       title: values.title?.trim() || undefined,
       expiresAt: normalizedExpiresAt,
-      maxClicks: Number.isFinite(values.maxClicks) ? values.maxClicks : undefined,
+      maxClicks: Number.isFinite(values.maxClicks)
+        ? values.maxClicks
+        : undefined,
       isPublic: Boolean(values.isPublic),
     };
 
     return Object.fromEntries(
       Object.entries(payload).filter(
-        ([, value]) => value !== undefined && value !== null && value !== ""
-      )
+        ([, value]) => value !== undefined && value !== null && value !== "",
+      ),
     );
   };
 
@@ -60,7 +60,7 @@ const CreateNewShorten = ({ setOpen, refetch }) => {
 
     try {
       const payload = cleanPayload(values);
-      const res = await createShortUrl(token, payload);
+      const res = await createShortUrl(payload);
       const shortenUrl = `${import.meta.env.VITE_REACT_SUBDOMAIN}/${res.shortUrl}`;
 
       await navigator.clipboard.writeText(shortenUrl);
@@ -152,7 +152,9 @@ const CreateNewShorten = ({ setOpen, refetch }) => {
         {showAdvanced && (
           <div className="mt-4 grid gap-3">
             <div>
-              <label className="font-semibold text-sm">Custom Alias (optional)</label>
+              <label className="font-semibold text-sm">
+                Custom Alias (optional)
+              </label>
               <input
                 type="text"
                 placeholder="my-awesome-link"
@@ -198,7 +200,9 @@ const CreateNewShorten = ({ setOpen, refetch }) => {
             </div>
 
             <div>
-              <label className="font-semibold text-sm">Expires At (optional)</label>
+              <label className="font-semibold text-sm">
+                Expires At (optional)
+              </label>
               <input
                 type="datetime-local"
                 disabled={loading}
@@ -220,7 +224,9 @@ const CreateNewShorten = ({ setOpen, refetch }) => {
             </div>
 
             <div>
-              <label className="font-semibold text-sm">Max Clicks (optional)</label>
+              <label className="font-semibold text-sm">
+                Max Clicks (optional)
+              </label>
               <input
                 type="number"
                 min={1}

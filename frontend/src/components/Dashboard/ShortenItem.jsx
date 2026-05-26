@@ -25,7 +25,6 @@ import {
   enableShortUrl,
   useFetchAnalytics,
 } from "../../hooks/useQuery";
-import { useStoreContext } from "../../contextApi/ContextApi";
 import StatusBadge from "../Common/StatusBadge";
 import ConfirmDialog from "../Common/ConfirmDialog";
 import Graph from "./Graph";
@@ -101,7 +100,6 @@ const toGraphData = (analytics) => {
 };
 
 const ShortenItem = ({
-  id,
   originalUrl,
   shortUrl,
   clickCount,
@@ -112,7 +110,6 @@ const ShortenItem = ({
   maxClicks,
   refetch,
 }) => {
-  const { token } = useStoreContext();
   const navigate = useNavigate();
 
   const [isCopied, setIsCopied] = useState(false);
@@ -162,14 +159,13 @@ const ShortenItem = ({
   const {
     isLoading: analyticsLoader,
     data: analyticsData,
-  } = useFetchAnalytics(
-    token,
+  } = useFetchAnalytics({
     shortUrl,
-    startDateTime,
-    endDateTime,
-    () => toast.error("Could not load analytics preview for this link."),
-    previewOpen
-  );
+    startDate: startDateTime,
+    endDate: endDateTime,
+    onError: () => toast.error("Could not load analytics preview for this link."),
+    enabled: previewOpen,
+  });
 
   const analyticsGraphData = useMemo(
     () => toGraphData(analyticsData),
@@ -208,7 +204,7 @@ const ShortenItem = ({
 
     setEditLoading(true);
     try {
-      await editShortUrl(token, shortUrl, { originalUrl: trimmedUrl });
+      await editShortUrl(shortUrl, { originalUrl: trimmedUrl });
       setCurrentOriginalUrl(trimmedUrl);
       setIsEditing(false);
       setEditError("");
@@ -233,7 +229,7 @@ const ShortenItem = ({
   const handleDeleteConfirm = async () => {
     setDeleteLoading(true);
     try {
-      await deleteShortUrl(token, shortUrl);
+      await deleteShortUrl(shortUrl);
       toast.success("Link deleted successfully.");
       setDeleteOpen(false);
       await refetch();
@@ -263,9 +259,9 @@ const ShortenItem = ({
   const handleToggleConfirm = async () => {
     setToggleLoading(true);
     try {
-      const updated = isActive 
-        ? await disableShortUrl(token, shortUrl)
-        : await enableShortUrl(token, shortUrl);
+      const updated = isActive
+        ? await disableShortUrl(shortUrl)
+        : await enableShortUrl(shortUrl);
         
       setCurrentStatus(updated.status);
       toast.success(
@@ -541,7 +537,7 @@ ActionButton.propTypes = {
 };
 
 ShortenItem.propTypes = {
-  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   originalUrl: PropTypes.string.isRequired,
   shortUrl: PropTypes.string.isRequired,
   clickCount: PropTypes.number.isRequired,
