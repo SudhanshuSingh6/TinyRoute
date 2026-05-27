@@ -25,6 +25,29 @@ public interface UrlMappingRepository extends JpaRepository<UrlMapping, Long> {
 
     boolean existsByShortUrl(String shortUrl);
 
+    @Modifying
+    @Transactional
+    @Query("""
+            UPDATE UrlMapping u
+            SET u.totalClickCount = u.totalClickCount + :count
+            WHERE u.id = :urlId
+            """)
+    void incrementTotalClickCount(
+            @Param("urlId") Long urlId,
+            @Param("count") Long count
+    );
+
+    @Modifying
+    @Query("""
+            UPDATE UrlMapping u
+            SET u.clickCount = u.clickCount + :count
+            WHERE u.id = :urlId
+            """)
+    void incrementClickCount(
+            @Param("urlId") Long urlId,
+            @Param("count") Long count
+    );
+
     @Transactional
     @Modifying
     @Query("""

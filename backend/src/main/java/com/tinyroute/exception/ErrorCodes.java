@@ -39,6 +39,7 @@ public final class ErrorCodes {
     public static final String MISSING_PARAMETER = "MISSING_PARAMETER";
     public static final String INVALID_ARGUMENT = "INVALID_ARGUMENT";
     public static final String INTERNAL_ERROR = "INTERNAL_ERROR";
+
     private ErrorCodes() {
     }
 }

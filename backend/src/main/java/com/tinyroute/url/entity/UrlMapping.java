@@ -38,14 +38,18 @@ public class UrlMapping {
     private String title;
 
     @Column(nullable = false)
-    private int clickCount = 0;
+    private long clickCount = 0;
+
+    @Column(nullable = false)
+    private int maxClicks;
+
+    @Column(nullable = false)
+    private int totalClickCount = 0;
 
     @Column(nullable = false)
     private LocalDateTime createdDate;
 
     private LocalDateTime expiresAt;
-
-    private Integer maxClicks;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

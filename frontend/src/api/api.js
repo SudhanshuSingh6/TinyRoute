@@ -20,10 +20,19 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    const isRefreshRequest = originalRequest.url.includes(
+      "/auth/public/refresh",
+    );
+
+    const isAuthRequest =
+      originalRequest.url.includes("/auth/public/login") ||
+      originalRequest.url.includes("/auth/public/register");
+
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      !originalRequest.url.includes("/auth/public/refresh")
+      !isRefreshRequest &&
+      !isAuthRequest
     ) {
       originalRequest._retry = true;
 

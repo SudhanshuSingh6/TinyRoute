@@ -111,7 +111,6 @@ public class UserService {
             return false;
         }
 
-        return urlMapping.getMaxClicks() == null
-                || urlMapping.getClickCount() < urlMapping.getMaxClicks();
+        return urlMapping.getClickCount() < urlMapping.getMaxClicks();
     }
 }

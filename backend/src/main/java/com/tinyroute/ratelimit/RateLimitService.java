@@ -18,14 +18,14 @@ public class RateLimitService {
 
         return proxyManager.builder()
                 .build(key, () -> BucketConfiguration.builder()
-                                .addLimit(Bandwidth.classic(plan.getCapacity(),
-                                                Refill.greedy(
-                                                        plan.getCapacity(),
-                                                        plan.getDuration()
-                                                )
+                        .addLimit(Bandwidth.classic(plan.getCapacity(),
+                                        Refill.greedy(
+                                                plan.getCapacity(),
+                                                plan.getDuration()
                                         )
                                 )
-                                .build()
+                        )
+                        .build()
                 );
     }
 }

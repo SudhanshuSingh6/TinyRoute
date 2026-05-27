@@ -69,7 +69,8 @@ public class RedirectCacheService {
                 urlMapping.getStatus(),
                 urlMapping.getExpiresAt(),
                 urlMapping.getMaxClicks(),
-                urlMapping.getClickCount()
+                urlMapping.getClickCount(),
+                urlMapping.getTotalClickCount()
         );
     }
 
@@ -81,6 +82,7 @@ public class RedirectCacheService {
         urlMapping.setExpiresAt(entry.expiresAt());
         urlMapping.setMaxClicks(entry.maxClicks());
         urlMapping.setClickCount(entry.clickCount());
+        urlMapping.setTotalClickCount(entry.totalClickCount());
         return urlMapping;
     }
 }

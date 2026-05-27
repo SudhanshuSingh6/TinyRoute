@@ -33,20 +33,6 @@ public class RedisAnalyticsService {
     private final RedisAnalyticsHelper redisHelper;
     private final RedisAnalyticsEventQueue analyticsEventQueue;
 
-    /**
-     * FINAL HOT PATH ANALYTICS FLOW
-     * <p>
-     * ONLY:
-     * - lightweight Redis counters
-     * - realtime unique visitors
-     * - enqueue raw event
-     * <p>
-     * NO:
-     * - DB writes
-     * - UA parsing
-     * - geo lookup
-     * - heavy enrichment
-     */
     public void recordClick(ClickEventData event) {
 
         try {
@@ -98,10 +84,6 @@ public class RedisAnalyticsService {
         }
     }
 
-    /**
-     * Called ONLY by background worker
-     * after enrichment.
-     */
     public void recordEnrichedAggregates(
             Long urlMappingId,
             String browser,

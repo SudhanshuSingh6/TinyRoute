@@ -10,6 +10,7 @@ import api from "../api/api";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+
   const [loader, setLoader] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -19,25 +20,38 @@ const LoginPage = () => {
     reset,
     formState: { errors },
   } = useForm({
-    defaultValues: { username: "", password: "" },
+    defaultValues: {
+      username: "",
+      password: "",
+    },
     mode: "onTouched",
   });
 
   const loginHandler = async (data) => {
+    if (loader) return;
+
     setLoader(true);
+
     try {
       await api.post(API.LOGIN, data);
+
       toast.success("Login successful!");
+
       reset();
-      navigate("/dashboard");
+
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       const status = error?.response?.status;
+
       if (status === 401) {
         toast.error("Incorrect username or password.");
       } else if (status === 404) {
         toast.error("User not found.");
       } else {
-        toast.error("Login failed. Please try again.");
+        const message =
+          error?.response?.data?.message || "Login failed. Please try again.";
+
+        toast.error(message);
       }
     } finally {
       setLoader(false);
@@ -45,15 +59,16 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-page flex justify-center items-center bg-gray-50">
+    <div className="min-h-page flex items-center justify-center bg-gray-50">
       <form
         onSubmit={handleSubmit(loginHandler)}
-        className="sm:w-form-md w-form-sm bg-white shadow-custom py-8 sm:px-8 px-4 rounded-xl"
+        className="sm:w-form-md w-form-sm rounded-xl bg-white py-8 sm:px-8 px-4 shadow-custom"
       >
-        <h1 className="text-center font-montserrat text-btnColor font-bold lg:text-3xl text-2xl">
+        <h1 className="text-center font-montserrat lg:text-3xl text-2xl font-bold text-btnColor">
           Welcome Back
         </h1>
-        <p className="text-center text-slate-500 text-sm mt-1 mb-5">
+
+        <p className="mt-1 mb-5 text-center text-sm text-slate-500">
           Log in to manage your links
         </p>
 
@@ -70,40 +85,54 @@ const LoginPage = () => {
             register={register}
             errors={errors}
             disabled={loader}
+            autoComplete="username"
           />
 
-          {/* Password with show/hide toggle — custom since TextField doesn't support suffix icon */}
           <div className="flex flex-col gap-1">
-            <label className="font-semibold text-md">Password</label>
+            <label htmlFor="password" className="text-md font-semibold">
+              Password
+            </label>
+
             <div className="relative">
               <input
+                id="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
+                autoComplete="current-password"
                 disabled={loader}
-                className={`w-full px-2 py-2 border outline-none bg-transparent text-slate-700 rounded-md pr-10
-                  ${errors.password?.message ? "border-red-500" : "border-slate-600"}
-                  ${loader ? "opacity-50 cursor-not-allowed bg-slate-100" : ""}
+                className={`w-full rounded-md border bg-transparent px-2 py-2 pr-10 text-slate-700 outline-none
+                  ${
+                    errors.password?.message
+                      ? "border-red-500"
+                      : "border-slate-600"
+                  }
+                  ${loader ? "cursor-not-allowed bg-slate-100 opacity-50" : ""}
                 `}
                 {...register("password", {
-                  required: { value: true, message: "*Password is required" },
+                  required: {
+                    value: true,
+                    message: "*Password is required",
+                  },
                   minLength: {
                     value: 6,
                     message: "Minimum 6 characters required",
                   },
                 })}
               />
+
               <button
                 type="button"
-                tabIndex={-1}
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute top-1/2 right-2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-700"
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
+
             {errors.password?.message && (
               <p className="text-sm font-semibold text-red-600">
-                {errors.password.message}*
+                {errors.password.message}
               </p>
             )}
           </div>
@@ -114,17 +143,18 @@ const LoginPage = () => {
           variant="primary"
           size="md"
           loading={loader}
+          disabled={loader}
           fullWidth
           className="mt-5"
         >
           Login
         </Button>
 
-        <p className="text-center text-sm text-slate-700 mt-6">
+        <p className="mt-6 text-center text-sm text-slate-700">
           Don&apos;t have an account?{" "}
           <Link
             to="/register"
-            className="text-btnColor font-semibold underline hover:opacity-80"
+            className="font-semibold text-btnColor underline hover:opacity-80"
           >
             Sign Up
           </Link>

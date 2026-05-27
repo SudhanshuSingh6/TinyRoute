@@ -12,7 +12,8 @@ public class UrlDetailsResponse {
     private String originalUrl;
     private String title;
     private Integer maxClicks;
-    private int clickCount;
+    private long clickCount;
+    private int totalClickCount;
     private UrlStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime expiresAt;

@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -59,43 +60,127 @@ public class UrlPreviewService {
         UrlMapping urlMapping = getPublicUrlOrThrow(shortUrl);
 
         UrlPreviewResponse dto = new UrlPreviewResponse();
+
         final String originalUrl;
 
         try {
             originalUrl = urlValidationService.validateAndNormalizeDestinationUrl(urlMapping.getOriginalUrl());
+
         } catch (DomainBlacklistedException | InvalidDestinationUrlException ex) {
-            log.warn("Blocked unsafe preview target for shortUrl '{}': {}", shortUrl, ex.getMessage());
+
+            log.warn(
+                    "Blocked unsafe preview target for shortUrl '{}': {}",
+                    shortUrl,
+                    ex.getMessage()
+            );
+
             throw UrlException.notFound();
         }
 
         dto.setOriginalUrl(originalUrl);
 
         try {
+
             Document doc = Jsoup.connect(originalUrl)
-                    .userAgent("Mozilla/5.0")
-                    .timeout(5000)
-                    .followRedirects(false)
+                    .userAgent(
+                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+                                    "AppleWebKit/537.36 (KHTML, like Gecko) " +
+                                    "Chrome/124.0.0.0 Safari/537.36"
+                    )
+                    .header(
+                            "Accept-Language",
+                            "en-US,en;q=0.9"
+                    )
+                    .header(
+                            "Accept",
+                            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+                    )
+                    .referrer("https://www.google.com")
+                    .timeout(10000)
+                    .followRedirects(true)
                     .get();
 
             String ogTitle = doc.select("meta[property=og:title]").attr("content");
-            dto.setTitle(!ogTitle.isBlank() ? ogTitle : doc.title());
 
-            String desc = doc.select("meta[name=description]").attr("content");
-            dto.setDescription(!desc.isBlank() ? desc : null);
+            dto.setTitle(!ogTitle.isBlank()
+                    ? ogTitle
+                    : doc.title()
+            );
 
-            String image = doc.select("meta[property=og:image]").attr("abs:content");
-            dto.setImageUrl(!image.isBlank() ? image : null);
+            String description = doc.select(
+                    "meta[property=og:description]"
+            ).attr("content");
+
+            if (description.isBlank()) {
+                description = doc.select("meta[name=description]")
+                        .attr("content");
+            }
+
+            dto.setDescription(!description.isBlank()
+                    ? description : null
+            );
+
+            String image = doc.select(
+                    "meta[property=og:image]"
+            ).attr("content");
+
+            dto.setImageUrl(
+                    !image.isBlank()
+                            ? image
+                            : null
+            );
+            if (dto.getTitle() == null || dto.getTitle().isBlank()) {
+                dto.setTitle(originalUrl);
+            }
+            if (dto.getImageUrl() == null || dto.getImageUrl().isBlank()) {
+                dto.setImageUrl(
+                        "https://placehold.co/600x300?text=No+Preview"
+                );
+            }
+            URI uri = URI.create(originalUrl);
+
+            if (dto.getTitle() == null || dto.getTitle().isBlank()) {
+                dto.setTitle(uri.getHost());
+            }
 
         } catch (HttpStatusException e) {
-            log.warn("Site returned {} for '{}'", e.getStatusCode(), originalUrl);
+
+            log.warn(
+                    "Site returned {} for '{}'",
+                    e.getStatusCode(),
+                    originalUrl
+            );
+
         } catch (UnsupportedMimeTypeException e) {
-            log.warn("Not an HTML page: '{}'", originalUrl);
+
+            log.warn(
+                    "Not an HTML page: '{}'",
+                    originalUrl
+            );
+
         } catch (SocketTimeoutException e) {
-            log.warn("Timeout fetching preview for '{}'", originalUrl);
+
+            log.warn(
+                    "Timeout fetching preview for '{}'",
+                    originalUrl
+            );
+
         } catch (IOException e) {
-            log.warn("Network error fetching '{}': {}", originalUrl, e.getMessage());
+
+            log.warn(
+                    "Network error fetching '{}': {}",
+                    originalUrl,
+                    e.getMessage()
+            );
+
         } catch (Exception e) {
-            log.error("Unexpected error in getPreview for '{}': {}", originalUrl, e.getMessage(), e);
+
+            log.error(
+                    "Unexpected error in getPreview for '{}': {}",
+                    originalUrl,
+                    e.getMessage(),
+                    e
+            );
         }
 
         return dto;
@@ -138,6 +223,6 @@ public class UrlPreviewService {
             return false;
         }
 
-        return urlMapping.getMaxClicks() == null || urlMapping.getClickCount() < urlMapping.getMaxClicks();
+        return urlMapping.getClickCount() < urlMapping.getMaxClicks();
     }
 }

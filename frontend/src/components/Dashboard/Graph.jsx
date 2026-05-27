@@ -10,7 +10,14 @@ import {
 } from "chart.js";
 import PropTypes from "prop-types";
 
-ChartJS.register(BarElement, Tooltip, CategoryScale, LinearScale, Legend, Filler);
+ChartJS.register(
+  BarElement,
+  Tooltip,
+  CategoryScale,
+  LinearScale,
+  Legend,
+  Filler,
+);
 
 const Graph = ({ graphData }) => {
   const labels = graphData?.map((item) => `${item.clickDate}`);

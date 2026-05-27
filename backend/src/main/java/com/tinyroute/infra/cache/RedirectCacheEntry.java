@@ -10,6 +10,7 @@ public record RedirectCacheEntry(
         UrlStatus status,
         LocalDateTime expiresAt,
         Integer maxClicks,
-        int clickCount
+        long clickCount,
+        int totalClickCount
 ) {
 }

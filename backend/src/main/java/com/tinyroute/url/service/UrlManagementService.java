@@ -121,8 +121,7 @@ public class UrlManagementService {
         if (urlMapping.getStatus() == UrlStatus.EXPIRED
                 && (expiresAt == null || !now.isAfter(expiresAt))) {
 
-            if (urlMapping.getMaxClicks() == null
-                    || urlMapping.getClickCount() < urlMapping.getMaxClicks()) {
+            if (urlMapping.getClickCount() < urlMapping.getMaxClicks()) {
                 urlMapping.setStatus(UrlStatus.ACTIVE);
             } else {
                 urlMapping.setStatus(UrlStatus.CLICK_LIMIT_REACHED);
@@ -167,8 +166,7 @@ public class UrlManagementService {
             throw UrlException.expired();
         }
 
-        if (urlMapping.getMaxClicks() != null
-                && urlMapping.getClickCount() >= urlMapping.getMaxClicks()) {
+        if (urlMapping.getClickCount() >= urlMapping.getMaxClicks()) {
             throw new ApiException(HttpStatus.BAD_REQUEST,
                     ErrorCodes.CLICK_LIMIT_REACHED, ErrorMessages.CLICK_LIMIT_REACHED);
         }

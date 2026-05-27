@@ -209,7 +209,7 @@ export const useFetchLinkHistory = (shortUrl, onError) => {
 // Link Preview
 // ─────────────────────────────────────────────
 
-export const useFetchLinkPreview = (shortUrl, onError) => {
+export const useFetchLinkPreview = ({ shortUrl, onError, enabled = true }) => {
   return useQuery(
     ["link-preview", shortUrl],
 
@@ -228,7 +228,7 @@ export const useFetchLinkPreview = (shortUrl, onError) => {
 
       refetchOnWindowFocus: false,
 
-      enabled: !!shortUrl,
+      enabled: enabled && !!shortUrl,
     },
   );
 };

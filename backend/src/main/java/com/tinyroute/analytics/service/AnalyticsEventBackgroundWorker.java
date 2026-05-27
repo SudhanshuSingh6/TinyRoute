@@ -8,6 +8,7 @@ import com.tinyroute.analytics.infra.UserAgentParsingService;
 import com.tinyroute.analytics.repository.ClickEventRepository;
 import com.tinyroute.infra.network.ClientIpService;
 import com.tinyroute.url.entity.UrlMapping;
+import com.tinyroute.url.repository.UrlMappingRepository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +19,9 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -35,6 +38,7 @@ public class AnalyticsEventBackgroundWorker {
     private final EntityManager entityManager;
     private final UniqueVisitorRegistrationService uniqueVisitorRegistrationService;
     private final RedisAnalyticsService redisAnalyticsService;
+    private final UrlMappingRepository urlMappingRepository;
 
     @Scheduled(fixedDelayString = "5000", initialDelayString = "2000")
     @Transactional
@@ -71,18 +75,47 @@ public class AnalyticsEventBackgroundWorker {
         long backoffMs = 1000L;
 
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+
             try {
                 clickEventRepository.saveAll(persistedEvents);
-                log.info("Persisted {} queued click events", persistedEvents.size());
+                Map<Long, Integer> totalClicksByUrl = new HashMap<>();
+
+                for (ClickEvent event : persistedEvents) {
+
+                    Long urlId = event.getUrlMapping().getId();
+
+                    totalClicksByUrl.merge(urlId, 1, Integer::sum);
+                }
+
+                for (Map.Entry<Long, Integer> entry : totalClicksByUrl.entrySet()) {
+                    urlMappingRepository.incrementTotalClickCount(
+                            entry.getKey(),
+                            entry.getValue().longValue()
+                    );
+                }
+
+                log.info("Persisted {} queued click events",
+                        persistedEvents.size()
+                );
+
                 break;
+
             } catch (Exception e) {
-                log.warn("Persist attempt {} failed for {} events: {}", attempt, persistedEvents.size(), e.getMessage());
+
+                log.warn(
+                        "Persist attempt {} failed for {} events: {}",
+                        attempt,
+                        persistedEvents.size(),
+                        e.getMessage()
+                );
+
                 try {
                     Thread.sleep(backoffMs);
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
                     break;
                 }
+
                 backoffMs *= 2;
             }
         }

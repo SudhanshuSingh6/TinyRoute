@@ -81,7 +81,7 @@ class PersistenceRulesDataJpaTest {
 
     @Test
     void incrementClickCount_incrementsCountByOne() {
-        // incrementClickCount is a dedicated JPQL UPDATE — it only touches clickCount.
+        // increment ClickCount is a dedicated JPQL UPDATE — it only touches clickCount.
         int updated = urlMappingRepository.incrementClickCount(urlMapping.getId());
 
         assertEquals(1, updated, "Should return 1 row affected");

@@ -26,6 +26,7 @@ public final class ErrorMessages {
     public static final String MALFORMED_REQUEST_BODY = "Request body is missing or malformed";
     public static final String INVALID_ARGUMENT = "Invalid argument";
     public static final String VALIDATION_ERROR = "Validation failed";
+
     private ErrorMessages() {
     }
 }
