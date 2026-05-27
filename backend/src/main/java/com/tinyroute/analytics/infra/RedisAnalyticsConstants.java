@@ -5,17 +5,11 @@ import java.time.format.DateTimeFormatter;
 
 public class RedisAnalyticsConstants {
 
-    private static final String PREFIX = "analytics:";
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
-
     // Replace the TTL block with:
     public static final long DAILY_COUNTER_TTL_SECONDS = 30L * 24 * 60 * 60;   // 30 days
-    public static final long UNIQUE_SET_TTL_SECONDS  = 30L * 24 * 60 * 60;   // 30 days
-    public static final long TOTAL_COUNTER_TTL_SECONDS = 315360000L;        // 10 years (effectively permanent)
-
-    // ═══════════════════════════════════════════════════════════
-    // Global Counters
-    // ═══════════════════════════════════════════════════════════
+    public static final long UNIQUE_SET_TTL_SECONDS = 30L * 24 * 60 * 60;   // 30 days
+    private static final String PREFIX = "analytics:";
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
 
     public static String globalClicksKey() {
         return PREFIX + "global:clicks";
@@ -24,10 +18,6 @@ public class RedisAnalyticsConstants {
     public static String globalDailyKey(LocalDate date) {
         return PREFIX + "global:daily:" + formatDate(date);
     }
-
-    // ═══════════════════════════════════════════════════════════
-    // Per-URL Counters
-    // ═══════════════════════════════════════════════════════════
 
     /**
      * Total clicks all-time for URL
@@ -52,10 +42,6 @@ public class RedisAnalyticsConstants {
     public static String urlUniqueVisitorsKey(Long urlMappingId, LocalDate date) {
         return PREFIX + "url:" + urlMappingId + ":unique:" + formatDate(date);
     }
-
-    // ═══════════════════════════════════════════════════════════
-    // Device Breakdown
-    // ═══════════════════════════════════════════════════════════
 
     /**
      * Device type counter

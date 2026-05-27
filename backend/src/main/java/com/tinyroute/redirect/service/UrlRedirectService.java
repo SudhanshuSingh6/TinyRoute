@@ -49,7 +49,7 @@ public class UrlRedirectService {
         }
 
         LocalDateTime now = LocalDateTime.now();
-        UrlStatus resolvedStatus = resolveStatus(urlMapping,now);
+        UrlStatus resolvedStatus = resolveStatus(urlMapping, now);
 
         if (urlMapping.getStatus() != resolvedStatus) {
             urlMappingRepository.updateStatus(urlMapping.getId(), resolvedStatus);
@@ -79,7 +79,7 @@ public class UrlRedirectService {
     }
 
 
-    private UrlStatus resolveStatus(UrlMapping urlMapping,LocalDateTime now) {
+    private UrlStatus resolveStatus(UrlMapping urlMapping, LocalDateTime now) {
         if (urlMapping.getStatus() == UrlStatus.DISABLED) {
             return UrlStatus.DISABLED;
         }
@@ -89,7 +89,7 @@ public class UrlRedirectService {
             long dbClicks = urlMapping.getClickCount();
             long redisClicks = 0L;
             try {
-                redisClicks = redisAnalyticsService.getUniqueVisitorCount(urlMapping.getId(),now.toLocalDate());
+                redisClicks = redisAnalyticsService.getUniqueVisitorCount(urlMapping.getId(), now.toLocalDate());
             } catch (Exception e) {
                 log.warn("Failed to read Redis clicks for urlId={}", urlMapping.getId(), e);
             }

@@ -1,4 +1,4 @@
-package com.tinyroute.infra.ua;
+package com.tinyroute.analytics.infra;
 
 import org.springframework.stereotype.Service;
 import ua_parser.Client;
@@ -52,5 +52,6 @@ public class UserAgentParsingService {
         return "Mobile";
     }
 
-    public record ParsedUserAgent(String browser, String os, String deviceType) { }
+    public record ParsedUserAgent(String browser, String os, String deviceType) {
+    }
 }

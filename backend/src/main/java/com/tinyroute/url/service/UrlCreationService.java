@@ -1,14 +1,17 @@
 package com.tinyroute.url.service;
 
 import com.tinyroute.config.RoleLimitConfig;
+import com.tinyroute.exception.AlreadyExistsException;
+import com.tinyroute.exception.ErrorCodes;
+import com.tinyroute.exception.InvalidUrlException;
+import com.tinyroute.exception.ShortUrlGenerationFailedException;
 import com.tinyroute.url.dto.CreateShortUrlRequest;
 import com.tinyroute.url.dto.UrlDetailsResponse;
 import com.tinyroute.url.entity.UrlMapping;
 import com.tinyroute.url.entity.UrlStatus;
-import com.tinyroute.user.entity.User;
-import com.tinyroute.exception.*;
 import com.tinyroute.url.mapper.UrlMapper;
 import com.tinyroute.url.repository.UrlMappingRepository;
+import com.tinyroute.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -48,7 +51,7 @@ public class UrlCreationService {
     private final UrlMapper urlMapper;
     private final RoleLimitConfig roleLimits;
 
-    public UrlDetailsResponse createShortUrl(User user,CreateShortUrlRequest request) {
+    public UrlDetailsResponse createShortUrl(User user, CreateShortUrlRequest request) {
         LocalDateTime now = LocalDateTime.now();
 
         String normalizedOriginalUrl =
@@ -164,9 +167,9 @@ public class UrlCreationService {
 
     private Integer determineMaxClicks(User user) {
         return switch (user.getRole()) {
-            case ROLE_ADMIN   -> roleLimits.getAdmin();
+            case ROLE_ADMIN -> roleLimits.getAdmin();
             case ROLE_PREMIUM -> roleLimits.getPremium();
-            default           -> roleLimits.getUser();
+            default -> roleLimits.getUser();
         };
     }
 

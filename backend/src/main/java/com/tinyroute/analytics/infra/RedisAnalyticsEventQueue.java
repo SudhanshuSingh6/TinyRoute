@@ -20,9 +20,6 @@ public class RedisAnalyticsEventQueue {
 
     private static final String RAW_EVENTS_QUEUE_KEY = "analytics:raw_events";
 
-    /**
-     * Safety TTL in case queue becomes abandoned
-     */
     private static final Duration QUEUE_TTL = Duration.ofDays(1);
 
     @Qualifier("analyticsRedisTemplate")
@@ -30,14 +27,6 @@ public class RedisAnalyticsEventQueue {
 
     private final ObjectMapper objectMapper;
 
-    /**
-     * Push raw analytics event into Redis List
-     *
-     * Hot path operation:
-     * ultra-fast
-     * no enrichment
-     * no DB interaction
-     */
     public void enqueue(ClickEventData event) {
 
         try {
@@ -64,11 +53,6 @@ public class RedisAnalyticsEventQueue {
         }
     }
 
-    /**
-     * Drain batch from Redis List
-     *
-     * Uses RPOP so events are processed FIFO-ish
-     */
     public List<ClickEventData> drainBatch(int maxBatchSize) {
         try {
             List<String> rawEvents = redisTemplate.opsForList()
@@ -91,9 +75,6 @@ public class RedisAnalyticsEventQueue {
         }
     }
 
-    /**
-     * Queue size monitoring
-     */
     public long size() {
 
         try {
@@ -115,9 +96,6 @@ public class RedisAnalyticsEventQueue {
         }
     }
 
-    /**
-     * Whether queue currently has events
-     */
     public boolean hasEvents() {
         return size() > 0;
     }

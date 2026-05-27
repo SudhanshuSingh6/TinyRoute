@@ -1,12 +1,6 @@
 package com.tinyroute.analytics.mapper;
 
-import com.tinyroute.analytics.dto.AnalyticsDimensionType;
-import com.tinyroute.analytics.dto.ClickByDimensionDTO;
-import com.tinyroute.analytics.dto.ClickTimeBucketDTO;
-import com.tinyroute.analytics.dto.ClickVelocityDTO;
-import com.tinyroute.analytics.dto.PeakActivityDTO;
-import com.tinyroute.analytics.dto.TimeBucketType;
-import com.tinyroute.analytics.dto.LinkAnalyticsResponse;
+import com.tinyroute.analytics.dto.*;
 import com.tinyroute.analytics.entity.ClickEvent;
 import org.springframework.stereotype.Component;
 
@@ -223,6 +217,7 @@ public class AnalyticsMapper {
             case MONTH -> buildPeakMonth(clicks);
         };
     }
+
     private PeakActivityDTO buildPeakHour(List<ClickEvent> clicks) {
         Map<String, Long> byHour = clicks.stream()
                 .collect(Collectors.groupingBy(
@@ -349,8 +344,8 @@ public class AnalyticsMapper {
         String trend = secondHalf > firstHalf
                 ? "UP"
                 : secondHalf < firstHalf
-                ? "DOWN"
-                : "STABLE";
+                  ? "DOWN"
+                  : "STABLE";
 
         return new ClickVelocityDTO(secondHalf, firstHalf, trend);
     }

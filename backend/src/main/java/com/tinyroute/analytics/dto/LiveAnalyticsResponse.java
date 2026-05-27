@@ -1,16 +1,16 @@
 package com.tinyroute.analytics.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDateTime;
 
 /**
  * Response DTO for live analytics endpoint
- *
+ * <p>
  * Returned by: GET /api/urls/analytics/live/{shortUrl}
  * Used by: Frontend dashboard polling
  * Updated: Every 3-5 seconds

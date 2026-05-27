@@ -3,18 +3,14 @@ package com.tinyroute.analytics.infra;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.GenericToStringSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
 public class RedisAnalyticsConfig {
 
-    /**
-     * StringRedisTemplate for analytics operations
-     * Handles string-based counters and sets
-     */
     @Bean(name = "analyticsRedisTemplate")
     public StringRedisTemplate analyticsRedisTemplate(
             RedisConnectionFactory connectionFactory) {
@@ -28,10 +24,6 @@ public class RedisAnalyticsConfig {
         return template;
     }
 
-    /**
-     * RedisTemplate for numeric operations
-     * More efficient for counter increments
-     */
     @Bean(name = "counterRedisTemplate")
     public RedisTemplate<String, Long> counterRedisTemplate(
             RedisConnectionFactory connectionFactory) {

@@ -10,7 +10,7 @@ import com.tinyroute.url.entity.UrlStatus;
 import com.tinyroute.user.entity.User;
 import com.tinyroute.analytics.infra.GeoLocationService;
 import com.tinyroute.infra.network.ClientIpService;
-import com.tinyroute.infra.ua.UserAgentParsingService;
+import com.tinyroute.analytics.infra.UserAgentParsingService;
 import com.tinyroute.analytics.repository.ClickEventRepository;
 import com.tinyroute.analytics.repository.UrlUniqueVisitorRepository;
 import com.tinyroute.url.repository.UrlEditHistoryRepository;

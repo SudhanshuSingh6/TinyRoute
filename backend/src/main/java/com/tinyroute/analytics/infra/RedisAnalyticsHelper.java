@@ -1,6 +1,5 @@
 package com.tinyroute.analytics.infra;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -9,19 +8,19 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class RedisAnalyticsHelper {
 
     @Qualifier("analyticsRedisTemplate")
     private final StringRedisTemplate redisTemplate;
 
-    /**
-     * Increment Redis counter.
-     *
-     * ttlSeconds = 0 means:
-     * no expiration.
-     */
+    public RedisAnalyticsHelper(
+            @Qualifier("analyticsRedisTemplate")
+            StringRedisTemplate redisTemplate
+    ) {
+        this.redisTemplate = redisTemplate;
+    }
+
     public void incrementCounter(String key, long ttlSeconds) {
         try {
             redisTemplate.opsForValue().increment(key);
@@ -32,10 +31,7 @@ public class RedisAnalyticsHelper {
                 );
             }
         } catch (Exception e) {
-            log.warn(
-                    "Failed to increment counter: {}",
-                    key,
-                    e
+            log.warn("Failed to increment counter: {}", key, e
             );
         }
     }
@@ -63,10 +59,7 @@ public class RedisAnalyticsHelper {
             }
         } catch (Exception e) {
 
-            log.warn(
-                    "Failed to add to set: {}",
-                    key,
-                    e
+            log.warn("Failed to add to set: {}", key, e
             );
         }
     }
@@ -81,11 +74,7 @@ public class RedisAnalyticsHelper {
                     ? Long.parseLong(value)
                     : 0L;
         } catch (Exception e) {
-            log.warn(
-                    "Failed to get counter: {}",
-                    key,
-                    e
-            );
+            log.warn("Failed to get counter: {}", key, e);
             return 0L;
         }
     }
@@ -101,11 +90,7 @@ public class RedisAnalyticsHelper {
                     : 0L;
 
         } catch (Exception e) {
-            log.warn(
-                    "Failed to get set size: {}",
-                    key,
-                    e
-            );
+            log.warn("Failed to get set size: {}", key, e);
             return 0L;
         }
     }

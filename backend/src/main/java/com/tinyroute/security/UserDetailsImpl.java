@@ -2,12 +2,13 @@ package com.tinyroute.security;
 
 import com.tinyroute.user.entity.Role;
 import com.tinyroute.user.entity.User;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.io.Serial;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;

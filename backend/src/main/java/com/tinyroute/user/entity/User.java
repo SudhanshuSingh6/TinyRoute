@@ -1,7 +1,10 @@
 package com.tinyroute.user.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Getter
@@ -12,7 +15,7 @@ import lombok.*;
         name = "users",
         indexes = {
                 @Index(name = "idx_username", columnList = "username", unique = true),
-                @Index(name = "idx_email",    columnList = "email",    unique = true)
+                @Index(name = "idx_email", columnList = "email", unique = true)
         }
 )
 public class User {

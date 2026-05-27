@@ -6,7 +6,7 @@ import com.tinyroute.analytics.infra.RedisAnalyticsEventQueue;
 import com.tinyroute.analytics.repository.ClickEventRepository;
 import com.tinyroute.analytics.infra.GeoLocationService;
 import com.tinyroute.infra.network.ClientIpService;
-import com.tinyroute.infra.ua.UserAgentParsingService;
+import com.tinyroute.analytics.infra.UserAgentParsingService;
 import com.tinyroute.url.entity.UrlMapping;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;

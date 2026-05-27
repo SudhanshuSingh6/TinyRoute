@@ -1,15 +1,15 @@
 package com.tinyroute.auth.service;
 
+import com.tinyroute.auth.dto.AuthResponse;
 import com.tinyroute.auth.dto.LoginRequest;
 import com.tinyroute.auth.dto.RegisterRequest;
-import com.tinyroute.auth.dto.AuthResponse;
-import com.tinyroute.user.entity.Role;
-import com.tinyroute.user.entity.User;
 import com.tinyroute.exception.AlreadyExistsException;
 import com.tinyroute.exception.ApiException;
-import com.tinyroute.user.repository.UserRepository;
 import com.tinyroute.security.UserDetailsImpl;
 import com.tinyroute.security.jwt.JwtService;
+import com.tinyroute.user.entity.Role;
+import com.tinyroute.user.entity.User;
+import com.tinyroute.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -28,10 +28,10 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRepository       userRepository;
-    private final PasswordEncoder      passwordEncoder;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final JwtService           jwtService;
+    private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;    // NEW
 
     @Transactional
@@ -63,7 +63,7 @@ public class AuthService {
     @Transactional
     public void registerUser(RegisterRequest request) {
         String username = normalizeUsername(request.getUsername());
-        String email    = normalizeEmail(request.getEmail());
+        String email = normalizeEmail(request.getEmail());
 
         if (userRepository.existsByUsername(username)) {
             throw AlreadyExistsException.username();
@@ -82,7 +82,7 @@ public class AuthService {
             userRepository.save(user);
         } catch (DataIntegrityViolationException ex) {
             if (userRepository.existsByUsername(username)) throw AlreadyExistsException.username();
-            if (userRepository.existsByEmail(email))    throw AlreadyExistsException.email();
+            if (userRepository.existsByEmail(email)) throw AlreadyExistsException.email();
             throw new ApiException(HttpStatus.CONFLICT, "REGISTRATION_FAILED",
                     "Could not complete registration.");
         }

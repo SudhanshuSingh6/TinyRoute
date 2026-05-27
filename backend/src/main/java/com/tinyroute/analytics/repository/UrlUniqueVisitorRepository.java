@@ -1,7 +1,7 @@
 package com.tinyroute.analytics.repository;
 
-import com.tinyroute.url.entity.UrlMapping;
 import com.tinyroute.analytics.entity.UrlUniqueVisitor;
+import com.tinyroute.url.entity.UrlMapping;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -25,10 +25,10 @@ public interface UrlUniqueVisitorRepository extends JpaRepository<UrlUniqueVisit
     @Transactional
     @Modifying
     @Query(value = """
-        INSERT INTO url_unique_visitor (url_mapping_id, ip_hash, first_seen_at)
-        VALUES (:urlMappingId, :ipHash, :firstSeenAt)
-        ON CONFLICT (url_mapping_id, ip_hash) DO NOTHING
-        """, nativeQuery = true)
+            INSERT INTO url_unique_visitor (url_mapping_id, ip_hash, first_seen_at)
+            VALUES (:urlMappingId, :ipHash, :firstSeenAt)
+            ON CONFLICT (url_mapping_id, ip_hash) DO NOTHING
+            """, nativeQuery = true)
     int insertUniqueVisitor(@Param("urlMappingId") Long urlMappingId,
                             @Param("ipHash") String ipHash,
                             @Param("firstSeenAt") LocalDateTime firstSeenAt);

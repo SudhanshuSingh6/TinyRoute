@@ -1,6 +1,5 @@
 package com.tinyroute.ratelimit;
 
-import com.tinyroute.infra.ratelimit.RateLimitPlan;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
@@ -16,12 +15,17 @@ public class RateLimitService {
     private final ProxyManager<String> proxyManager;
 
     public Bucket resolveBucket(String key, RateLimitPlan plan) {
+
         return proxyManager.builder()
                 .build(key, () -> BucketConfiguration.builder()
-                        .addLimit(Bandwidth.classic(
-                                plan.getCapacity(),
-                                Refill.greedy(plan.getRefillTokens(), plan.getDuration())
-                        ))
-                        .build());
+                                .addLimit(Bandwidth.classic(plan.getCapacity(),
+                                                Refill.greedy(
+                                                        plan.getCapacity(),
+                                                        plan.getDuration()
+                                                )
+                                        )
+                                )
+                                .build()
+                );
     }
 }

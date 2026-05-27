@@ -8,12 +8,7 @@ import com.tinyroute.url.validation.DomainNormalizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.Locale;
 import java.util.Set;
 
@@ -145,11 +140,7 @@ public class UrlValidationService {
         }
 
         // 0.0.0.0/8 and 240.0.0.0/4 (special-use ranges)
-        if (b0 == 0 || b0 >= 240) {
-            return true;
-        }
-
-        return false;
+        return b0 == 0 || b0 >= 240;
     }
 
     private boolean isBlockedIpv6(Inet6Address ipv6) {

@@ -28,19 +28,19 @@ public interface UrlMappingRepository extends JpaRepository<UrlMapping, Long> {
     @Transactional
     @Modifying
     @Query("""
-        update UrlMapping u
-        set u.status = :status
-        where u.id = :id
-    """)
+                update UrlMapping u
+                set u.status = :status
+                where u.id = :id
+            """)
     void updateStatus(@Param("id") Long id, @Param("status") UrlStatus status);
 
     @Transactional
     @Modifying
     @Query("""
-        update UrlMapping u
-        set u.clickCount = u.clickCount + 1
-        where u.id = :id
-    """)
+                update UrlMapping u
+                set u.clickCount = u.clickCount + 1
+                where u.id = :id
+            """)
     int incrementClickCount(@Param("id") Long id);
 
     // ---------- User-owned URLs ----------

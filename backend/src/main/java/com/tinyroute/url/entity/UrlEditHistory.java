@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Table(
         name = "url_edit_history",
         indexes = {
-                @Index(name = "idx_edit_history_url",  columnList = "url_mapping_id"),
+                @Index(name = "idx_edit_history_url", columnList = "url_mapping_id"),
                 @Index(name = "idx_edit_history_date", columnList = "changedAt")
         }
 )

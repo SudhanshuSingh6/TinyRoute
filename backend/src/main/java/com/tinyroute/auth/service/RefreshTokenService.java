@@ -1,9 +1,9 @@
 package com.tinyroute.auth.service;
 
 import com.tinyroute.auth.entity.RefreshToken;
-import com.tinyroute.user.entity.User;
-import com.tinyroute.exception.ApiException;
 import com.tinyroute.auth.repository.RefreshTokenRepository;
+import com.tinyroute.exception.ApiException;
+import com.tinyroute.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,7 +33,7 @@ public class RefreshTokenService {
 
     @Transactional
     public String createRefreshToken(User user) {
-        String rawToken  = generateRawToken();
+        String rawToken = generateRawToken();
         String tokenHash = hashToken(rawToken);
 
         RefreshToken entity = new RefreshToken();
@@ -79,9 +79,9 @@ public class RefreshTokenService {
         existing.setRevoked(true);
         refreshTokenRepository.save(existing);
 
-        User user        = existing.getUser();
-        String newRaw    = generateRawToken();
-        String newHash   = hashToken(newRaw);
+        User user = existing.getUser();
+        String newRaw = generateRawToken();
+        String newHash = hashToken(newRaw);
 
         RefreshToken newToken = new RefreshToken();
         newToken.setTokenHash(newHash);
@@ -132,5 +132,6 @@ public class RefreshTokenService {
         return sb.toString();
     }
 
-    public record RotationResult(User user, String newRawRefreshToken) {}
+    public record RotationResult(User user, String newRawRefreshToken) {
+    }
 }

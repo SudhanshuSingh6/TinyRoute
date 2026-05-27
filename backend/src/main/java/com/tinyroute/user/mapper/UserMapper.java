@@ -25,6 +25,7 @@ public class UserMapper {
         dto.setBioPageViews(bioPageViewsOverride);
         return dto;
     }
+
     public PublicUrlDTO toPublicBioLinkResponse(UrlMapping urlMapping) {
         PublicUrlDTO dto = new PublicUrlDTO();
         dto.setShortUrl(urlMapping.getShortUrl());

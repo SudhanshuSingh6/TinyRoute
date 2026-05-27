@@ -1,4 +1,4 @@
-package com.tinyroute.infra.ratelimit;
+package com.tinyroute.ratelimit;
 
 import lombok.Getter;
 
@@ -13,7 +13,10 @@ public enum RateLimitEndpoint {
     MY_URLS(RateLimitPlan.MY_URLS,
             "Too many URL list requests. Please try again later."),
     URL_MANAGEMENT(RateLimitPlan.URL_MANAGEMENT,
-            "Too many URL management requests. Please try again later.");
+            "Too many URL management requests. Please try again later."),
+    REDIRECT(RateLimitPlan.REDIRECT,
+            "Too many redirect requests. Please try again later."
+    );
 
     private final RateLimitPlan plan;
     private final String exceededMessage;

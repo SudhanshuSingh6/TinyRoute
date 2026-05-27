@@ -1,23 +1,19 @@
 package com.tinyroute.url.service;
 
-import com.tinyroute.url.dto.UpdateShortUrlRequest;
+import com.tinyroute.analytics.repository.ClickEventRepository;
+import com.tinyroute.analytics.repository.UrlUniqueVisitorRepository;
+import com.tinyroute.exception.*;
+import com.tinyroute.infra.cache.RedirectCacheService;
 import com.tinyroute.url.dto.EditHistoryResponse;
+import com.tinyroute.url.dto.UpdateShortUrlRequest;
 import com.tinyroute.url.dto.UrlDetailsResponse;
 import com.tinyroute.url.entity.UrlEditHistory;
 import com.tinyroute.url.entity.UrlMapping;
 import com.tinyroute.url.entity.UrlStatus;
-import com.tinyroute.user.entity.User;
-import com.tinyroute.exception.ApiException;
-import com.tinyroute.exception.ErrorCodes;
-import com.tinyroute.exception.ErrorMessages;
-import com.tinyroute.exception.InvalidUrlException;
-import com.tinyroute.exception.UrlException;
-import com.tinyroute.infra.cache.RedirectCacheService;
 import com.tinyroute.url.mapper.UrlMapper;
-import com.tinyroute.analytics.repository.ClickEventRepository;
-import com.tinyroute.analytics.repository.UrlUniqueVisitorRepository;
 import com.tinyroute.url.repository.UrlEditHistoryRepository;
 import com.tinyroute.url.repository.UrlMappingRepository;
+import com.tinyroute.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -31,13 +27,13 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class UrlManagementService {
 
-    private final UrlMappingRepository       urlMappingRepository;
-    private final UrlEditHistoryRepository   urlEditHistoryRepository;
-    private final ClickEventRepository       clickEventRepository;
+    private final UrlMappingRepository urlMappingRepository;
+    private final UrlEditHistoryRepository urlEditHistoryRepository;
+    private final ClickEventRepository clickEventRepository;
     private final UrlUniqueVisitorRepository urlUniqueVisitorRepository;
     private final UrlValidationService urlValidationService;
-    private final UrlMapper                  urlMapper;
-    private final RedirectCacheService       redirectCacheService;
+    private final UrlMapper urlMapper;
+    private final RedirectCacheService redirectCacheService;
 
 
     public List<UrlDetailsResponse> getUrlsByUser(User user) {
@@ -71,7 +67,7 @@ public class UrlManagementService {
         String normalizedTitle = normalizeTitle(request.getTitle());
 
         boolean originalChanged = !Objects.equals(urlMapping.getOriginalUrl(), normalizedOriginalUrl);
-        boolean titleChanged    = !Objects.equals(urlMapping.getTitle(), normalizedTitle);
+        boolean titleChanged = !Objects.equals(urlMapping.getTitle(), normalizedTitle);
 
         if (!originalChanged && !titleChanged) {
             return urlMapper.toUrlDetailsResponse(urlMapping);

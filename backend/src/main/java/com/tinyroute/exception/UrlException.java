@@ -6,13 +6,6 @@ import org.springframework.http.HttpStatus;
 @Getter
 public class UrlException extends ApiException {
 
-    public enum Reason {
-        NOT_FOUND,
-        ACCESS_DENIED,
-        EXPIRED,
-        DISABLED
-    }
-
     private final Reason reason;
 
     private UrlException(Reason reason, String message) {
@@ -72,5 +65,12 @@ public class UrlException extends ApiException {
             case EXPIRED -> ErrorCodes.URL_EXPIRED;
             case DISABLED -> ErrorCodes.URL_DISABLED;
         };
+    }
+
+    public enum Reason {
+        NOT_FOUND,
+        ACCESS_DENIED,
+        EXPIRED,
+        DISABLED
     }
 }

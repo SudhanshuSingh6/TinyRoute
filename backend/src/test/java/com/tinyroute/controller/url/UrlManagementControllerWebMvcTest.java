@@ -10,7 +10,7 @@ import com.tinyroute.url.entity.UrlStatus;
 import com.tinyroute.user.entity.User;
 import com.tinyroute.exception.ApiException;
 import com.tinyroute.exception.handler.GlobalExceptionHandler;
-import com.tinyroute.infra.ratelimit.RateLimitHelper;
+import com.tinyroute.ratelimit.RateLimitHelper;
 import com.tinyroute.analytics.service.AnalyticsService;
 import com.tinyroute.url.controller.UrlManagementController;
 import com.tinyroute.url.service.UrlManagementService;

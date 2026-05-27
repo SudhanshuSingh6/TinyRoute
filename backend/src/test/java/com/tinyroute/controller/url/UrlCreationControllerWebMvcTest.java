@@ -1,13 +1,13 @@
 package com.tinyroute.controller.url;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tinyroute.infra.ratelimit.RateLimitEndpoint;
+import com.tinyroute.ratelimit.RateLimitEndpoint;
 import com.tinyroute.url.dto.CreateShortUrlRequest;
 import com.tinyroute.url.dto.UrlDetailsResponse;
 import com.tinyroute.user.entity.Role;
 import com.tinyroute.user.entity.User;
 import com.tinyroute.exception.handler.GlobalExceptionHandler;
-import com.tinyroute.infra.ratelimit.RateLimitHelper;
+import com.tinyroute.ratelimit.RateLimitHelper;
 import com.tinyroute.url.controller.UrlCreationController;
 import com.tinyroute.url.service.UrlCreationService;
 import org.junit.jupiter.api.BeforeEach;

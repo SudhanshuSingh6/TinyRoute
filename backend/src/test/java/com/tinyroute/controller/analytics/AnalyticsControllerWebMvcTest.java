@@ -1,14 +1,14 @@
 package com.tinyroute.controller.analytics;
 
 import com.tinyroute.analytics.controller.AnalyticsController;
-import com.tinyroute.infra.ratelimit.RateLimitEndpoint;
+import com.tinyroute.ratelimit.RateLimitEndpoint;
 import com.tinyroute.analytics.dto.LinkAnalyticsResponse;
 import com.tinyroute.user.entity.Role;
 import com.tinyroute.user.entity.User;
 import com.tinyroute.exception.ApiException;
 import com.tinyroute.exception.handler.GlobalExceptionHandler;
 import com.tinyroute.exception.RateLimitExceededException;
-import com.tinyroute.infra.ratelimit.RateLimitHelper;
+import com.tinyroute.ratelimit.RateLimitHelper;
 import com.tinyroute.analytics.service.AnalyticsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

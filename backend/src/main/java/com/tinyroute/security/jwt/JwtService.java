@@ -26,14 +26,11 @@ import java.util.stream.Collectors;
 @Component
 public class JwtService {
 
-    private static final String ROLES_CLAIM = "roles";
-    private static final int MIN_SECRET_BYTES = 32; // 256 bits
-
-    private static final String TYPE_CLAIM = "type";
-
     public static final String ACCESS_TOKEN = "access";
     public static final String REFRESH_TOKEN = "refresh";
-
+    private static final String ROLES_CLAIM = "roles";
+    private static final int MIN_SECRET_BYTES = 32; // 256 bits
+    private static final String TYPE_CLAIM = "type";
     @Value("${jwt.secret}")
     private String jwtSecret;
 
@@ -125,7 +122,7 @@ public class JwtService {
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .claim(ROLES_CLAIM, roles)
-                .claim(TYPE_CLAIM,ACCESS_TOKEN)
+                .claim(TYPE_CLAIM, ACCESS_TOKEN)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + jwtExpirationMs))
                 .signWith(signingKey)

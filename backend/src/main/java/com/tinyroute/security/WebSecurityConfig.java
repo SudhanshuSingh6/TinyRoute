@@ -2,7 +2,6 @@ package com.tinyroute.security;
 
 import com.tinyroute.security.jwt.JwtAuthenticationFilter;
 import com.tinyroute.security.jwt.JwtService;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -118,7 +117,8 @@ public class WebSecurityConfig {
     ) throws Exception {
 
         http
-                .cors(cors -> {})
+                .cors(cors -> {
+                })
                 .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(
@@ -147,7 +147,7 @@ public class WebSecurityConfig {
                         ).permitAll()
                         .requestMatchers(
                                 HttpMethod.GET,
-                                "/{shortUrl}"
+                                "/*"
                         ).permitAll()
                         .requestMatchers(
                                 "/swagger-ui.html",

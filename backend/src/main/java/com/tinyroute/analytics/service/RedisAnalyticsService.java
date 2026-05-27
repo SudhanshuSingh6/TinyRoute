@@ -35,12 +35,12 @@ public class RedisAnalyticsService {
 
     /**
      * FINAL HOT PATH ANALYTICS FLOW
-     *
+     * <p>
      * ONLY:
      * - lightweight Redis counters
      * - realtime unique visitors
      * - enqueue raw event
-     *
+     * <p>
      * NO:
      * - DB writes
      * - UA parsing
@@ -154,7 +154,7 @@ public class RedisAnalyticsService {
 
     /**
      * Live realtime analytics.
-     *
+     * <p>
      * Redis ONLY.
      */
     public LiveAnalyticsResponse getLiveAnalytics(Long urlMappingId) {
@@ -268,9 +268,9 @@ public class RedisAnalyticsService {
         );
     }
 
-    public Long getUniqueVisitorCount(Long urlMappingId,LocalDate now) {
+    public Long getUniqueVisitorCount(Long urlMappingId, LocalDate now) {
         return redisHelper.getSetSize(RedisAnalyticsConstants.urlUniqueVisitorsKey(
-                urlMappingId,now
+                urlMappingId, now
         ));
     }
 

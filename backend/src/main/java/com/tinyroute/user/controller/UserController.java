@@ -1,7 +1,7 @@
 package com.tinyroute.user.controller;
 
-import com.tinyroute.user.dto.UserProfileDTO;
 import com.tinyroute.user.dto.UpdateProfileRequest;
+import com.tinyroute.user.dto.UserProfileDTO;
 import com.tinyroute.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
