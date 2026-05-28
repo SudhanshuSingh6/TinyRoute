@@ -56,20 +56,24 @@ public class AnalyticsEventBackgroundWorker {
 
         //log.info("Drained {} events from queue", batch.size());
 
-        List<ClickEvent> persistedEvents = new ArrayList<>(batch.size());
+        List<EnrichedEvent> enrichedEvents = new ArrayList<>(batch.size());
 
         for (ClickEventData event : batch) {
             try {
-                persistedEvents.add(enrichAndMapEvent(event));
+                enrichedEvents.add(enrichAndMapEvent(event));
             } catch (Exception e) {
                 log.warn("Failed to enrich queued click event for urlId={}: {}",
                         event.getUrlMappingId(), e.getMessage(), e);
             }
         }
 
-        if (persistedEvents.isEmpty()) {
+        if (enrichedEvents.isEmpty()) {
             return;
         }
+
+        List<ClickEvent> persistedEvents = enrichedEvents.stream()
+                .map(EnrichedEvent::clickEvent)
+                .toList();
 
         int maxAttempts = 3;
         long backoffMs = 1000L;
@@ -78,19 +82,30 @@ public class AnalyticsEventBackgroundWorker {
 
             try {
                 clickEventRepository.saveAll(persistedEvents);
-                Map<Long, Integer> totalClicksByUrl = new HashMap<>();
+                Map<Long, Long> totalClicksByUrl = new HashMap<>();
+                Map<Long, Long> uniqueClicksByUrl = new HashMap<>();
 
-                for (ClickEvent event : persistedEvents) {
+                for (EnrichedEvent event : enrichedEvents) {
+                    Long urlId = event.clickEvent.getUrlMapping().getId();
+                    totalClicksByUrl.merge(urlId, 1L, Long::sum);
 
-                    Long urlId = event.getUrlMapping().getId();
+                    if (event.uniqueVisit) {
+                        uniqueClicksByUrl.merge(urlId, 1L, Long::sum);
+                    }
 
-                    totalClicksByUrl.merge(urlId, 1, Integer::sum);
                 }
-
-                for (Map.Entry<Long, Integer> entry : totalClicksByUrl.entrySet()) {
+                for (Map.Entry<Long, Long> entry : totalClicksByUrl.entrySet()) {
                     urlMappingRepository.incrementTotalClickCount(
                             entry.getKey(),
-                            entry.getValue().longValue()
+                            entry.getValue()
+                    );
+                }
+
+                for (Map.Entry<Long, Long> entry : uniqueClicksByUrl.entrySet()) {
+                    urlMappingRepository.incrementClickCount(
+                            entry.getKey(),
+                            entry.getValue()
+
                     );
                 }
 
@@ -121,7 +136,7 @@ public class AnalyticsEventBackgroundWorker {
         }
     }
 
-    private ClickEvent enrichAndMapEvent(ClickEventData event) {
+    private EnrichedEvent enrichAndMapEvent(ClickEventData event) {
         LocalDateTime clickTime = event.getClickTime() != null
                 ? event.getClickTime()
                 : LocalDateTime.now();
@@ -137,7 +152,7 @@ public class AnalyticsEventBackgroundWorker {
         UserAgentParsingService.ParsedUserAgent parsed =
                 userAgentParsingService.parse(event.getUserAgent());
 
-        uniqueVisitorRegistrationService.registerIfFirstVisit(
+        boolean isUnique = uniqueVisitorRegistrationService.registerIfFirstVisit(
                 event.getUrlMappingId(),
                 ipHash,
                 clickTime
@@ -169,6 +184,11 @@ public class AnalyticsEventBackgroundWorker {
                 ? event.getLanguage().split(",", 2)[0]
                 : "Unknown");
 
-        return clickEvent;
+        return new EnrichedEvent(clickEvent,isUnique);
     }
+
+    private record EnrichedEvent(
+            ClickEvent clickEvent,
+            boolean uniqueVisit
+    ) {}
 }

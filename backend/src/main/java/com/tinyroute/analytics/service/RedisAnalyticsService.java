@@ -250,10 +250,11 @@ public class RedisAnalyticsService {
         );
     }
 
-    public Long getUniqueVisitorCount(Long urlMappingId, LocalDate now) {
-        return redisHelper.getSetSize(RedisAnalyticsConstants.urlUniqueVisitorsKey(
-                urlMappingId, now
-        ));
+    public void syncLifetimeUnique(Long urlId, long uniqueCount) {
+        redisHelper.setCounter(RedisAnalyticsConstants.urlSyncedUniqueKey(urlId), uniqueCount, 0);}
+
+    public Long getSyncedLifetimeUnique(Long urlId) {
+        return redisHelper.getCounter(RedisAnalyticsConstants.urlSyncedUniqueKey(urlId));
     }
 
     private LocalDate clickDate(ClickEventData event) {

@@ -94,4 +94,15 @@ public class RedisAnalyticsHelper {
             return 0L;
         }
     }
+
+    public void setCounter(String key, long value, long ttlSeconds) {
+        try {
+            redisTemplate.opsForValue().set(key, String.valueOf(value));
+            if (ttlSeconds > 0) {
+                redisTemplate.expire(key, Duration.ofSeconds(ttlSeconds));
+            }
+        } catch (Exception e) {
+            log.warn("Failed to set counter: {}", key, e);
+        }
+    }
 }

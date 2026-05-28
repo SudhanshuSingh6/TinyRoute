@@ -66,6 +66,11 @@ public class AuthController {
                         RateLimitEndpoint.AUTH,
                         "/api/auth/public/login"
                 );
+        if (limitResponse != null) {
+            return ResponseEntity.status(limitResponse.getStatusCode())
+                    .headers(limitResponse.getHeaders())
+                    .build();
+        }
         AuthResponse jwtResponse = authService.authenticateUser(loginRequest);
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", jwtResponse.getToken())
                 .httpOnly(true)

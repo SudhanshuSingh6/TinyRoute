@@ -63,6 +63,7 @@ class UrlRedirectServiceTest {
         m.setShortUrl(shortUrl);
         m.setStatus(UrlStatus.ACTIVE);
         m.setClickCount(0);
+        m.setMaxClicks(1000);
         return m;
     }
 
@@ -89,7 +90,6 @@ class UrlRedirectServiceTest {
                 eq(request.getHeader("User-Agent")),
                 any(LocalDateTime.class)
         )).thenReturn(event);
-        when(redisAnalyticsService.recordClick(mapping, event)).thenReturn(true);
 
         return event;
     }
@@ -104,7 +104,7 @@ class UrlRedirectServiceTest {
 
         assertNull(result);
         verifyNoInteractions(clickEventDataBuilder);
-        verify(redisAnalyticsService, never()).recordClick(any(), any());
+        verify(redisAnalyticsService, never()).recordClick(any());
     }
 
     // ─── Disabled link ──────────────────────────────────────────────────────────
@@ -119,7 +119,7 @@ class UrlRedirectServiceTest {
 
         assertEquals(UrlStatus.DISABLED, result.getStatus());
         verifyNoInteractions(clickEventDataBuilder);
-        verify(redisAnalyticsService, never()).recordClick(any(), any());
+        verify(redisAnalyticsService, never()).recordClick(any());
     }
 
     // ─── Expired link ───────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ class UrlRedirectServiceTest {
         assertEquals(UrlStatus.EXPIRED, result.getStatus());
         verify(urlMappingRepository).updateStatus(eq(20L), eq(UrlStatus.EXPIRED));
         verifyNoInteractions(clickEventDataBuilder);
-        verify(redisAnalyticsService, never()).recordClick(any(), any());
+        verify(redisAnalyticsService, never()).recordClick(any());
     }
 
     @Test
@@ -152,7 +152,7 @@ class UrlRedirectServiceTest {
         // Already EXPIRED — no redundant status update
         verify(urlMappingRepository, never()).updateStatus(anyLong(), any());
         verifyNoInteractions(clickEventDataBuilder);
-        verify(redisAnalyticsService, never()).recordClick(any(), any());
+        verify(redisAnalyticsService, never()).recordClick(any());
     }
 
     // ─── Click limit already reached ────────────────────────────────────────────
@@ -164,7 +164,7 @@ class UrlRedirectServiceTest {
         mapping.setMaxClicks(5);
 
         when(urlMappingRepository.findByShortUrl("limit123")).thenReturn(mapping);
-        when(redisAnalyticsService.getUrlTotalClicks(30L)).thenReturn(0L);
+        when(redisAnalyticsService.getSyncedLifetimeUnique(30L)).thenReturn(0L);
 
         UrlMapping result = urlRedirectService.getOriginalUrl("limit123", new MockHttpServletRequest());
 
@@ -173,7 +173,7 @@ class UrlRedirectServiceTest {
         verify(urlMappingRepository).updateStatus(eq(30L), eq(UrlStatus.CLICK_LIMIT_REACHED));
         verify(urlMappingRepository, never()).save(any());
         verifyNoInteractions(clickEventDataBuilder);
-        verify(redisAnalyticsService, never()).recordClick(any(), any());
+        verify(redisAnalyticsService, never()).recordClick(any());
     }
 
     @Test
@@ -184,13 +184,13 @@ class UrlRedirectServiceTest {
         mapping.setMaxClicks(10);
 
         when(urlMappingRepository.findByShortUrl("limitx22")).thenReturn(mapping);
-        when(redisAnalyticsService.getUrlTotalClicks(31L)).thenReturn(0L);
+        when(redisAnalyticsService.getSyncedLifetimeUnique(31L)).thenReturn(0L);
 
         urlRedirectService.getOriginalUrl("limitx22", new MockHttpServletRequest());
 
         verify(urlMappingRepository, never()).updateStatus(anyLong(), any());
         verifyNoInteractions(clickEventDataBuilder);
-        verify(redisAnalyticsService, never()).recordClick(any(), any());
+        verify(redisAnalyticsService, never()).recordClick(any());
     }
 
     // ─── First (unique) visitor ─────────────────────────────────────────────────
@@ -206,7 +206,7 @@ class UrlRedirectServiceTest {
         UrlMapping result = urlRedirectService.getOriginalUrl("abc12345", request);
 
         assertNotNull(result);
-        verify(redisAnalyticsService).recordClick(mapping, event);
+        verify(redisAnalyticsService).recordClick(event);
         verify(urlMappingRepository, never()).incrementClickCount(anyLong());
         verify(urlMappingRepository, never()).updateStatus(eq(100L), eq(UrlStatus.CLICK_LIMIT_REACHED));
     }
@@ -228,7 +228,7 @@ class UrlRedirectServiceTest {
 
         urlRedirectService.getOriginalUrl("dup12345", request);
 
-        verify(redisAnalyticsService).recordClick(mapping, event);
+        verify(redisAnalyticsService).recordClick(event);
         verify(urlMappingRepository, never()).incrementClickCount(anyLong());
     }
 
@@ -241,13 +241,13 @@ class UrlRedirectServiceTest {
         mapping.setMaxClicks(5);
 
         when(urlMappingRepository.findByShortUrl("edge1234")).thenReturn(mapping);
-        when(redisAnalyticsService.getUrlTotalClicks(300L)).thenReturn(0L);
+        when(redisAnalyticsService.getSyncedLifetimeUnique(300L)).thenReturn(0L);
 
         MockHttpServletRequest req = requestFrom("5.5.5.5");
         ClickEventData event = stubRecordedClick(mapping, req);
         urlRedirectService.getOriginalUrl("edge1234", req);
 
-        verify(redisAnalyticsService).recordClick(mapping, event);
+        verify(redisAnalyticsService).recordClick(event);
         // Boundary rule: reaching max on this click still allows current redirect.
         // Blocking should start from the next request.
         verify(urlMappingRepository, never()).updateStatus(eq(300L), eq(UrlStatus.CLICK_LIMIT_REACHED));
@@ -261,7 +261,7 @@ class UrlRedirectServiceTest {
     void getOriginalUrl_whenNoExpiryAndNoMaxClicks_alwaysRedirects() {
         UrlMapping mapping = activeMapping(400L, "free1234");
         mapping.setClickCount(999);
-        mapping.setMaxClicks(null);
+        mapping.setMaxClicks(Integer.MAX_VALUE);
         mapping.setExpiresAt(null);
 
         when(urlMappingRepository.findByShortUrl("free1234")).thenReturn(mapping);

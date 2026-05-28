@@ -10,7 +10,6 @@ import com.tinyroute.user.entity.User;
 import com.tinyroute.analytics.repository.UrlUniqueVisitorRepository;
 import com.tinyroute.url.repository.UrlMappingRepository;
 import com.tinyroute.user.repository.UserRepository;
-import com.tinyroute.analytics.service.AsyncAnalyticsWorker;
 import com.tinyroute.analytics.service.UniqueVisitorRegistrationService;
 import com.tinyroute.redirect.service.UrlRedirectService;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +34,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
@@ -55,8 +53,6 @@ class RedirectConcurrencyIntegrationTest {
     private UrlUniqueVisitorRepository urlUniqueVisitorRepository;
 
     @MockitoBean
-    private AsyncAnalyticsWorker asyncAnalyticsWorker;
-    @MockitoBean
     private UniqueVisitorRegistrationService uniqueVisitorRegistrationService;
     @MockitoBean
     private RedisClient redisClient;
@@ -70,15 +66,6 @@ class RedirectConcurrencyIntegrationTest {
         urlUniqueVisitorRepository.deleteAll();
         urlMappingRepository.deleteAll();
         userRepository.deleteAll();
-
-        doNothing().when(asyncAnalyticsWorker).recordClickEvent(
-                anyLong(),
-                anyString(),
-                any(),
-                any(),
-                any(),
-                any()
-        );
     }
 
     @Test

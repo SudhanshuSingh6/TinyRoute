@@ -8,6 +8,7 @@ import com.tinyroute.analytics.infra.GeoLocationService;
 import com.tinyroute.infra.network.ClientIpService;
 import com.tinyroute.analytics.infra.UserAgentParsingService;
 import com.tinyroute.url.entity.UrlMapping;
+import com.tinyroute.url.repository.UrlMappingRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,6 +44,8 @@ class AnalyticsEventBackgroundWorkerTest {
     private UniqueVisitorRegistrationService uniqueVisitorRegistrationService;
     @Mock
     private RedisAnalyticsService redisAnalyticsService;
+    @Mock
+    private UrlMappingRepository urlMappingRepository;
 
     @InjectMocks
     private AnalyticsEventBackgroundWorker worker;
@@ -64,6 +67,7 @@ class AnalyticsEventBackgroundWorkerTest {
 
         UrlMapping urlMapping = new UrlMapping();
         urlMapping.setId(123L);
+        urlMapping.setClickCount(1L);
         when(entityManager.getReference(eq(UrlMapping.class), eq(123L))).thenReturn(urlMapping);
 
         when(geoLocationService.lookup("1.1.1.1"))
@@ -71,6 +75,7 @@ class AnalyticsEventBackgroundWorkerTest {
 
         when(userAgentParsingService.parse("Mozilla/5.0"))
                 .thenReturn(new UserAgentParsingService.ParsedUserAgent("Chrome", "Windows", "Desktop"));
+        when(urlMappingRepository.findById(123L)).thenReturn(java.util.Optional.of(urlMapping));
 
         worker.processQueuedClickEvents();
 
@@ -103,5 +108,6 @@ class AnalyticsEventBackgroundWorkerTest {
                 "Desktop",
                 LocalDate.of(2026, 5, 25)
         );
+        verify(redisAnalyticsService).syncLifetimeUnique(123L, 1L);
     }
 }

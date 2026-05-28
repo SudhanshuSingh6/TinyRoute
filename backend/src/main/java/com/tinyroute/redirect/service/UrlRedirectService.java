@@ -83,16 +83,9 @@ public class UrlRedirectService {
         if (urlMapping.getStatus() == UrlStatus.DISABLED) {
             return UrlStatus.DISABLED;
         }
-        if (now != null && now.isAfter(LocalDateTime.now()))
+        if (urlMapping.getExpiresAt() != null && now.isAfter(urlMapping.getExpiresAt()))
             return UrlStatus.EXPIRED;
-        long dbClicks = urlMapping.getClickCount();
-        long redisClicks = 0L;
-        try {
-            redisClicks = redisAnalyticsService.getUniqueVisitorCount(urlMapping.getId(), now.toLocalDate());
-        } catch (Exception e) {
-            log.warn("Failed to read Redis clicks for urlId={}", urlMapping.getId(), e);
-        }
-        if (dbClicks + redisClicks >= urlMapping.getMaxClicks()) {
+        if (urlMapping.getClickCount() >= urlMapping.getMaxClicks()) {
             return UrlStatus.CLICK_LIMIT_REACHED;
         }
         return UrlStatus.ACTIVE;

@@ -50,6 +50,7 @@ public class ClickEventDataBuilder {
                 .language(request.getHeader("Accept-Language"))
                 .clickTime(clickTime)
                 .enriched(false)
+                .unique(false)
                 .build();
     }
 }

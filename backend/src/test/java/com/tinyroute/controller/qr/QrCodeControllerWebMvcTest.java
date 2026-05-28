@@ -2,7 +2,7 @@ package com.tinyroute.controller.qr;
 
 import com.tinyroute.exception.handler.GlobalExceptionHandler;
 import com.tinyroute.exception.UrlException;
-import com.tinyroute.url.controller.QrCodeController;
+import com.tinyroute.url.controller.PreviewController;
 import com.tinyroute.url.service.UrlPreviewService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = QrCodeController.class)
+@WebMvcTest(controllers = PreviewController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @Import(GlobalExceptionHandler.class)
 class QrCodeControllerWebMvcTest {
