@@ -3,6 +3,7 @@ package com.tinyroute.auth.service;
 import com.tinyroute.auth.entity.RefreshToken;
 import com.tinyroute.auth.repository.RefreshTokenRepository;
 import com.tinyroute.exception.ApiException;
+import com.tinyroute.exception.ErrorCodes;
 import com.tinyroute.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +54,7 @@ public class RefreshTokenService {
         RefreshToken existing = refreshTokenRepository.findByTokenHash(tokenHash)
                 .orElseThrow(() -> new ApiException(
                         HttpStatus.UNAUTHORIZED,
-                        "INVALID_REFRESH_TOKEN",
+                        ErrorCodes.INVALID_REFRESH_TOKEN,
                         "Refresh token is invalid."
                 ));
 
@@ -63,7 +64,7 @@ public class RefreshTokenService {
             refreshTokenRepository.revokeAllActiveForUser(existing.getUser());
             throw new ApiException(
                     HttpStatus.UNAUTHORIZED,
-                    "REFRESH_TOKEN_REVOKED",
+                    ErrorCodes.REFRESH_TOKEN_REVOKED,
                     "Refresh token has already been used. Please log in again."
             );
         }
@@ -71,7 +72,7 @@ public class RefreshTokenService {
         if (existing.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new ApiException(
                     HttpStatus.UNAUTHORIZED,
-                    "REFRESH_TOKEN_EXPIRED",
+                    ErrorCodes.REFRESH_TOKEN_EXPIRED,
                     "Refresh token has expired. Please log in again."
             );
         }

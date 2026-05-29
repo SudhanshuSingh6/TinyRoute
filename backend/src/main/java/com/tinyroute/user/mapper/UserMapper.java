@@ -23,6 +23,7 @@ public class UserMapper {
         dto.setBio(user.getBio());
         dto.setAvatarUrl(user.getAvatarUrl());
         dto.setBioPageViews(bioPageViewsOverride);
+        dto.setEmail(user.getEmail());
         return dto;
     }
 
@@ -31,7 +32,7 @@ public class UserMapper {
         dto.setShortUrl(urlMapping.getShortUrl());
         dto.setTitle(urlMapping.getTitle());
         dto.setOriginalUrl(urlMapping.getOriginalUrl());
-        dto.setCreatedAt(urlMapping.getCreatedDate());
+        dto.setCreatedAt(urlMapping.getCreatedAt());
         return dto;
     }
 }

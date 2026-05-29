@@ -1,5 +1,6 @@
 package com.tinyroute.analytics.dto;
 
+import jakarta.validation.constraints.AssertTrue;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -16,6 +17,7 @@ public class AnalyticsQueryRequest {
 
     private String timezone = "UTC";
 
+    @AssertTrue(message = "endDate must be after startDate")
     public boolean hasValidDateRange() {
         if (startDate == null || endDate == null) {
             return true;

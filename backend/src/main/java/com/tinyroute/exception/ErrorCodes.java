@@ -24,6 +24,7 @@ public final class ErrorCodes {
     public static final String AUTHENTICATION_FAILED = "AUTHENTICATION_FAILED";
     public static final String USER_NOT_FOUND = "USER_NOT_FOUND";
     // Refresh token
+    public static final String REFRESH_TOKEN_MISSING = "REFRESH_TOKEN_MISSING";
     public static final String INVALID_REFRESH_TOKEN = "INVALID_REFRESH_TOKEN";
     public static final String REFRESH_TOKEN_REVOKED = "REFRESH_TOKEN_REVOKED";
     public static final String REFRESH_TOKEN_EXPIRED = "REFRESH_TOKEN_EXPIRED";

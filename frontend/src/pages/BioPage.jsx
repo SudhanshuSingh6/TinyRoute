@@ -6,51 +6,14 @@ import { IoCopy } from "react-icons/io5";
 import { LiaCheckSolid } from "react-icons/lia";
 
 import Loader from "../components/Common/Loader";
+import EmptyState from "../components/Common/EmptyState";
 import Logo from "../components/Common/Logo";
 import { useFetchBioPage } from "../hooks/useQuery";
+import { getInitials } from "../utils/helper";
+import AvatarDisplay from "../components/Common/AvatarDisplay";
+import { useCopyToClipboard } from "../hooks/useCopyToClipboard";
 import api from "../api/api";
 import { API } from "../utils/apiRoutes";
-
-// ─── helpers ──────────────────────────────────────────────────────────────────
-
-const isValidHttpUrl = (v = "") => {
-  try {
-    const url = new URL(v);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
-};
-
-const getInitials = (name = "") => {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "U";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-};
-
-// ─── AvatarDisplay ────────────────────────────────────────────────────────────
-// Shared: same implementation as ProfilePage — image or gradient initials circle.
-
-const AvatarDisplay = ({ src, initials, size = 80 }) => {
-  const [errored, setErrored] = useState(false);
-  const show = src && isValidHttpUrl(src) && !errored;
-  const style = {
-    width: size, height: size, borderRadius: "50%",
-    border: "4px solid white", boxShadow: "0 4px 14px rgba(0,0,0,0.12)",
-    flexShrink: 0,
-  };
-  return show ? (
-    <img src={src} alt={initials} onError={() => setErrored(true)} style={{ ...style, objectFit: "cover" }} />
-  ) : (
-    <div
-      className="bg-custom-gradient flex items-center justify-center text-white font-bold"
-      style={{ ...style, fontSize: size * 0.3 }}
-    >
-      {initials}
-    </div>
-  );
-};
 
 // ─── QRDropdown ───────────────────────────────────────────────────────────────
 // Fetches and shows the QR code for a short URL in a floating dropdown.
@@ -151,7 +114,7 @@ const QRDropdown = ({ shortUrl }) => {
 // No click counts, no limits, no analytics — public-facing only.
 
 const PublicLinkCard = ({ item }) => {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyToClipboard();
   const fullShortUrl = `${import.meta.env.VITE_REACT_SUBDOMAIN}/${item.shortUrl}`;
   const subDomain = import.meta.env.VITE_REACT_SUBDOMAIN?.replace(/^https?:\/\//, "") ?? "";
 
@@ -174,7 +137,7 @@ const PublicLinkCard = ({ item }) => {
         <div className="flex items-center gap-2 shrink-0">
           <CopyToClipboard
             text={fullShortUrl}
-            onCopy={() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+            onCopy={copy}
           >
             <button
               title="Copy short URL"
@@ -273,7 +236,9 @@ const BioPage = () => {
           <div className="h-24 bg-custom-gradient" />
 
           <div className="px-6 pb-6 flex flex-col items-center -mt-10 gap-3">
-            <AvatarDisplay src={avatarUrl} initials={initials} size={80} />
+            <div className="relative z-10 rounded-full bg-white">
+              <AvatarDisplay src={avatarUrl} initials={initials} size={80} />
+            </div>
 
             <div className="text-center">
               <h1 className="text-xl font-bold font-montserrat text-slate-900">{displayUsername}</h1>

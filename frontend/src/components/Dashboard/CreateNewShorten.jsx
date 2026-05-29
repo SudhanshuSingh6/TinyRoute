@@ -1,105 +1,26 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { Tooltip } from "@mui/material";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { RxCross2 } from "react-icons/rx";
-import toast from "react-hot-toast";
 import Button from "../Common/Button";
-import { createShortUrl } from "../../hooks/useQuery";
+import ErrorMessage from "../Common/ErrorMessage";
+import { useShortenForm } from "../../hooks/useShortenForm";
 
 const aliasRegex = /^[a-zA-Z0-9_-]{3,32}$/;
 
 const CreateNewShorten = ({ setOpen, refetch }) => {
-  const [loading, setLoading] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm({
-    defaultValues: {
-      originalUrl: "",
-      customAlias: "",
-      title: "",
-      expiresAt: "",
-      maxClicks: "",
-      isPublic: true,
-    },
-    mode: "onTouched",
-  });
-
-  const cleanPayload = (values) => {
-    const normalizedExpiresAt = values.expiresAt
-      ? values.expiresAt.length === 16
-        ? `${values.expiresAt}:00`
-        : values.expiresAt
-      : undefined;
-
-    const payload = {
-      originalUrl: values.originalUrl.trim(),
-      customAlias: values.customAlias?.trim() || undefined,
-      title: values.title?.trim() || undefined,
-      expiresAt: normalizedExpiresAt,
-      maxClicks: Number.isFinite(values.maxClicks)
-        ? values.maxClicks
-        : undefined,
-      isPublic: Boolean(values.isPublic),
-    };
-
-    return Object.fromEntries(
-      Object.entries(payload).filter(
-        ([, value]) => value !== undefined && value !== null && value !== "",
-      ),
-    );
-  };
-
-  const createShortUrlHandler = async (values) => {
-    setLoading(true);
-
-    try {
-      const payload = cleanPayload(values);
-      const res = await createShortUrl(payload);
-      const shortenUrl = `${import.meta.env.VITE_REACT_SUBDOMAIN}/${res.shortUrl}`;
-
-      await navigator.clipboard.writeText(shortenUrl);
-
-      toast.success("Short URL created & copied to clipboard!", {
-        duration: 3000,
-      });
-
-      reset({
-        originalUrl: "",
-        customAlias: "",
-        title: "",
-        expiresAt: "",
-        maxClicks: "",
-        isPublic: true,
-      });
-
+  const { register, errors, onSubmit, loading } = useShortenForm({
+    onSuccess: async () => {
       await refetch();
       setOpen(false);
-    } catch (error) {
-      const status = error?.response?.status;
-      if (status === 400) {
-        toast.error("Please check your URL and advanced options.");
-      } else if (status === 409) {
-        toast.error("Custom alias is already taken.");
-      } else if (status === 429) {
-        toast.error("Rate limit reached. Please try again shortly.");
-      } else {
-        toast.error("Failed to create short URL right now.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
 
   return (
     <div className="flex justify-center items-center bg-white rounded-xl">
       <form
-        onSubmit={handleSubmit(createShortUrlHandler)}
+        onSubmit={onSubmit}
         className="sm:w-form-md w-form-sm relative shadow-custom pt-8 pb-5 sm:px-8 px-4 rounded-xl max-h-[90vh] overflow-y-auto"
       >
         <h1 className="font-montserrat sm:mt-0 mt-3 text-center font-bold sm:text-2xl text-22 text-slate-800">
@@ -133,11 +54,7 @@ const CreateNewShorten = ({ setOpen, refetch }) => {
               },
             })}
           />
-          {errors.originalUrl && (
-            <p className="text-sm font-semibold text-red-600 mt-1">
-              {errors.originalUrl.message}
-            </p>
-          )}
+          <ErrorMessage message={errors.originalUrl?.message} />
         </div>
 
         <button
@@ -169,11 +86,7 @@ const CreateNewShorten = ({ setOpen, refetch }) => {
                     "Use 3-32 chars: letters, numbers, _ or -",
                 })}
               />
-              {errors.customAlias && (
-                <p className="text-sm font-semibold text-red-600 mt-1">
-                  {errors.customAlias.message}
-                </p>
-              )}
+              <ErrorMessage message={errors.customAlias?.message} />
             </div>
 
             <div>
@@ -192,11 +105,7 @@ const CreateNewShorten = ({ setOpen, refetch }) => {
                   },
                 })}
               />
-              {errors.title && (
-                <p className="text-sm font-semibold text-red-600 mt-1">
-                  {errors.title.message}
-                </p>
-              )}
+              <ErrorMessage message={errors.title?.message} />
             </div>
 
             <div>
@@ -216,11 +125,7 @@ const CreateNewShorten = ({ setOpen, refetch }) => {
                     "Expiry must be in the future",
                 })}
               />
-              {errors.expiresAt && (
-                <p className="text-sm font-semibold text-red-600 mt-1">
-                  {errors.expiresAt.message}
-                </p>
-              )}
+              <ErrorMessage message={errors.expiresAt?.message} />
             </div>
 
             <div>
@@ -242,11 +147,7 @@ const CreateNewShorten = ({ setOpen, refetch }) => {
                     "Max clicks must be at least 1",
                 })}
               />
-              {errors.maxClicks && (
-                <p className="text-sm font-semibold text-red-600 mt-1">
-                  {errors.maxClicks.message}
-                </p>
-              )}
+              <ErrorMessage message={errors.maxClicks?.message} />
             </div>
 
             <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">

@@ -56,7 +56,7 @@ class PersistenceRulesDataJpaTest {
         mapping.setOriginalUrl("https://openai.com");
         mapping.setShortUrl("repo1234");
         mapping.setStatus(UrlStatus.ACTIVE);
-        mapping.setCreatedDate(LocalDateTime.now());
+        mapping.setCreatedAt(LocalDateTime.now());
         this.urlMapping = urlMappingRepository.save(mapping);
     }
 

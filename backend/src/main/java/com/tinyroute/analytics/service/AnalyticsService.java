@@ -42,7 +42,7 @@ public class AnalyticsService {
 
         LocalDateTime start = request.getStartDate() != null
                 ? request.getStartDate()
-                : urlMapping.getCreatedDate();
+                : urlMapping.getCreatedAt();
 
         LocalDateTime end = request.getEndDate() != null
                 ? request.getEndDate()

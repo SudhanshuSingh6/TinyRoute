@@ -3,7 +3,7 @@ package com.tinyroute.redirect.controller;
 import com.tinyroute.exception.response.RedirectErrorResponse;
 import com.tinyroute.ratelimit.RateLimitEndpoint;
 import com.tinyroute.ratelimit.RateLimitHelper;
-import com.tinyroute.redirect.service.UrlRedirectService;
+import com.tinyroute.redirect.service.RedirectService;
 import com.tinyroute.url.entity.UrlMapping;
 import com.tinyroute.url.entity.UrlStatus;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,7 +35,7 @@ public class RedirectController {
                     Locale.ENGLISH
             );
 
-    private final UrlRedirectService urlRedirectService;
+    private final RedirectService redirectService;
     private final RateLimitHelper rateLimitHelper;
 
     @Operation(
@@ -67,34 +67,11 @@ public class RedirectController {
             return limitResponse;
         }
 
-        UrlMapping urlMapping;
-
-        try {
-
-            urlMapping =
-                    urlRedirectService.getOriginalUrl(
-                            shortUrl,
-                            request
-                    );
-
-        } catch (Exception e) {
-
-            log.error(
-                    "Unexpected error resolving short URL '{}': {}",
-                    shortUrl,
-                    e.getMessage(),
-                    e
-            );
-
-            return ResponseEntity
-                    .status(500)
-                    .body(
-                            new RedirectErrorResponse(
-                                    UrlStatus.DISABLED,
-                                    "Something went wrong. Please try again shortly."
-                            )
-                    );
-        }
+        UrlMapping urlMapping =
+                redirectService.getOriginalUrl(
+                        shortUrl,
+                        request
+                );
 
         if (urlMapping == null) {
             return ResponseEntity.notFound().build();
@@ -173,21 +150,13 @@ public class RedirectController {
             String scheme = uri.getScheme();
             String host = uri.getHost();
 
-            if (
-                    scheme == null
-                            || host == null
-                            || host.isBlank()
-            ) {
+            if (scheme == null || host == null || host.isBlank()) {
                 return null;
             }
 
-            String normalizedScheme =
-                    scheme.toLowerCase(Locale.ROOT);
+            String normalizedScheme = scheme.toLowerCase(Locale.ROOT);
 
-            if (
-                    !"http".equals(normalizedScheme)
-                            && !"https".equals(normalizedScheme)
-            ) {
+            if (!"http".equals(normalizedScheme) && !"https".equals(normalizedScheme)) {
                 return null;
             }
 

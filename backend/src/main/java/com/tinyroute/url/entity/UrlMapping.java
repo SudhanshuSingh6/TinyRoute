@@ -47,7 +47,7 @@ public class UrlMapping {
     private int totalClickCount = 0;
 
     @Column(nullable = false)
-    private LocalDateTime createdDate;
+    private LocalDateTime createdAt;
 
     private LocalDateTime expiresAt;
 

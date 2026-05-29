@@ -43,7 +43,7 @@ class UrlMappingRepositoryTest {
         UrlMapping mapping = new UrlMapping();
         mapping.setOriginalUrl("https://google.com");
         mapping.setShortUrl("abc12345");
-        mapping.setCreatedDate(LocalDateTime.now());
+        mapping.setCreatedAt(LocalDateTime.now());
         mapping.setUser(testUser);
         urlMappingRepository.save(mapping);
 
@@ -71,14 +71,14 @@ class UrlMappingRepositoryTest {
         UrlMapping mapping1 = new UrlMapping();
         mapping1.setOriginalUrl("https://google.com");
         mapping1.setShortUrl("short001");
-        mapping1.setCreatedDate(LocalDateTime.now());
+        mapping1.setCreatedAt(LocalDateTime.now());
         mapping1.setUser(testUser);
         urlMappingRepository.save(mapping1);
 
         UrlMapping mapping2 = new UrlMapping();
         mapping2.setOriginalUrl("https://github.com");
         mapping2.setShortUrl("short002");
-        mapping2.setCreatedDate(LocalDateTime.now());
+        mapping2.setCreatedAt(LocalDateTime.now());
         mapping2.setUser(testUser);
         urlMappingRepository.save(mapping2);
 
@@ -104,7 +104,7 @@ class UrlMappingRepositoryTest {
         UrlMapping mapping = new UrlMapping();
         mapping.setOriginalUrl("https://youtube.com");
         mapping.setShortUrl("myalias");
-        mapping.setCreatedDate(LocalDateTime.now());
+        mapping.setCreatedAt(LocalDateTime.now());
         mapping.setUser(testUser);
         urlMappingRepository.save(mapping);
 
@@ -131,7 +131,7 @@ class UrlMappingRepositoryTest {
         UrlMapping mapping1 = new UrlMapping();
         mapping1.setOriginalUrl("https://google.com");
         mapping1.setShortUrl("aaa111");
-        mapping1.setCreatedDate(LocalDateTime.now());
+        mapping1.setCreatedAt(LocalDateTime.now());
         mapping1.setUser(testUser);
         urlMappingRepository.save(mapping1);
 
@@ -139,7 +139,7 @@ class UrlMappingRepositoryTest {
         UrlMapping mapping2 = new UrlMapping();
         mapping2.setOriginalUrl("https://github.com");
         mapping2.setShortUrl("bbb222");
-        mapping2.setCreatedDate(LocalDateTime.now());
+        mapping2.setCreatedAt(LocalDateTime.now());
         mapping2.setUser(otherUser);
         urlMappingRepository.save(mapping2);
 

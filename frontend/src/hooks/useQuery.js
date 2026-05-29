@@ -21,10 +21,7 @@ export const useFetchMyShortUrls = (onError) => {
     },
 
     {
-      select: (data) =>
-        (data ?? []).sort(
-          (a, b) => new Date(b.createdDate) - new Date(a.createdDate),
-        ),
+      select: (data) => (data ?? []).slice().sort((a, b) => b.id - a.id),
 
       onError,
 
@@ -289,6 +286,12 @@ export const enableShortUrl = async (shortUrl) => {
 
 export const editShortUrl = async (shortUrl, data) => {
   const response = await api.put(API.EDIT(shortUrl), data);
+
+  return response.data;
+};
+
+export const editShortUrlExpiry = async (shortUrl, data) => {
+  const response = await api.patch(API.EDIT_EXPIRY(shortUrl), data);
 
   return response.data;
 };

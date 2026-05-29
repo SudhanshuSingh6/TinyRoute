@@ -10,6 +10,7 @@ import DateRangePicker, {
   today,
 } from "../components/Common/DateRangePicker";
 import { useFetchAnalytics, useFetchLiveAnalytics } from "../hooks/useQuery";
+import { getDimension, toNum, buildChart, formatPeakLabel } from "../utils/analyticsTransform";
 
 // ── analytics components ──────────────────────────────────────────────────────
 import VelocityBadge from "../components/Analytics/VelocityBadge";
@@ -17,102 +18,6 @@ import DimensionCard from "../components/Analytics/DimensionCard";
 import DimensionBar from "../components/Analytics/DimensionBar";
 import ClicksLineChart from "../components/Analytics/ClicksLineChart";
 import PeakActivityCard from "../components/Analytics/PeakActivityCard";
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ──────────────────────────────────────────────────────────────────────────────
-
-const getDimension = (list, type) => {
-  if (!Array.isArray(list)) return [];
-
-  return list
-    .filter((d) => d.dimension === type)
-    .sort((a, b) => b.count - a.count);
-};
-
-const toNum = (v) => {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
-};
-
-/**
- * Build chart-ready data.
- */
-const buildChartData = (timeBuckets = []) => {
-  if (!timeBuckets.length) {
-    return {
-      labels: [],
-      values: [],
-      latestLabel: "",
-    };
-  }
-
-  const type = timeBuckets[0]?.type;
-
-  const labels = timeBuckets.map((b) => {
-    switch (type) {
-      case "HOUR":
-        // "2026-04-02 19:00" → "19:00"
-        return b.bucket.split(" ")[1];
-
-      case "DAY": {
-        // "2026-04-02" → "2 Apr"
-        const [year, month, day] = b.bucket.split("-");
-
-        return `${Number(day)} ${new Date(year, month - 1).toLocaleString(
-          "en-IN",
-          {
-            month: "short",
-          },
-        )}`;
-      }
-
-      case "WEEK": {
-        // "Week of 2026-03-30" → "5 Apr"
-
-        const dateString = b.bucket.replace("Week of ", "");
-
-        const [year, month, day] = dateString.split("-");
-
-        const date = new Date(year, month - 1, day);
-
-        date.setDate(date.getDate() + 6);
-
-        return `${date.getDate()} ${date.toLocaleString("en-IN", {
-          month: "short",
-        })}`;
-      }
-
-      case "MONTH": {
-        // "2026-05" → "May 2026"
-
-        const [year, month] = b.bucket.split("-");
-
-        return new Date(year, month - 1).toLocaleString("en-IN", {
-          month: "short",
-          year: "numeric",
-        });
-      }
-
-      default:
-        return b.bucket;
-    }
-  });
-
-  return {
-    labels,
-    values: timeBuckets.map((b) => b.count),
-    latestLabel: labels[labels.length - 1] ?? "",
-  };
-};
-
-const formatPeakLabel = (raw) => {
-  if (!raw || raw === "N/A") return "—";
-
-  const parts = raw.split(" ");
-
-  return parts.length === 2 ? parts[1] : raw;
-};
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Velocity Card
@@ -185,70 +90,10 @@ const AnalyticsPage = () => {
     [analytics],
   );
 
-  const chart = useMemo(() => {
-    const built = buildChartData(analytics?.clicksByTimeBucket);
-
-    const buckets = analytics?.clicksByTimeBucket;
-
-    if (!buckets?.length || !liveAnalytics?.todayClicks) {
-      return built;
-    }
-
-    const patchedValues = [...built.values];
-
-    const now = new Date();
-
-    const localDate = now.toLocaleDateString("en-CA");
-
-    const currentHour = `${localDate} ${String(now.getHours()).padStart(
-      2,
-      "0",
-    )}`;
-
-    const currentIndex = buckets.findIndex((bucket) => {
-      switch (bucket.type) {
-        case "DAY":
-          return bucket.bucket === localDate;
-
-        case "MONTH": {
-          const monthKey = localDate.slice(0, 7);
-
-          return bucket.bucket === monthKey;
-        }
-
-        case "WEEK": {
-          const start = new Date(bucket.bucket.replace("Week of ", ""));
-
-          const end = new Date(start);
-
-          end.setDate(end.getDate() + 6);
-
-          return now >= start && now <= end;
-        }
-
-        case "HOUR":
-          return bucket.bucket.startsWith(currentHour);
-
-        default:
-          return false;
-      }
-    });
-
-    if (currentIndex !== -1) {
-      const historicalValue = built.values[currentIndex];
-
-      const liveValue = liveAnalytics.todayClicks;
-
-      if (liveValue > historicalValue) {
-        patchedValues[currentIndex] = liveValue;
-      }
-    }
-
-    return {
-      ...built,
-      values: patchedValues,
-    };
-  }, [analytics, liveAnalytics]);
+  const chart = useMemo(
+    () => buildChart(analytics, liveAnalytics),
+    [analytics, liveAnalytics],
+  );
 
   const totalClicks = toNum(
     liveAnalytics?.totalClicks ?? analytics?.totalClicks,
@@ -317,7 +162,19 @@ const AnalyticsPage = () => {
             </h1>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-card self-start">
+          <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-card self-start flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setStartDate(today());
+                setEndDate(today());
+              }}
+              className="flex items-center gap-2 rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors duration-150 hover:border-btnColor hover:text-btnColor"
+            >
+              <span className="h-2 w-2 rounded-full bg-green-500" />
+              Today
+            </button>
+
             <DateRangePicker
               startDate={startDate}
               endDate={endDate}
@@ -430,7 +287,7 @@ const AnalyticsPage = () => {
               </div>
             </div>
 
-            <div className="max-w-2xl flex flex-col gap-3">
+            <div className="flex flex-col gap-3">
               {countries.slice(0, 8).map((c) => (
                 <DimensionBar
                   key={c.key}

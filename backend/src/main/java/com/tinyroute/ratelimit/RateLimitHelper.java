@@ -4,7 +4,7 @@ import com.tinyroute.exception.ApiException;
 import com.tinyroute.exception.ErrorCodes;
 import com.tinyroute.exception.ErrorMessages;
 import com.tinyroute.exception.RateLimitExceededException;
-import com.tinyroute.exception.response.RateLimitErrorResponse;
+import com.tinyroute.exception.response.ApiErrorResponse;
 import com.tinyroute.infra.network.ClientIpService;
 import com.tinyroute.user.entity.Role;
 import com.tinyroute.user.entity.User;
@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.security.Principal;
+import java.time.OffsetDateTime;
 
 @Component
 @RequiredArgsConstructor
@@ -165,7 +166,7 @@ public class RateLimitHelper {
         }
     }
 
-    public ResponseEntity<RateLimitErrorResponse> applyPublicRateLimit(
+    public ResponseEntity<ApiErrorResponse> applyPublicRateLimit(
             HttpServletRequest request,
             RateLimitEndpoint endpoint,
             String path
@@ -220,13 +221,12 @@ public class RateLimitHelper {
                             )
                     )
                     .body(
-                            new RateLimitErrorResponse(
-                                    "RATE_LIMIT_EXCEEDED",
+                            new ApiErrorResponse(
+                                    HttpStatus.TOO_MANY_REQUESTS.value(),
+                                    ErrorCodes.RATE_LIMIT_EXCEEDED,
+                                    endpoint.getExceededMessage(),
                                     path,
-                                    endpoint.getPlan().getCapacity(),
-                                    probe.getRemainingTokens(),
-                                    retryAfter,
-                                    endpoint.getExceededMessage()
+                                    OffsetDateTime.now()
                             )
                     );
 

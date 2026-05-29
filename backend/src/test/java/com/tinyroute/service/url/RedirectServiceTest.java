@@ -8,7 +8,7 @@ import com.tinyroute.url.entity.UrlStatus;
 import com.tinyroute.url.repository.UrlMappingRepository;
 import com.tinyroute.infra.network.ClientIpService;
 import com.tinyroute.infra.cache.RedirectCacheService;
-import com.tinyroute.redirect.service.UrlRedirectService;
+import com.tinyroute.redirect.service.RedirectService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +25,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class UrlRedirectServiceTest {
+class RedirectServiceTest {
 
     @Mock
     private UrlMappingRepository urlMappingRepository;
@@ -39,7 +39,7 @@ class UrlRedirectServiceTest {
     private ClickEventDataBuilder clickEventDataBuilder;
 
     @InjectMocks
-    private UrlRedirectService urlRedirectService;
+    private RedirectService redirectService;
 
     // ─── helper ────────────────────────────────────────────────────────────────
 
@@ -100,7 +100,7 @@ class UrlRedirectServiceTest {
     void getOriginalUrl_whenShortUrlNotFound_returnsNull() {
         when(urlMappingRepository.findByShortUrl("missing")).thenReturn(null);
 
-        UrlMapping result = urlRedirectService.getOriginalUrl("missing", requestFrom("1.1.1.1"));
+        UrlMapping result = redirectService.getOriginalUrl("missing", requestFrom("1.1.1.1"));
 
         assertNull(result);
         verifyNoInteractions(clickEventDataBuilder);
@@ -115,7 +115,7 @@ class UrlRedirectServiceTest {
         mapping.setStatus(UrlStatus.DISABLED);
         when(urlMappingRepository.findByShortUrl("dis12345")).thenReturn(mapping);
 
-        UrlMapping result = urlRedirectService.getOriginalUrl("dis12345", requestFrom("1.1.1.1"));
+        UrlMapping result = redirectService.getOriginalUrl("dis12345", requestFrom("1.1.1.1"));
 
         assertEquals(UrlStatus.DISABLED, result.getStatus());
         verifyNoInteractions(clickEventDataBuilder);
@@ -131,7 +131,7 @@ class UrlRedirectServiceTest {
 
         when(urlMappingRepository.findByShortUrl("exp12345")).thenReturn(mapping);
 
-        UrlMapping result = urlRedirectService.getOriginalUrl("exp12345", requestFrom("1.1.1.1"));
+        UrlMapping result = redirectService.getOriginalUrl("exp12345", requestFrom("1.1.1.1"));
 
         assertEquals(UrlStatus.EXPIRED, result.getStatus());
         verify(urlMappingRepository).updateStatus(eq(20L), eq(UrlStatus.EXPIRED));
@@ -147,7 +147,7 @@ class UrlRedirectServiceTest {
 
         when(urlMappingRepository.findByShortUrl("exp22222")).thenReturn(mapping);
 
-        urlRedirectService.getOriginalUrl("exp22222", requestFrom("1.1.1.1"));
+        redirectService.getOriginalUrl("exp22222", requestFrom("1.1.1.1"));
 
         // Already EXPIRED — no redundant status update
         verify(urlMappingRepository, never()).updateStatus(anyLong(), any());
@@ -164,9 +164,9 @@ class UrlRedirectServiceTest {
         mapping.setMaxClicks(5);
 
         when(urlMappingRepository.findByShortUrl("limit123")).thenReturn(mapping);
-        when(redisAnalyticsService.getSyncedLifetimeUnique(30L)).thenReturn(0L);
 
-        UrlMapping result = urlRedirectService.getOriginalUrl("limit123", new MockHttpServletRequest());
+
+        UrlMapping result = redirectService.getOriginalUrl("limit123", new MockHttpServletRequest());
 
         assertEquals(UrlStatus.CLICK_LIMIT_REACHED, result.getStatus());
         // Service must call updateStatus — NOT save()
@@ -184,9 +184,8 @@ class UrlRedirectServiceTest {
         mapping.setMaxClicks(10);
 
         when(urlMappingRepository.findByShortUrl("limitx22")).thenReturn(mapping);
-        when(redisAnalyticsService.getSyncedLifetimeUnique(31L)).thenReturn(0L);
 
-        urlRedirectService.getOriginalUrl("limitx22", new MockHttpServletRequest());
+        redirectService.getOriginalUrl("limitx22", new MockHttpServletRequest());
 
         verify(urlMappingRepository, never()).updateStatus(anyLong(), any());
         verifyNoInteractions(clickEventDataBuilder);
@@ -203,7 +202,7 @@ class UrlRedirectServiceTest {
 
         MockHttpServletRequest request = requestFrom("1.1.1.1");
         ClickEventData event = stubRecordedClick(mapping, request);
-        UrlMapping result = urlRedirectService.getOriginalUrl("abc12345", request);
+        UrlMapping result = redirectService.getOriginalUrl("abc12345", request);
 
         assertNotNull(result);
         verify(redisAnalyticsService).recordClick(event);
@@ -226,7 +225,7 @@ class UrlRedirectServiceTest {
 
         ClickEventData event = stubRecordedClick(mapping, request);
 
-        urlRedirectService.getOriginalUrl("dup12345", request);
+        redirectService.getOriginalUrl("dup12345", request);
 
         verify(redisAnalyticsService).recordClick(event);
         verify(urlMappingRepository, never()).incrementClickCount(anyLong());
@@ -241,11 +240,10 @@ class UrlRedirectServiceTest {
         mapping.setMaxClicks(5);
 
         when(urlMappingRepository.findByShortUrl("edge1234")).thenReturn(mapping);
-        when(redisAnalyticsService.getSyncedLifetimeUnique(300L)).thenReturn(0L);
 
         MockHttpServletRequest req = requestFrom("5.5.5.5");
         ClickEventData event = stubRecordedClick(mapping, req);
-        urlRedirectService.getOriginalUrl("edge1234", req);
+        redirectService.getOriginalUrl("edge1234", req);
 
         verify(redisAnalyticsService).recordClick(event);
         // Boundary rule: reaching max on this click still allows current redirect.
@@ -268,7 +266,7 @@ class UrlRedirectServiceTest {
 
         MockHttpServletRequest req = requestFrom("2.2.2.2");
         stubRecordedClick(mapping, req);
-        UrlMapping result = urlRedirectService.getOriginalUrl("free1234", req);
+        UrlMapping result = redirectService.getOriginalUrl("free1234", req);
 
         assertEquals(UrlStatus.ACTIVE, result.getStatus());
         verify(urlMappingRepository, never()).updateStatus(anyLong(), any());
@@ -285,7 +283,7 @@ class UrlRedirectServiceTest {
 
         MockHttpServletRequest req = requestFrom("3.3.3.3");
         stubRecordedClick(mapping, req);
-        UrlMapping result = urlRedirectService.getOriginalUrl("futx1234", req);
+        UrlMapping result = redirectService.getOriginalUrl("futx1234", req);
 
         assertEquals(UrlStatus.ACTIVE, result.getStatus());
         verify(urlMappingRepository, never()).updateStatus(anyLong(), eq(UrlStatus.EXPIRED));

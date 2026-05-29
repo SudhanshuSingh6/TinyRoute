@@ -25,7 +25,7 @@ import java.security.Principal;
 
 @Tag(name = "URL Analytics", description = "Analytics for short URLs")
 @RestController
-@RequestMapping("/api/urls")
+@RequestMapping("/api/urls/analytics")
 @RequiredArgsConstructor
 public class AnalyticsController {
 
@@ -42,7 +42,7 @@ public class AnalyticsController {
     @ApiResponse(responseCode = "400", description = "Invalid date range")
     @ApiResponse(responseCode = "404", description = "URL not found")
     @ApiResponse(responseCode = "429", description = "Rate limit exceeded")
-    @GetMapping("/analytics/{shortUrl}")
+    @GetMapping("/{shortUrl}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<LinkAnalyticsResponse> getUserAnalytics(
             @Parameter(description = "The short URL code", example = "abc12345")
@@ -84,7 +84,7 @@ public class AnalyticsController {
     /**
      * Live realtime analytics from Redis.
      */
-    @GetMapping("/analytics/live/{shortUrl}")
+    @GetMapping("/{shortUrl}/live")
     @PreAuthorize("hasRole('USER')")
     @Operation(summary = "Get live realtime analytics")
     @ApiResponse(responseCode = "200", description = "Live analytics retrieved")

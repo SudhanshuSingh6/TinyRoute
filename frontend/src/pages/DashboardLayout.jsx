@@ -9,6 +9,7 @@ import Button from "../components/Common/Button";
 import EmptyState from "../components/Common/EmptyState";
 import DateRangePicker from "../components/Common/DateRangePicker";
 import { useFetchMyShortUrls, useFetchTotalClicks } from "../hooks/useQuery";
+import QueryLayout from "../components/Common/QueryLayout";
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
@@ -45,7 +46,7 @@ const DashboardLayout = () => {
 
   return (
     <div className="lg:px-14 sm:px-8 px-4 min-h-page">
-      <div className="lg:w-11/12 w-full mx-auto py-16">
+      <div className="lg:w-8/12 w-full mx-auto py-16">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h1 className="text-slate-900 font-bold text-2xl">Dashboard</h1>
           <DateRangePicker
@@ -82,19 +83,22 @@ const DashboardLayout = () => {
         </div>
 
         <div>
-          {isLoading ? (
-            <Loader message="Loading your links..." />
-          ) : myShortenUrls.length === 0 ? (
-            <EmptyState
-              icon={<FaLink />}
-              title="No short links yet"
-              subtitle="Create your first short URL and start tracking clicks."
-              actionLabel="Create Short URL"
-              onAction={() => setShortenPopUp(true)}
-            />
-          ) : (
+          <QueryLayout
+            isLoading={isLoading}
+            loaderMessage="Loading your links..."
+            isEmpty={myShortenUrls.length === 0}
+            emptyState={
+              <EmptyState
+                icon={<FaLink />}
+                title="No short links yet"
+                subtitle="Create your first short URL and start tracking clicks."
+                actionLabel="Create Short URL"
+                onAction={() => setShortenPopUp(true)}
+              />
+            }
+          >
             <ShortenUrlList data={myShortenUrls} refetch={refetch} />
-          )}
+          </QueryLayout>
         </div>
       </div>
 

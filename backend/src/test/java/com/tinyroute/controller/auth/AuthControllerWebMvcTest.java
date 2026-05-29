@@ -11,6 +11,8 @@ import com.tinyroute.user.entity.User;
 import com.tinyroute.exception.AlreadyExistsException;
 import com.tinyroute.exception.ApiException;
 import com.tinyroute.exception.handler.GlobalExceptionHandler;
+import com.tinyroute.exception.response.ApiErrorResponse;
+import com.tinyroute.ratelimit.RateLimitEndpoint;
 import com.tinyroute.ratelimit.RateLimitHelper;
 import com.tinyroute.ratelimit.RateLimitService;
 import com.tinyroute.infra.network.ClientIpService;
@@ -24,11 +26,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
@@ -237,5 +241,30 @@ class AuthControllerWebMvcTest {
         mockMvc.perform(post("/api/auth/public/refresh"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").value("REFRESH_TOKEN_MISSING"));
+    }
+
+    // ─────────────────────────────────────────────────
+    // Rate limiting
+    // ─────────────────────────────────────────────────
+
+    @Test
+    void login_rateLimited_returns429WithHeaders() throws Exception {
+        ResponseEntity<ApiErrorResponse> limited = ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", "30")
+                .header("X-RateLimit-Remaining", "0")
+                .build();
+        when(rateLimitHelper.applyPublicRateLimit(any(), eq(RateLimitEndpoint.AUTH), anyString()))
+                .thenReturn(limited);
+
+        LoginRequest request = new LoginRequest();
+        request.setUsername("alice");
+        request.setPassword("password123");
+
+        mockMvc.perform(post("/api/auth/public/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(header().string("Retry-After", "30"));
     }
 }

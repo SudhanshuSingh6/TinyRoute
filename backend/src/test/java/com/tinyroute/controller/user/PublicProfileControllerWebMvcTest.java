@@ -42,7 +42,7 @@ class PublicProfileControllerWebMvcTest {
         urlDto.setShortUrl("abc12345");
         urlDto.setTitle("My Blog");
         urlDto.setOriginalUrl("https://myblog.com");
-        urlDto.setCreatedDate(LocalDateTime.of(2026, 5, 20, 10, 0));
+        urlDto.setCreatedAt(LocalDateTime.of(2026, 5, 20, 10, 0));
 
         PublicProfileResponse mockResponse = new PublicProfileResponse();
         mockResponse.setUsername("alice");

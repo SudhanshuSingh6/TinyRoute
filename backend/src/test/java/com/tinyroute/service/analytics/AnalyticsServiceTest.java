@@ -55,7 +55,7 @@ class AnalyticsServiceTest {
     private UrlMapping activeMapping(Long id) {
         UrlMapping m = new UrlMapping();
         m.setId(id);
-        m.setCreatedDate(LocalDateTime.of(2026, 1, 1, 0, 0));
+        m.setCreatedAt(LocalDateTime.of(2026, 1, 1, 0, 0));
         return m;
     }
 
@@ -137,25 +137,25 @@ class AnalyticsServiceTest {
     }
 
     @Test
-    void getAnalytics_whenNoStartDateProvided_usesCreatedDate() {
+    void getAnalytics_whenNoStartDateProvided_usescreatedAt() {
         UrlMapping mapping = activeMapping(3L);
-        LocalDateTime createdDate = LocalDateTime.of(2026, 1, 1, 0, 0);
-        mapping.setCreatedDate(createdDate);
+        LocalDateTime createdAt = LocalDateTime.of(2026, 1, 1, 0, 0);
+        mapping.setCreatedAt(createdAt);
         when(urlMappingRepository.findByShortUrlAndUserUsername("abc", "alice"))
                 .thenReturn(Optional.of(mapping));
 
         LocalDateTime end = LocalDateTime.now().minusDays(1);
-        when(clickEventRepository.findByUrlMappingAndClickDateBetween(eq(mapping), eq(createdDate), any()))
+        when(clickEventRepository.findByUrlMappingAndClickDateBetween(eq(mapping), eq(createdAt), any()))
                 .thenReturn(List.of());
         when(urlUniqueVisitorRepository.countByUrlMappingIdAndFirstSeenAtBetween(any(), any(), any()))
                 .thenReturn(0L);
         when(analyticsMapper.toLinkAnalyticsResponse(any(), anyLong(), any(), any()))
                 .thenReturn(new LinkAnalyticsResponse());
 
-        // no start date in request → should default to createdDate
+        // no start date in request → should default to createdAt
         analyticsService.getAnalytics("abc", queryRequest(null, end), "alice");
 
-        verify(clickEventRepository).findByUrlMappingAndClickDateBetween(eq(mapping), eq(createdDate), any());
+        verify(clickEventRepository).findByUrlMappingAndClickDateBetween(eq(mapping), eq(createdAt), any());
     }
 
     // ─── getTotalClicksByUserAndDate ─────────────────────────────────────────────

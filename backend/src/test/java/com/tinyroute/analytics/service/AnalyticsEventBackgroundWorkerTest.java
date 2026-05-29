@@ -75,7 +75,6 @@ class AnalyticsEventBackgroundWorkerTest {
 
         when(userAgentParsingService.parse("Mozilla/5.0"))
                 .thenReturn(new UserAgentParsingService.ParsedUserAgent("Chrome", "Windows", "Desktop"));
-        when(urlMappingRepository.findById(123L)).thenReturn(java.util.Optional.of(urlMapping));
 
         worker.processQueuedClickEvents();
 
@@ -101,13 +100,14 @@ class AnalyticsEventBackgroundWorkerTest {
                 "hashed-ip",
                 LocalDateTime.of(2026, 5, 25, 12, 0)
         );
-        verify(redisAnalyticsService).recordEnrichedAggregates(
+        verify(redisAnalyticsService).recordLiveAggregates(
                 123L,
-                "Chrome",
-                "US",
-                "Desktop",
+                "US",       // country
+                "Desktop",  // deviceType
+                "Chrome",   // browser
+                "Windows",  // os
+                "https://example.com", // referrer
                 LocalDate.of(2026, 5, 25)
         );
-        verify(redisAnalyticsService).syncLifetimeUnique(123L, 1L);
     }
 }

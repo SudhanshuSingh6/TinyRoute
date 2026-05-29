@@ -59,7 +59,7 @@ class UrlCreationControllerWebMvcTest {
     }
 
     @Test
-    void createShortUrl_validRequest_returns200AndResponseBody() throws Exception {
+    void createShortUrl_validRequest_returns201AndResponseBody() throws Exception {
         UrlDetailsResponse response = new UrlDetailsResponse();
         response.setShortUrl("abc12345");
         response.setOriginalUrl("https://openai.com");
@@ -77,7 +77,7 @@ class UrlCreationControllerWebMvcTest {
                         .principal(() -> "alice")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.shortUrl").value("abc12345"))
                 .andExpect(jsonPath("$.originalUrl").value("https://openai.com"));
     }

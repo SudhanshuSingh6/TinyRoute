@@ -106,7 +106,8 @@ class RedirectFlowIntegrationTest {
         mapping.setOriginalUrl("https://openai.com");
         mapping.setShortUrl("it123456");
         mapping.setStatus(UrlStatus.ACTIVE);
-        mapping.setCreatedDate(LocalDateTime.now());
+        mapping.setMaxClicks(100); // positive limit so the link is below it (0 would read as limit-reached)
+        mapping.setCreatedAt(LocalDateTime.now());
         urlMappingRepository.save(mapping);
 
         mockMvc.perform(get("/it123456")
@@ -142,7 +143,7 @@ class RedirectFlowIntegrationTest {
         mapping.setOriginalUrl("https://openai.com/limit");
         mapping.setShortUrl("itlimit1");
         mapping.setStatus(UrlStatus.ACTIVE);
-        mapping.setCreatedDate(LocalDateTime.now());
+        mapping.setCreatedAt(LocalDateTime.now());
         mapping.setMaxClicks(1);
         mapping.setClickCount(0);
         urlMappingRepository.save(mapping);

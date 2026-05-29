@@ -11,7 +11,7 @@ import com.tinyroute.analytics.repository.UrlUniqueVisitorRepository;
 import com.tinyroute.url.repository.UrlMappingRepository;
 import com.tinyroute.user.repository.UserRepository;
 import com.tinyroute.analytics.service.UniqueVisitorRegistrationService;
-import com.tinyroute.redirect.service.UrlRedirectService;
+import com.tinyroute.redirect.service.RedirectService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
 class RedirectConcurrencyIntegrationTest {
 
     @Autowired
-    private UrlRedirectService urlRedirectService;
+    private RedirectService redirectService;
 
     @Autowired
     private UserRepository userRepository;
@@ -70,36 +70,33 @@ class RedirectConcurrencyIntegrationTest {
 
     @Test
     void redirectConcurrency_respectsMaxClicksUnderRace() throws Exception {
-        createActiveMapping("race-max", 1);
-        stubFirstVisitOnly();
+        // A link already at its click limit must resolve to CLICK_LIMIT_REACHED for every
+        // concurrent request — the status guard must be race-safe. clickCount itself is
+        // incremented asynchronously by the analytics worker, so it is not asserted here.
+        UrlMapping mapping = createActiveMapping("race-max", 1);
+        mapping.setClickCount(1); // already at the limit
+        urlMappingRepository.save(mapping);
 
         runConcurrentRedirectCalls("race-max", 8);
 
-        MockHttpServletRequest followUpRequest = new MockHttpServletRequest();
-        followUpRequest.setRemoteAddr("9.9.9.9");
-        followUpRequest.addHeader("User-Agent", "Mozilla/5.0");
-        followUpRequest.addHeader("Referer", "https://example.com");
-        followUpRequest.addHeader("Accept-Language", "en-US,en;q=0.9");
-
-        urlRedirectService.getOriginalUrl("race-max", followUpRequest);
-
         UrlMapping updated = urlMappingRepository.findByShortUrl("race-max");
-
-        assertEquals(1, updated.getClickCount());
         assertEquals(UrlStatus.CLICK_LIMIT_REACHED, updated.getStatus());
+        assertEquals(1, updated.getClickCount());
     }
 
     @Test
-    void redirectConcurrency_marksSingleUniqueClickForSameIp() throws Exception {
+    void redirectConcurrency_underLimitStaysActiveAndIsRaceSafe() throws Exception {
+        // Concurrent same-IP hits on an under-limit link must all be served safely and leave
+        // the link ACTIVE. Unique-visitor de-duplication and click counting are performed
+        // asynchronously by the worker (UniqueVisitorRegistrationService + the DB unique
+        // constraint covered in PersistenceRulesDataJpaTest), so clickCount stays 0 here.
         createActiveMapping("race-uniq", 100);
-        stubFirstVisitOnly();
 
         runConcurrentRedirectCalls("race-uniq", 12);
 
         UrlMapping updated = urlMappingRepository.findByShortUrl("race-uniq");
-
-        assertEquals(1, updated.getClickCount());
         assertEquals(UrlStatus.ACTIVE, updated.getStatus());
+        assertEquals(0, updated.getClickCount());
     }
 
     private void stubFirstVisitOnly() {
@@ -122,7 +119,7 @@ class RedirectConcurrencyIntegrationTest {
         mapping.setShortUrl(shortUrl);
         mapping.setStatus(UrlStatus.ACTIVE);
         mapping.setMaxClicks(maxClicks);
-        mapping.setCreatedDate(LocalDateTime.now());
+        mapping.setCreatedAt(LocalDateTime.now());
         mapping.setClickCount(0);
 
         return urlMappingRepository.save(mapping);
@@ -147,7 +144,7 @@ class RedirectConcurrencyIntegrationTest {
                     request.addHeader("Referer", "https://example.com");
                     request.addHeader("Accept-Language", "en-US,en;q=0.9");
 
-                    urlRedirectService.getOriginalUrl(shortUrl, request);
+                    redirectService.getOriginalUrl(shortUrl, request);
                 } catch (Throwable t) {
                     failures.add(t);
                 } finally {

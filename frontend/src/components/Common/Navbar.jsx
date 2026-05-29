@@ -10,6 +10,7 @@ import { API } from "../../utils/apiRoutes";
 import { handleLogout } from "../../utils/authUtils";
 
 import Logo from "./Logo";
+import AvatarDisplay from "./AvatarDisplay";
 
 const NAV_LINKS = [
   { label: "Home", path: "/" },
@@ -134,17 +135,14 @@ const Navbar = () => {
                 aria-haspopup="menu"
                 aria-expanded={profileOpen}
               >
-                {avatarUrl ? (
-                  <img
+                <div className="relative z-10 rounded-full bg-white">
+                  <AvatarDisplay
                     src={avatarUrl}
-                    alt={username || "Profile"}
-                    className="h-7 w-7 rounded-full object-cover"
+                    initials={initials}
+                    size={28}
+                    bordered={false}
                   />
-                ) : (
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-btnColor text-xs font-bold">
-                    {initials}
-                  </span>
-                )}
+                </div>
 
                 <span className="max-w-28 truncate">
                   {username || "Profile"}

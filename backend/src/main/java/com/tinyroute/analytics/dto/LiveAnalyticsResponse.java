@@ -7,40 +7,38 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.Map;
 
-/**
- * Response DTO for live analytics endpoint
- * <p>
- * Returned by: GET /api/urls/analytics/live/{shortUrl}
- * Used by: Frontend dashboard polling
- * Updated: Every 3-5 seconds
- */
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class LiveAnalyticsResponse {
 
-    /**
-     * Total clicks all-time
-     */
-    private Long totalClicks;
-
-    /**
-     * Clicks today
-     */
     private Long todayClicks;
 
-    /**
-     * Unique visitors today
-     * (deduplicated by IP hash)
-     */
-    private Long uniqueVisitorsToday;
+    private Long todayUniqueVisitors;
 
-    /**
-     * Timestamp when data was fetched
-     * Used by frontend to show "Updated: Just now"
-     */
+    @Builder.Default
+    private Map<String, Long> hourlyClicks = Collections.emptyMap();
+
+    @Builder.Default
+    private Map<String, Long> countries = Collections.emptyMap();
+
+    @Builder.Default
+    private Map<String, Long> devices = Collections.emptyMap();
+
+    @Builder.Default
+    private Map<String, Long> browsers = Collections.emptyMap();
+
+    @Builder.Default
+    private Map<String, Long> operatingSystems = Collections.emptyMap();
+
+    @Builder.Default
+    private Map<String, Long> referrers = Collections.emptyMap();
+
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime lastUpdated;
 }

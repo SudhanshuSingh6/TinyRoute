@@ -12,23 +12,14 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
+import java.util.Collections;
 import java.util.Map;
+import java.util.TreeMap;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class RedisAnalyticsService {
-
-    private static final List<String> DEVICE_BUCKETS = List.of(
-            "mobile",
-            "desktop",
-            "tablet",
-            "bot",
-            "unknown"
-    );
 
     private final RedisAnalyticsHelper redisHelper;
     private final RedisAnalyticsEventQueue analyticsEventQueue;
@@ -40,243 +31,169 @@ public class RedisAnalyticsService {
             LocalDate today = clickDate(event);
             Long urlMappingId = event.getUrlMappingId();
 
-            // Global clicks
             redisHelper.incrementCounter(
-                    RedisAnalyticsConstants.globalClicksKey(),
-                    0
-            );
-
-            // Total clicks per URL
-            redisHelper.incrementCounter(
-                    RedisAnalyticsConstants.urlTotalClicksKey(urlMappingId),
-                    0
-            );
-
-            // Daily clicks
-            redisHelper.incrementCounter(
-                    RedisAnalyticsConstants.urlDailyClicksKey(
-                            urlMappingId,
-                            today
-                    ),
+                    RedisAnalyticsConstants.urlDailyClicksKey(urlMappingId, today),
                     RedisAnalyticsConstants.DAILY_COUNTER_TTL_SECONDS
             );
 
-            // Unique visitors today
             redisHelper.addToSet(
-                    RedisAnalyticsConstants.urlUniqueVisitorsKey(
-                            urlMappingId,
-                            today
-                    ),
+                    RedisAnalyticsConstants.urlUniqueVisitorsKey(urlMappingId, today),
                     event.getIpHash(),
                     RedisAnalyticsConstants.UNIQUE_SET_TTL_SECONDS
             );
 
-            // Async queue
+            String hour = String.format("%02d", clickHour(event));
+            redisHelper.incrementHash(
+                    RedisAnalyticsConstants.urlHourlyClicksKey(urlMappingId, today),
+                    hour,
+                    RedisAnalyticsConstants.LIVE_HASH_TTL_SECONDS
+            );
+
             analyticsEventQueue.enqueue(event);
 
         } catch (Exception e) {
-
-            log.warn(
-                    "Failed to record realtime analytics for urlId={}",
-                    event.getUrlMappingId(),
-                    e
-            );
+            log.warn("Failed to record realtime analytics for urlId={}", event.getUrlMappingId(), e);
         }
     }
 
-    public void recordEnrichedAggregates(
+    public void recordLiveAggregates(
             Long urlMappingId,
-            String browser,
             String country,
             String deviceType,
+            String browser,
+            String os,
+            String referrer,
             LocalDate date
     ) {
-
         try {
+            LocalDate metricDate = date != null ? date : LocalDate.now();
+            long ttl = RedisAnalyticsConstants.LIVE_HASH_TTL_SECONDS;
 
-            LocalDate metricDate =
-                    date != null ? date : LocalDate.now();
-
-            redisHelper.incrementCounter(
-                    RedisAnalyticsConstants.urlBrowserKey(
-                            urlMappingId,
-                            normalizeDimension(browser),
-                            metricDate
-                    ),
-                    RedisAnalyticsConstants.DAILY_COUNTER_TTL_SECONDS
+            redisHelper.incrementHash(
+                    RedisAnalyticsConstants.urlCountryHashKey(urlMappingId, metricDate),
+                    normalizeDimension(country),
+                    ttl
             );
-
-            redisHelper.incrementCounter(
-                    RedisAnalyticsConstants.urlCountryKey(
-                            urlMappingId,
-                            normalizeDimension(country),
-                            metricDate
-                    ),
-                    RedisAnalyticsConstants.DAILY_COUNTER_TTL_SECONDS
+            redisHelper.incrementHash(
+                    RedisAnalyticsConstants.urlDeviceHashKey(urlMappingId, metricDate),
+                    normalizeDimension(deviceType),
+                    ttl
             );
-
-            redisHelper.incrementCounter(
-                    RedisAnalyticsConstants.urlDeviceKey(
-                            urlMappingId,
-                            normalizeDimension(deviceType),
-                            metricDate
-                    ),
-                    RedisAnalyticsConstants.DAILY_COUNTER_TTL_SECONDS
+            redisHelper.incrementHash(
+                    RedisAnalyticsConstants.urlBrowserHashKey(urlMappingId, metricDate),
+                    normalizeDimension(browser),
+                    ttl
+            );
+            redisHelper.incrementHash(
+                    RedisAnalyticsConstants.urlOsHashKey(urlMappingId, metricDate),
+                    normalizeDimension(os),
+                    ttl
+            );
+            redisHelper.incrementHash(
+                    RedisAnalyticsConstants.urlReferrerHashKey(urlMappingId, metricDate),
+                    normalizeDimension(referrer),
+                    ttl
             );
 
         } catch (Exception e) {
-
-            log.warn(
-                    "Failed to record enriched analytics for urlId={}",
-                    urlMappingId,
-                    e
-            );
+            log.warn("Failed to record live aggregates for urlId={}", urlMappingId, e);
         }
     }
 
-    /**
-     * Live realtime analytics.
-     * <p>
-     * Redis ONLY.
-     */
     public LiveAnalyticsResponse getLiveAnalytics(Long urlMappingId) {
 
         try {
-
             LocalDate today = LocalDate.now();
 
-            Long totalClicks = redisHelper.getCounter(
-                    RedisAnalyticsConstants.urlTotalClicksKey(
-                            urlMappingId
-                    )
-            );
-
             Long todayClicks = redisHelper.getCounter(
-                    RedisAnalyticsConstants.urlDailyClicksKey(
-                            urlMappingId,
-                            today
-                    )
+                    RedisAnalyticsConstants.urlDailyClicksKey(urlMappingId, today)
             );
 
-            Long uniqueVisitors = redisHelper.getSetSize(
-                    RedisAnalyticsConstants.urlUniqueVisitorsKey(
-                            urlMappingId,
-                            today
-                    )
+            Long todayUniqueVisitors = redisHelper.getSetSize(
+                    RedisAnalyticsConstants.urlUniqueVisitorsKey(urlMappingId, today)
+            );
+
+            Map<String, Long> hourlyClicks = sortedHourlyMap(
+                    redisHelper.getHash(RedisAnalyticsConstants.urlHourlyClicksKey(urlMappingId, today))
+            );
+
+            Map<String, Long> countries = redisHelper.getHash(
+                    RedisAnalyticsConstants.urlCountryHashKey(urlMappingId, today)
+            );
+            Map<String, Long> devices = redisHelper.getHash(
+                    RedisAnalyticsConstants.urlDeviceHashKey(urlMappingId, today)
+            );
+            Map<String, Long> browsers = redisHelper.getHash(
+                    RedisAnalyticsConstants.urlBrowserHashKey(urlMappingId, today)
+            );
+            Map<String, Long> operatingSystems = redisHelper.getHash(
+                    RedisAnalyticsConstants.urlOsHashKey(urlMappingId, today)
+            );
+            Map<String, Long> referrers = redisHelper.getHash(
+                    RedisAnalyticsConstants.urlReferrerHashKey(urlMappingId, today)
             );
 
             return LiveAnalyticsResponse.builder()
-                    .totalClicks(totalClicks)
                     .todayClicks(todayClicks)
-                    .uniqueVisitorsToday(uniqueVisitors)
+                    .todayUniqueVisitors(todayUniqueVisitors)
+                    .hourlyClicks(hourlyClicks)
+                    .countries(countries)
+                    .devices(devices)
+                    .browsers(browsers)
+                    .operatingSystems(operatingSystems)
+                    .referrers(referrers)
                     .lastUpdated(LocalDateTime.now())
                     .build();
 
         } catch (Exception e) {
-
-            log.warn(
-                    "Failed to get live analytics for urlId={}",
-                    urlMappingId,
-                    e
-            );
-
-            return LiveAnalyticsResponse.builder()
-                    .totalClicks(0L)
-                    .todayClicks(0L)
-                    .uniqueVisitorsToday(0L)
-                    .lastUpdated(LocalDateTime.now())
-                    .build();
+            log.warn("Failed to get live analytics for urlId={}", urlMappingId, e);
+            return emptyLiveResponse();
         }
     }
 
-    /**
-     * Device breakdown for live dashboard.
-     */
-    public Map<String, Long> getDeviceBreakdownToday(Long urlMappingId) {
-
-        Map<String, Long> breakdown = new LinkedHashMap<>();
-        LocalDate today = LocalDate.now();
-
-        for (String device : DEVICE_BUCKETS) {
-
-            Long count = redisHelper.getCounter(
-                    RedisAnalyticsConstants.urlDeviceKey(
-                            urlMappingId,
-                            device,
-                            today
-                    )
-            );
-
-            if (count > 0) {
-                breakdown.put(device, count);
-            }
-        }
-
-        return breakdown;
-    }
-
-    /**
-     * Queue monitoring endpoint.
-     */
     public Long getRawQueueSize() {
         return analyticsEventQueue.size();
     }
 
-    public Long getGlobalClicks() {
-
-        try {
-
-            return redisHelper.getCounter(
-                    RedisAnalyticsConstants.globalClicksKey()
-            );
-
-        } catch (Exception e) {
-
-            log.warn(
-                    "Failed to get global clicks",
-                    e
-            );
-
-            return 0L;
-        }
-    }
-
-    public Long getUrlTotalClicks(Long urlMappingId) {
-
-        return redisHelper.getCounter(
-                RedisAnalyticsConstants.urlTotalClicksKey(
-                        urlMappingId
-                )
-        );
-    }
-
-    public void syncLifetimeUnique(Long urlId, long uniqueCount) {
-        redisHelper.setCounter(RedisAnalyticsConstants.urlSyncedUniqueKey(urlId), uniqueCount, 0);}
-
-    public Long getSyncedLifetimeUnique(Long urlId) {
-        return redisHelper.getCounter(RedisAnalyticsConstants.urlSyncedUniqueKey(urlId));
-    }
-
     private LocalDate clickDate(ClickEventData event) {
-
         return event.getClickTime() != null
                 ? event.getClickTime().toLocalDate()
                 : LocalDate.now();
     }
 
-    private String normalizeDimension(String value) {
+    private int clickHour(ClickEventData event) {
+        return event.getClickTime() != null
+                ? event.getClickTime().getHour()
+                : LocalDateTime.now().getHour();
+    }
 
+    private Map<String, Long> sortedHourlyMap(Map<String, Long> raw) {
+        if (raw == null || raw.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return new TreeMap<>(raw);
+    }
+
+    private String normalizeDimension(String value) {
         if (!StringUtils.hasText(value)) {
             return "unknown";
         }
+        String normalized = value.trim();
 
-        String normalized = value.trim()
-                .toLowerCase(Locale.ROOT)
-                .replaceAll("[^a-z0-9]+", "_")
-                .replaceAll("^_+|_+$", "");
+        return normalized.isBlank() ? "unknown" : normalized;
+    }
 
-        return normalized.isBlank()
-                ? "unknown"
-                : normalized;
+    private LiveAnalyticsResponse emptyLiveResponse() {
+        return LiveAnalyticsResponse.builder()
+                .todayClicks(0L)
+                .todayUniqueVisitors(0L)
+                .hourlyClicks(Collections.emptyMap())
+                .countries(Collections.emptyMap())
+                .devices(Collections.emptyMap())
+                .browsers(Collections.emptyMap())
+                .operatingSystems(Collections.emptyMap())
+                .referrers(Collections.emptyMap())
+                .lastUpdated(LocalDateTime.now())
+                .build();
     }
 }

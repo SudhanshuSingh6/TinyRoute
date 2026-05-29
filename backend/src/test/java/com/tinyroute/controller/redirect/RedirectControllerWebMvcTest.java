@@ -4,11 +4,13 @@ import com.tinyroute.redirect.controller.RedirectController;
 import com.tinyroute.url.entity.UrlMapping;
 import com.tinyroute.url.entity.UrlStatus;
 import com.tinyroute.ratelimit.RateLimitHelper;
-import com.tinyroute.redirect.service.UrlRedirectService;
+import com.tinyroute.redirect.service.RedirectService;
+import com.tinyroute.exception.handler.GlobalExceptionHandler;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -24,13 +26,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = RedirectController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 class RedirectControllerWebMvcTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
-    private UrlRedirectService urlRedirectService;
+    private RedirectService redirectService;
 
     @MockitoBean
     private RateLimitHelper rateLimitHelper;
@@ -41,7 +44,7 @@ class RedirectControllerWebMvcTest {
         UrlMapping mapping = new UrlMapping();
         mapping.setStatus(UrlStatus.ACTIVE);
         mapping.setOriginalUrl("https://openai.com");
-        when(urlRedirectService.getOriginalUrl(eq("abc12345"), any())).thenReturn(mapping);
+        when(redirectService.getOriginalUrl(eq("abc12345"), any())).thenReturn(mapping);
 
         mockMvc.perform(get("/abc12345"))
                 .andExpect(status().isFound())
@@ -50,7 +53,7 @@ class RedirectControllerWebMvcTest {
 
     @Test
     void redirect_whenMissingLink_returns404() throws Exception {
-        when(urlRedirectService.getOriginalUrl(eq("missing"), any())).thenReturn(null);
+        when(redirectService.getOriginalUrl(eq("missing"), any())).thenReturn(null);
 
         mockMvc.perform(get("/missing"))
                 .andExpect(status().isNotFound());
@@ -61,7 +64,7 @@ class RedirectControllerWebMvcTest {
         UrlMapping mapping = new UrlMapping();
         mapping.setStatus(UrlStatus.EXPIRED);
         mapping.setExpiresAt(LocalDateTime.of(2026, 3, 1, 0, 0));
-        when(urlRedirectService.getOriginalUrl(eq("expired1"), any())).thenReturn(mapping);
+        when(redirectService.getOriginalUrl(eq("expired1"), any())).thenReturn(mapping);
 
         mockMvc.perform(get("/expired1"))
                 .andExpect(status().isGone())
@@ -73,10 +76,20 @@ class RedirectControllerWebMvcTest {
         UrlMapping mapping = new UrlMapping();
         mapping.setStatus(UrlStatus.ACTIVE);
         mapping.setOriginalUrl("javascript:alert(1)");
-        when(urlRedirectService.getOriginalUrl(eq("badlink"), any())).thenReturn(mapping);
+        when(redirectService.getOriginalUrl(eq("badlink"), any())).thenReturn(mapping);
 
         mockMvc.perform(get("/badlink"))
                 .andExpect(status().isGone())
                 .andExpect(jsonPath("$.message").value("This link has an invalid destination URL."));
+    }
+
+    @Test
+    void redirect_serviceThrowsUnexpectedException_returns500() throws Exception {
+        when(redirectService.getOriginalUrl(eq("boom"), any()))
+                .thenThrow(new RuntimeException("unexpected"));
+
+        mockMvc.perform(get("/boom"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("INTERNAL_ERROR"));
     }
 }

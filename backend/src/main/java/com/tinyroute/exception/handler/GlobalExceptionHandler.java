@@ -14,7 +14,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -43,9 +43,11 @@ public class GlobalExceptionHandler {
         return build(ex.getHttpStatus(), ex.getErrorCode(), ex.getMessage(), request, headers);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+    // Handles both @RequestBody (MethodArgumentNotValidException) and
+    // @ModelAttribute (BindException) validation failures — the former extends the latter.
+    @ExceptionHandler(BindException.class)
     public ResponseEntity<ApiErrorResponse> handleValidation(
-            MethodArgumentNotValidException ex,
+            BindException ex,
             HttpServletRequest request
     ) {
         String message = ex.getBindingResult().getFieldErrors().stream()

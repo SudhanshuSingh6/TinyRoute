@@ -6,7 +6,8 @@ import com.tinyroute.auth.dto.RegisterRequest;
 import com.tinyroute.auth.service.AuthService;
 import com.tinyroute.auth.service.RefreshTokenService;
 import com.tinyroute.exception.ApiException;
-import com.tinyroute.exception.response.RateLimitErrorResponse;
+import com.tinyroute.exception.ErrorCodes;
+import com.tinyroute.exception.response.ApiErrorResponse;
 import com.tinyroute.infra.network.ClientIpService;
 import com.tinyroute.ratelimit.RateLimitEndpoint;
 import com.tinyroute.ratelimit.RateLimitHelper;
@@ -60,7 +61,7 @@ public class AuthController {
             LoginRequest loginRequest,
             HttpServletRequest request,
             HttpServletResponse response) {
-        ResponseEntity<RateLimitErrorResponse> limitResponse =
+        ResponseEntity<ApiErrorResponse> limitResponse =
                 rateLimitHelper.applyPublicRateLimit(
                         request,
                         RateLimitEndpoint.AUTH,
@@ -119,7 +120,7 @@ public class AuthController {
         if (refreshToken == null || refreshToken.isBlank()) {
             throw new ApiException(
                     HttpStatus.UNAUTHORIZED,
-                    "REFRESH_TOKEN_MISSING",
+                    ErrorCodes.REFRESH_TOKEN_MISSING,
                     "Refresh token cookie is missing."
             );
         }

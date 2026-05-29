@@ -1,4 +1,5 @@
 import PropTypes from "prop-types";
+import { baseChartOptions, integerTickCallback } from "../../utils/chartConfig";
 import {
   Chart as ChartJS,
   LineElement,
@@ -98,9 +99,7 @@ const ClicksLineChart = ({ labels, values }) => {
   };
 
   const options = {
-    responsive: true,
-
-    maintainAspectRatio: false,
+    ...baseChartOptions,
 
     animation: {
       duration: 350,
@@ -186,10 +185,7 @@ const ClicksLineChart = ({ labels, values }) => {
             size: 11,
           },
 
-          callback: (value) =>
-            Number.isInteger(value)
-              ? value
-              : "",
+          callback: integerTickCallback,
         },
       },
     },

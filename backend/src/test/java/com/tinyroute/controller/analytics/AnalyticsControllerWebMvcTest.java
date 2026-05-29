@@ -10,6 +10,8 @@ import com.tinyroute.exception.handler.GlobalExceptionHandler;
 import com.tinyroute.exception.RateLimitExceededException;
 import com.tinyroute.ratelimit.RateLimitHelper;
 import com.tinyroute.analytics.service.AnalyticsService;
+import com.tinyroute.analytics.service.RedisAnalyticsService;
+import com.tinyroute.url.repository.UrlMappingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +40,12 @@ class AnalyticsControllerWebMvcTest {
 
     @MockitoBean
     private AnalyticsService analyticsService;
+
+    @MockitoBean
+    private RedisAnalyticsService redisAnalyticsService;
+
+    @MockitoBean
+    private UrlMappingRepository urlMappingRepository;
 
     @MockitoBean
     private RateLimitHelper rateLimitHelper;
@@ -131,15 +139,16 @@ class AnalyticsControllerWebMvcTest {
 
     @Test
     void getUserAnalytics_whenServiceThrowsInvalidDateRange_returns400() throws Exception {
-        // Service throws BAD_REQUEST when end <= start
+        // Uses a VALID range so bean validation passes and the request reaches the service;
+        // the service-thrown INVALID_DATE_RANGE (e.g. after null-date defaulting) maps to 400.
         when(analyticsService.getAnalytics(eq("abc12345"), any(), eq("alice")))
                 .thenThrow(new ApiException(HttpStatus.BAD_REQUEST, "INVALID_DATE_RANGE",
                         "endDate must be after startDate."));
 
         mockMvc.perform(get("/api/urls/analytics/abc12345")
                         .principal(() -> "alice")
-                        .param("startDate", "2026-03-31T00:00:00")
-                        .param("endDate", "2026-03-01T00:00:00"))
+                        .param("startDate", "2026-03-01T00:00:00")
+                        .param("endDate", "2026-03-31T00:00:00"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("INVALID_DATE_RANGE"));
     }
@@ -201,5 +210,17 @@ class AnalyticsControllerWebMvcTest {
                         .principal(() -> "alice"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("X-RateLimit-Remaining", "4"));
+    }
+
+    @Test
+    void getUserAnalytics_endDateBeforeStartDate_returns400() throws Exception {
+        // @AssertTrue on AnalyticsQueryRequest.hasValidDateRange() fails during binding,
+        // before the controller body runs.
+        mockMvc.perform(get("/api/urls/analytics/abc12345")
+                        .param("startDate", "2026-05-01T00:00:00")
+                        .param("endDate", "2026-04-01T00:00:00")
+                        .principal(() -> "alice"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"));
     }
 }

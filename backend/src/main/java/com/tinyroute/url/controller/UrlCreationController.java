@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,7 +33,7 @@ public class UrlCreationController {
     private final RateLimitHelper rateLimitHelper;
 
     @Operation(summary = "Shorten a URL", description = "Creates a short URL. Supports custom alias, expiry date, click limit and title. Rate limited per role.")
-    @ApiResponse(responseCode = "200", description = "URL shortened successfully")
+    @ApiResponse(responseCode = "201", description = "URL shortened successfully")
     @ApiResponse(responseCode = "400", description = "Alias already taken or domain blacklisted")
     @ApiResponse(responseCode = "401", description = "Authenticated user could not be resolved")
     @ApiResponse(responseCode = "429", description = "Rate limit exceeded")
@@ -51,6 +52,6 @@ public class UrlCreationController {
                 ? new HttpHeaders()
                 : rateLimitHelper.buildRateLimitHeaders(result.probe(), result.plan());
 
-        return ResponseEntity.ok().headers(headers).body(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).headers(headers).body(dto);
     }
 }

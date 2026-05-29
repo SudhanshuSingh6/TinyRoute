@@ -16,7 +16,7 @@ public class UrlMapper {
         dto.setShortUrl(urlMapping.getShortUrl());
         dto.setTitle(urlMapping.getTitle());
         dto.setClickCount(urlMapping.getClickCount());
-        dto.setCreatedAt(urlMapping.getCreatedDate());
+        dto.setCreatedAt(urlMapping.getCreatedAt());
         dto.setTotalClickCount(urlMapping.getTotalClickCount());
         dto.setExpiresAt(urlMapping.getExpiresAt());
         dto.setMaxClicks(urlMapping.getMaxClicks());

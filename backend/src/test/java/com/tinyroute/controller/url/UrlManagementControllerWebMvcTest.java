@@ -321,6 +321,29 @@ class UrlManagementControllerWebMvcTest {
                 .andExpect(status().isBadRequest());
     }
 
+    // ─────────────────────────────────────────────────
+    // GET /total-clicks
+    // ─────────────────────────────────────────────────
+
+    @Test
+    void getTotalClicks_endDateBeforeStartDate_returns400() throws Exception {
+        mockMvc.perform(get("/api/urls/total-clicks")
+                        .param("startDate", "2026-05-01")
+                        .param("endDate", "2026-04-01")
+                        .principal(() -> "alice"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("INVALID_DATE_RANGE"));
+    }
+
+    @Test
+    void getTotalClicks_missingStartDate_returns400() throws Exception {
+        mockMvc.perform(get("/api/urls/total-clicks")
+                        .param("endDate", "2026-05-01")
+                        .principal(() -> "alice"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("MISSING_PARAMETER"));
+    }
+
 
     // ─────────────────────────────────────────────────
     // Helpers

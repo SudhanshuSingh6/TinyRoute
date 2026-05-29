@@ -19,7 +19,7 @@ const LinkPreviewCard = ({ preview, fallbackUrl, loading, error }) => {
   const hasMetadata = Boolean(title || description || image);
 
   return (
-    <section className="bg-white border border-slate-200 rounded-xl p-6 shadow-card">
+    <section className="bg-white border border-slate-100 rounded-xl p-2 shadow-card h-[20px]">
       <h2 className="text-lg font-bold text-slate-900 mb-4">Link Preview</h2>
 
       {error && <p className="text-sm text-amber-700 mb-3">{error}</p>}
@@ -37,13 +37,15 @@ const LinkPreviewCard = ({ preview, fallbackUrl, loading, error }) => {
             <img
               src={image}
               alt={title || "Link preview"}
-              className="w-full h-56 object-cover bg-slate-100"
+              className="w-full h-26 object-cover bg-slate-100"
             />
           )}
 
           <div className="p-4 space-y-2">
             {title && <h3 className="text-slate-900 font-bold">{title}</h3>}
-            {description && <p className="text-slate-600 text-sm">{description}</p>}
+            {description && (
+              <p className="text-slate-600 text-sm">{description}</p>
+            )}
             <a
               href={sourceUrl}
               target="_blank"

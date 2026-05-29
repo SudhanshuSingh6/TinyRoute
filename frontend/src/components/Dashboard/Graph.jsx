@@ -1,4 +1,5 @@
 import { Bar } from "react-chartjs-2";
+import { baseChartOptions, integerTickCallback } from "../../utils/chartConfig";
 import {
   Chart as ChartJS,
   BarElement,
@@ -48,18 +49,14 @@ const Graph = ({ graphData }) => {
   };
 
   const options = {
-    maintainAspectRatio: false,
-    responsive: true,
+    ...baseChartOptions,
     plugins: {
       legend: { display: true },
     },
     scales: {
       y: {
         beginAtZero: true,
-        ticks: {
-          callback: (value) =>
-            Number.isInteger(value) ? value.toString() : "",
-        },
+        ticks: { callback: integerTickCallback },
         title: {
           display: true,
           text: "Number of Clicks",

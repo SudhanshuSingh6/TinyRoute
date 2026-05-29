@@ -43,18 +43,15 @@ public class AnalyticsEventBackgroundWorker {
     @Scheduled(fixedDelayString = "5000", initialDelayString = "2000")
     @Transactional
     public void processQueuedClickEvents() {
+
         if (!analyticsEventQueue.hasEvents()) {
             return;
         }
-        long queueSizeBefore = analyticsEventQueue.size();
-        //log.info("Queue size before drain: {}", queueSizeBefore);
 
         List<ClickEventData> batch = analyticsEventQueue.drainBatch(MAX_BATCH_SIZE);
         if (batch.isEmpty()) {
             return;
         }
-
-        //log.info("Drained {} events from queue", batch.size());
 
         List<EnrichedEvent> enrichedEvents = new ArrayList<>(batch.size());
 
@@ -71,7 +68,7 @@ public class AnalyticsEventBackgroundWorker {
             return;
         }
 
-        List<ClickEvent> persistedEvents = enrichedEvents.stream()
+        List<ClickEvent> clickEvents = enrichedEvents.stream()
                 .map(EnrichedEvent::clickEvent)
                 .toList();
 
@@ -79,64 +76,47 @@ public class AnalyticsEventBackgroundWorker {
         long backoffMs = 1000L;
 
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-
             try {
-                clickEventRepository.saveAll(persistedEvents);
+                clickEventRepository.saveAll(clickEvents);
+
                 Map<Long, Long> totalClicksByUrl = new HashMap<>();
                 Map<Long, Long> uniqueClicksByUrl = new HashMap<>();
 
-                for (EnrichedEvent event : enrichedEvents) {
-                    Long urlId = event.clickEvent.getUrlMapping().getId();
+                for (EnrichedEvent e : enrichedEvents) {
+                    Long urlId = e.clickEvent().getUrlMapping().getId();
                     totalClicksByUrl.merge(urlId, 1L, Long::sum);
-
-                    if (event.uniqueVisit) {
+                    if (e.uniqueVisit()) {
                         uniqueClicksByUrl.merge(urlId, 1L, Long::sum);
                     }
-
                 }
+
                 for (Map.Entry<Long, Long> entry : totalClicksByUrl.entrySet()) {
-                    urlMappingRepository.incrementTotalClickCount(
-                            entry.getKey(),
-                            entry.getValue()
-                    );
+                    urlMappingRepository.incrementTotalClickCount(entry.getKey(), entry.getValue());
                 }
-
                 for (Map.Entry<Long, Long> entry : uniqueClicksByUrl.entrySet()) {
-                    urlMappingRepository.incrementClickCount(
-                            entry.getKey(),
-                            entry.getValue()
-
-                    );
+                    urlMappingRepository.incrementClickCount(entry.getKey(), entry.getValue());
                 }
 
-                log.info("Persisted {} queued click events",
-                        persistedEvents.size()
-                );
-
+                log.info("Persisted {} click events ({} unique visits)",
+                        clickEvents.size(), uniqueClicksByUrl.values().stream().mapToLong(Long::longValue).sum());
                 break;
 
             } catch (Exception e) {
-
-                log.warn(
-                        "Persist attempt {} failed for {} events: {}",
-                        attempt,
-                        persistedEvents.size(),
-                        e.getMessage()
-                );
-
+                log.warn("Persist attempt {}/{} failed for {} events: {}",
+                        attempt, maxAttempts, clickEvents.size(), e.getMessage());
                 try {
                     Thread.sleep(backoffMs);
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
                     break;
                 }
-
                 backoffMs *= 2;
             }
         }
     }
 
     private EnrichedEvent enrichAndMapEvent(ClickEventData event) {
+
         LocalDateTime clickTime = event.getClickTime() != null
                 ? event.getClickTime()
                 : LocalDateTime.now();
@@ -147,22 +127,26 @@ public class AnalyticsEventBackgroundWorker {
 
         GeoLocationService.GeoLocation geo = geoLocationService.lookup(event.getIp());
         String country = geo != null ? geo.country() : "Unknown";
-        String city = geo != null ? geo.city() : "Unknown";
+        String city    = geo != null ? geo.city()    : "Unknown";
 
         UserAgentParsingService.ParsedUserAgent parsed =
                 userAgentParsingService.parse(event.getUserAgent());
 
+        String referrer = StringUtils.hasText(event.getReferer())
+                ? event.getReferer()
+                : "Direct";
+
         boolean isUnique = uniqueVisitorRegistrationService.registerIfFirstVisit(
-                event.getUrlMappingId(),
-                ipHash,
-                clickTime
+                event.getUrlMappingId(), ipHash, clickTime
         );
 
-        redisAnalyticsService.recordEnrichedAggregates(
+        redisAnalyticsService.recordLiveAggregates(
                 event.getUrlMappingId(),
-                parsed.browser(),
                 country,
                 parsed.deviceType(),
+                parsed.browser(),
+                parsed.os(),
+                referrer,
                 clickTime.toLocalDate()
         );
 
@@ -175,20 +159,13 @@ public class AnalyticsEventBackgroundWorker {
         clickEvent.setBrowser(parsed.browser());
         clickEvent.setOs(parsed.os());
         clickEvent.setDeviceType(parsed.deviceType());
-
-        clickEvent.setReferrer(StringUtils.hasText(event.getReferer())
-                ? event.getReferer()
-                : "Direct");
-
+        clickEvent.setReferrer(referrer);
         clickEvent.setLanguage(StringUtils.hasText(event.getLanguage())
                 ? event.getLanguage().split(",", 2)[0]
                 : "Unknown");
 
-        return new EnrichedEvent(clickEvent,isUnique);
+        return new EnrichedEvent(clickEvent, isUnique);
     }
 
-    private record EnrichedEvent(
-            ClickEvent clickEvent,
-            boolean uniqueVisit
-    ) {}
+    private record EnrichedEvent(ClickEvent clickEvent, boolean uniqueVisit) {}
 }

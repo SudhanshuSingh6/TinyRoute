@@ -21,7 +21,7 @@ import java.util.Optional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UrlRedirectService {
+public class RedirectService {
 
     private final UrlMappingRepository urlMappingRepository;
     private final ClientIpService clientIpService;

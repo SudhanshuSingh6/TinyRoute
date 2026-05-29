@@ -3,16 +3,16 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
 import TextField from "../components/Common/TextField";
 import Button from "../components/Common/Button";
+import PasswordField from "../components/Common/PasswordField";
 import api from "../api/api";
+import { handleApiError } from "../utils/errorHandler";
 
 const LoginPage = () => {
   const navigate = useNavigate();
 
   const [loader, setLoader] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -41,18 +41,7 @@ const LoginPage = () => {
 
       navigate("/dashboard", { replace: true });
     } catch (error) {
-      const status = error?.response?.status;
-
-      if (status === 401) {
-        toast.error("Incorrect username or password.");
-      } else if (status === 404) {
-        toast.error("User not found.");
-      } else {
-        const message =
-          error?.response?.data?.message || "Login failed. Please try again.";
-
-        toast.error(message);
-      }
+      handleApiError(error, {}, "Login failed. Please try again.");
     } finally {
       setLoader(false);
     }
@@ -88,54 +77,19 @@ const LoginPage = () => {
             autoComplete="username"
           />
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="password" className="text-md font-semibold">
-              Password
-            </label>
-
-            <div className="relative">
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
-                autoComplete="current-password"
-                disabled={loader}
-                className={`w-full rounded-md border bg-transparent px-2 py-2 pr-10 text-slate-700 outline-none
-                  ${
-                    errors.password?.message
-                      ? "border-red-500"
-                      : "border-slate-600"
-                  }
-                  ${loader ? "cursor-not-allowed bg-slate-100 opacity-50" : ""}
-                `}
-                {...register("password", {
-                  required: {
-                    value: true,
-                    message: "*Password is required",
-                  },
-                  minLength: {
-                    value: 6,
-                    message: "Minimum 6 characters required",
-                  },
-                })}
-              />
-
-              <button
-                type="button"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute top-1/2 right-2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-700"
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            </div>
-
-            {errors.password?.message && (
-              <p className="text-sm font-semibold text-red-600">
-                {errors.password.message}
-              </p>
-            )}
-          </div>
+          <PasswordField
+            id="password"
+            label="Password"
+            placeholder="Enter your password"
+            autoComplete="current-password"
+            disabled={loader}
+            register={register}
+            errors={errors}
+            registerOptions={{
+              required: { value: true, message: "*Password is required" },
+              minLength: { value: 6, message: "Minimum 6 characters required" },
+            }}
+          />
         </div>
 
         <Button

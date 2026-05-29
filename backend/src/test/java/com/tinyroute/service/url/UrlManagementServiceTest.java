@@ -74,6 +74,7 @@ class UrlManagementServiceTest {
         mapping.setUser(owner);
         mapping.setStatus(UrlStatus.ACTIVE);
         mapping.setOriginalUrl("https://original.com");
+        mapping.setMaxClicks(1000); // below-limit by default; click-limit tests override
         return mapping;
     }
 

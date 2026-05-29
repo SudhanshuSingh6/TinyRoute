@@ -141,7 +141,7 @@ public class UrlCreationService {
         UrlMapping urlMapping = new UrlMapping();
         urlMapping.setOriginalUrl(normalizedOriginalUrl);
         urlMapping.setUser(user);
-        urlMapping.setCreatedDate(now);
+        urlMapping.setCreatedAt(now);
         urlMapping.setExpiresAt(expiresAt);
         urlMapping.setMaxClicks(determineMaxClicks(user));
         urlMapping.setTitle(normalizeTitle(title));
