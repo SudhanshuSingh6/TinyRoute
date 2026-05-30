@@ -51,6 +51,9 @@ public class AuthController {
     @Value("${app.cookie.secure}")
     private boolean secureCookies;
 
+    @Value("${app.cookie.same-site:Lax}")
+    private String sameSiteCookies;
+
     @Value("${jwt.expiration}")
     private long accessTokenExpirationMs;
 
@@ -158,16 +161,13 @@ public class AuthController {
 
         return ResponseEntity.noContent().build();
     }
-
-    // Builds an HttpOnly, SameSite=Lax auth cookie whose lifetime mirrors the
-    // matching token's configured expiry, so cookie and token never drift.
-    // A maxAgeMs of 0 clears the cookie.
+    
     private ResponseCookie buildAuthCookie(String name, String value, long maxAgeMs) {
         return ResponseCookie.from(name, value)
                 .httpOnly(true)
                 .secure(secureCookies)
                 .path("/")
-                .sameSite("Lax")
+                .sameSite(sameSiteCookies)
                 .maxAge(Duration.ofMillis(maxAgeMs))
                 .build();
     }
