@@ -56,16 +56,16 @@ public class RedirectController {
             HttpServletRequest request
     ) {
 
-        ResponseEntity<?> limitResponse =
-                rateLimitHelper.applyPublicRateLimit(
-                        request,
-                        RateLimitEndpoint.REDIRECT,
-                        "/" + shortUrl
-                );
+       // ResponseEntity<?> limitResponse =
+             //   rateLimitHelper.applyPublicRateLimit(
+               //         request,
+               //         RateLimitEndpoint.REDIRECT,
+            //            "/" + shortUrl
+              //  );
 
-        if (limitResponse != null) {
-            return limitResponse;
-        }
+      //  if (limitResponse != null) {
+       //     return limitResponse;
+      //  }
 
         UrlMapping urlMapping =
                 redirectService.getOriginalUrl(

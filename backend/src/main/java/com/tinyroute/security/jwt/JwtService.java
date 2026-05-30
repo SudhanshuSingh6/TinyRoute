@@ -2,7 +2,6 @@ package com.tinyroute.security.jwt;
 
 import com.tinyroute.security.UserDetailsImpl;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -129,13 +128,12 @@ public class JwtService {
                 .compact();
     }
 
-    public String getUsernameFromJwtToken(String token) {
-        return parseClaims(token).getSubject();
+    public boolean isAccessToken(Claims claims) {
+        return ACCESS_TOKEN.equals(claims.get(TYPE_CLAIM, String.class));
     }
 
-    public List<GrantedAuthority> getAuthoritiesFromJwtToken(String token) {
-        String roles = parseClaims(token)
-                .get(ROLES_CLAIM, String.class);
+    public List<GrantedAuthority> getAuthorities(Claims claims) {
+        String roles = claims.get(ROLES_CLAIM, String.class);
 
         if (roles == null || roles.isBlank()) {
             log.warn("JWT contained no roles claim — defaulting to empty authority list");
@@ -147,34 +145,5 @@ public class JwtService {
                 .filter(r -> !r.isBlank())
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
-    }
-
-    public boolean validateToken(String token) {
-        try {
-            Jwts.parser()
-                    .verifyWith(signingKey)
-                    .build()
-                    .parseSignedClaims(token);
-            return true;
-        } catch (JwtException e) {
-            log.warn("Invalid JWT token");
-        } catch (IllegalArgumentException e) {
-            log.warn("JWT token is null or empty: {}", e.getMessage());
-        } catch (Exception e) {
-            log.error("Unexpected JWT validation error: {}", e.getMessage());
-        }
-        return false;
-    }
-
-    public boolean isAccessToken(String token) {
-        try {
-            String type = parseClaims(token)
-                    .get(TYPE_CLAIM, String.class);
-
-            return ACCESS_TOKEN.equals(type);
-
-        } catch (Exception e) {
-            return false;
-        }
     }
 }

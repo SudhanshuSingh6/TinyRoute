@@ -9,8 +9,6 @@ const DEFAULT_VALUES = {
   customAlias: "",
   title: "",
   expiresAt: "",
-  maxClicks: "",
-  isPublic: true,
 };
 
 const cleanPayload = (values) => {
@@ -25,8 +23,6 @@ const cleanPayload = (values) => {
     customAlias: values.customAlias?.trim() || undefined,
     title: values.title?.trim() || undefined,
     expiresAt: normalizedExpiresAt,
-    maxClicks: Number.isFinite(values.maxClicks) ? values.maxClicks : undefined,
-    isPublic: Boolean(values.isPublic),
   };
 
   return Object.fromEntries(

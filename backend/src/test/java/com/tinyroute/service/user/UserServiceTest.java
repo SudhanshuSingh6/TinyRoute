@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -124,7 +125,8 @@ class UserServiceTest {
 
         assertEquals("alice", response.getUsername());
         assertEquals(1, response.getUrls().size());
-        assertEquals(6L, u.getBioPageViews()); // incremented from 5
+        // View count is bumped via an atomic UPDATE, not an in-memory read-modify-write.
+        verify(userRepository).incrementBioPageViews(u.getId());
     }
 
     @Test

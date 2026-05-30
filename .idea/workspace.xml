@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="e4269dc2-676b-414b-a973-aca916f084a1" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/analytics/controller/AnalyticsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/analytics/controller/AnalyticsController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/analytics/dto/AnalyticsQueryRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/analytics/dto/AnalyticsQueryRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/analytics/dto/LiveAnalyticsResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/analytics/dto/LiveAnalyticsResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/analytics/infra/ClickEventDataBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/analytics/infra/ClickEventDataBuilder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/analytics/infra/RedisAnalyticsConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/analytics/infra/RedisAnalyticsConstants.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/analytics/infra/RedisAnalyticsHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/analytics/infra/RedisAnalyticsHelper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/analytics/service/AnalyticsEventBackgroundWorker.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/analytics/service/AnalyticsEventBackgroundWorker.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/analytics/service/AnalyticsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/analytics/service/AnalyticsService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/analytics/service/RedisAnalyticsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/analytics/service/RedisAnalyticsService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/auth/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/auth/controller/AuthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/auth/service/RefreshTokenService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/auth/service/RefreshTokenService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/ErrorCodes.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/ErrorCodes.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/handler/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/handler/GlobalExceptionHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/exception/response/RateLimitErrorResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/ratelimit/RateLimitHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/ratelimit/RateLimitHelper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/redirect/controller/RedirectController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/redirect/controller/RedirectController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/redirect/service/UrlRedirectService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/redirect/service/RedirectService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/url/controller/UrlCreationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/url/controller/UrlCreationController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/url/entity/UrlMapping.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/url/entity/UrlMapping.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/url/mapper/UrlMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/url/mapper/UrlMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/url/service/UrlCreationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/url/service/UrlCreationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/user/mapper/UserMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/com/tinyroute/user/mapper/UserMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/resources/db/V1__initial_schema.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/resources/db/migration/V1__initial_schema.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/analytics/service/AnalyticsEventBackgroundWorkerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/analytics/service/AnalyticsEventBackgroundWorkerTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/analytics/AnalyticsControllerWebMvcTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/analytics/AnalyticsControllerWebMvcTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/auth/AuthControllerWebMvcTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/auth/AuthControllerWebMvcTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/redirect/RedirectControllerWebMvcTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/redirect/RedirectControllerWebMvcTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/url/UrlCreationControllerWebMvcTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/url/UrlCreationControllerWebMvcTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/url/UrlManagementControllerWebMvcTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/url/UrlManagementControllerWebMvcTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/user/PublicProfileControllerWebMvcTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/controller/user/PublicProfileControllerWebMvcTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/exception/GlobalExceptionHandlerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/exception/GlobalExceptionHandlerTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/integration/RedirectConcurrencyIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/integration/RedirectConcurrencyIntegrationTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/integration/RedirectFlowIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/integration/RedirectFlowIntegrationTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/repository/PersistenceRulesDataJpaTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/repository/PersistenceRulesDataJpaTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/repository/UrlMappingRepositoryTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/repository/UrlMappingRepositoryTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/analytics/AnalyticsServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/analytics/AnalyticsServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/url/UrlCreationServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/url/UrlCreationServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/url/UrlManagementServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/url/UrlManagementServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/url/UrlRedirectServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/tinyroute/service/url/RedirectServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Analytics/ClicksLineChart.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Analytics/ClicksLineChart.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Common/Navbar.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Common/Navbar.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Dashboard/CreateNewShorten.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Dashboard/CreateNewShorten.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Dashboard/Graph.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Dashboard/Graph.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Dashboard/ShortenItem.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Dashboard/ShortenItem.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Link/LinkPreviewCard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Link/LinkPreviewCard.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/hooks/useQuery.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/hooks/useQuery.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/AnalyticsPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/AnalyticsPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/BioPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/BioPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/DashboardLayout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/DashboardLayout.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/LoginPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/LoginPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/ProfilePage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/ProfilePage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/RegisterPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/RegisterPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/utils/apiRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/utils/apiRoutes.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/utils/helper.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/utils/helper.js" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3ELZvOCDkFBQNGBidJFYAvUfbNB" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Maven.Unnamed.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "Spring Boot.Unnamed.executor": "Run",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/home/sudhanshu/Documents/Project/TinyRoute/images",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.0"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/images" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Spring Boot.Unnamed">
+    <configuration name="Unnamed" type="MavenRunConfiguration" factoryName="Maven">
+      <MavenSettings>
+        <option name="myGeneralSettings">
+          <MavenGeneralSettings>
+            <option name="alwaysUpdateSnapshots" value="false" />
+            <option name="checksumPolicy" value="NOT_SET" />
+            <option name="customMavenHome" />
+            <option name="emulateTerminal" value="false" />
+            <option name="failureBehavior" value="NOT_SET" />
+            <option name="localRepository" value="" />
+            <option name="mavenHome" value="Bundled (Maven 3)" />
+            <option name="mavenHomeTypeForPersistence" value="BUNDLED3" />
+            <option name="nonRecursive" value="false" />
+            <option name="outputLevel" value="INFO" />
+            <option name="printErrorStackTraces" value="false" />
+            <option name="showDialogWithAdvancedSettings" value="false" />
+            <option name="threads" />
+            <option name="useMavenConfig" value="true" />
+            <option name="userSettingsFile" value="$USER_HOME$/.m2/settings.xml" />
+            <option name="workOffline" value="false" />
+          </MavenGeneralSettings>
+        </option>
+        <option name="myRunnerSettings" />
+        <option name="myRunnerParameters">
+          <MavenRunnerParameters>
+            <option name="cmdOptions" />
+            <option name="profiles">
+              <set />
+            </option>
+            <option name="goals">
+              <list />
+            </option>
+            <option name="multimoduleDir" />
+            <option name="pomFileName" />
+            <option name="profilesMap">
+              <map />
+            </option>
+            <option name="projectsCmdOptionValues">
+              <list />
+            </option>
+            <option name="resolveToWorkspace" value="false" />
+            <option name="workingDirPath" value="" />
+          </MavenRunnerParameters>
+        </option>
+      </MavenSettings>
+      <method v="2" />
+    </configuration>
+    <configuration name="Unnamed" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+      <module name="TinyRoute" />
+      <option name="SPRING_BOOT_MAIN_CLASS" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Maven.Unnamed" />
+      <item itemvalue="Spring Boot.Unnamed" />
+    </list>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="e4269dc2-676b-414b-a973-aca916f084a1" name="Changes" comment="" />
+      <created>1779960039375</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1779960039375</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

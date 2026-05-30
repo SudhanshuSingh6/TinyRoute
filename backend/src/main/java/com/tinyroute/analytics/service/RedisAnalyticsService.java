@@ -30,26 +30,19 @@ public class RedisAnalyticsService {
 
             LocalDate today = clickDate(event);
             Long urlMappingId = event.getUrlMappingId();
+            String hour = String.format("%02d", clickHour(event));
 
-            redisHelper.incrementCounter(
+            redisHelper.recordClickAtomic(
                     RedisAnalyticsConstants.urlDailyClicksKey(urlMappingId, today),
-                    RedisAnalyticsConstants.DAILY_COUNTER_TTL_SECONDS
-            );
-
-            redisHelper.addToSet(
                     RedisAnalyticsConstants.urlUniqueVisitorsKey(urlMappingId, today),
                     event.getIpHash(),
-                    RedisAnalyticsConstants.UNIQUE_SET_TTL_SECONDS
-            );
-
-            String hour = String.format("%02d", clickHour(event));
-            redisHelper.incrementHash(
                     RedisAnalyticsConstants.urlHourlyClicksKey(urlMappingId, today),
                     hour,
-                    RedisAnalyticsConstants.LIVE_HASH_TTL_SECONDS
+                    analyticsEventQueue.queueKey(),
+                    analyticsEventQueue.serialize(event),
+                    RedisAnalyticsConstants.DAILY_COUNTER_TTL_SECONDS,
+                    analyticsEventQueue.queueTtlSeconds()
             );
-
-            analyticsEventQueue.enqueue(event);
 
         } catch (Exception e) {
             log.warn("Failed to record realtime analytics for urlId={}", event.getUrlMappingId(), e);
@@ -69,27 +62,15 @@ public class RedisAnalyticsService {
             LocalDate metricDate = date != null ? date : LocalDate.now();
             long ttl = RedisAnalyticsConstants.LIVE_HASH_TTL_SECONDS;
 
-            redisHelper.incrementHash(
+            redisHelper.recordLiveAggregatesAtomic(
                     RedisAnalyticsConstants.urlCountryHashKey(urlMappingId, metricDate),
                     normalizeDimension(country),
-                    ttl
-            );
-            redisHelper.incrementHash(
                     RedisAnalyticsConstants.urlDeviceHashKey(urlMappingId, metricDate),
                     normalizeDimension(deviceType),
-                    ttl
-            );
-            redisHelper.incrementHash(
                     RedisAnalyticsConstants.urlBrowserHashKey(urlMappingId, metricDate),
                     normalizeDimension(browser),
-                    ttl
-            );
-            redisHelper.incrementHash(
                     RedisAnalyticsConstants.urlOsHashKey(urlMappingId, metricDate),
                     normalizeDimension(os),
-                    ttl
-            );
-            redisHelper.incrementHash(
                     RedisAnalyticsConstants.urlReferrerHashKey(urlMappingId, metricDate),
                     normalizeDimension(referrer),
                     ttl

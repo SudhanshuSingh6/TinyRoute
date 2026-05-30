@@ -51,6 +51,12 @@ public class AuthController {
     @Value("${app.cookie.secure}")
     private boolean secureCookies;
 
+    @Value("${jwt.expiration}")
+    private long accessTokenExpirationMs;
+
+    @Value("${jwt.refresh-token-expiration}")
+    private long refreshTokenExpirationMs;
+
     @Operation(summary = "Login", description = "Authenticate user and issue secure HttpOnly cookie-based access and refresh tokens.")
     @ApiResponse(responseCode = "200", description = "Login successful")
     @ApiResponse(responseCode = "400", description = "Validation failed")
@@ -73,21 +79,10 @@ public class AuthController {
                     .build();
         }
         AuthResponse jwtResponse = authService.authenticateUser(loginRequest);
-        ResponseCookie accessCookie = ResponseCookie.from("accessToken", jwtResponse.getToken())
-                .httpOnly(true)
-                .secure(secureCookies)
-                .path("/")
-                .sameSite("Lax")
-                .maxAge(Duration.ofMinutes(15))
-                .build();
-
-        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", jwtResponse.getRefreshToken())
-                .httpOnly(true)
-                .secure(secureCookies)
-                .path("/")
-                .sameSite("Lax")
-                .maxAge(Duration.ofDays(7))
-                .build();
+        ResponseCookie accessCookie =
+                buildAuthCookie("accessToken", jwtResponse.getToken(), accessTokenExpirationMs);
+        ResponseCookie refreshCookie =
+                buildAuthCookie("refreshToken", jwtResponse.getRefreshToken(), refreshTokenExpirationMs);
 
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
@@ -130,21 +125,10 @@ public class AuthController {
 
         String newAccessToken = jwtService.generateAccessToken(userDetails);
 
-        ResponseCookie accessCookie = ResponseCookie.from("accessToken", newAccessToken)
-                .httpOnly(true)
-                .secure(secureCookies)
-                .path("/")
-                .sameSite("Lax")
-                .maxAge(Duration.ofMinutes(15))
-                .build();
-
-        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", rotation.newRawRefreshToken())
-                .httpOnly(true)
-                .secure(secureCookies)
-                .path("/")
-                .sameSite("Lax")
-                .maxAge(Duration.ofDays(7))
-                .build();
+        ResponseCookie accessCookie =
+                buildAuthCookie("accessToken", newAccessToken, accessTokenExpirationMs);
+        ResponseCookie refreshCookie =
+                buildAuthCookie("refreshToken", rotation.newRawRefreshToken(), refreshTokenExpirationMs);
 
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
@@ -166,25 +150,25 @@ public class AuthController {
             authService.logout(refreshToken);
         }
 
-        ResponseCookie clearAccessCookie = ResponseCookie.from("accessToken", "")
-                .httpOnly(true)
-                .secure(secureCookies)
-                .path("/")
-                .sameSite("Lax")
-                .maxAge(0)
-                .build();
-
-        ResponseCookie clearRefreshCookie = ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .secure(secureCookies)
-                .path("/")
-                .sameSite("Lax")
-                .maxAge(0)
-                .build();
+        ResponseCookie clearAccessCookie = buildAuthCookie("accessToken", "", 0);
+        ResponseCookie clearRefreshCookie = buildAuthCookie("refreshToken", "", 0);
 
         response.addHeader(HttpHeaders.SET_COOKIE, clearAccessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, clearRefreshCookie.toString());
 
         return ResponseEntity.noContent().build();
+    }
+
+    // Builds an HttpOnly, SameSite=Lax auth cookie whose lifetime mirrors the
+    // matching token's configured expiry, so cookie and token never drift.
+    // A maxAgeMs of 0 clears the cookie.
+    private ResponseCookie buildAuthCookie(String name, String value, long maxAgeMs) {
+        return ResponseCookie.from(name, value)
+                .httpOnly(true)
+                .secure(secureCookies)
+                .path("/")
+                .sameSite("Lax")
+                .maxAge(Duration.ofMillis(maxAgeMs))
+                .build();
     }
 }

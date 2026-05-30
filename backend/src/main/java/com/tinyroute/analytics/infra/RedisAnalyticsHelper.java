@@ -3,16 +3,56 @@ package com.tinyroute.analytics.infra;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
 @Slf4j
 public class RedisAnalyticsHelper {
+
+    // Records one click in a single round-trip: increments the daily counter,
+    // adds the visitor to today's unique set, bumps the hourly hash, and pushes
+    // the raw event onto the processing queue. TTLs are set only when a key has
+    // none yet (TTL < 0), so we don't re-EXPIRE on every click.
+    // KEYS[1]=daily KEYS[2]=unique KEYS[3]=hourly KEYS[4]=queue
+    // ARGV[1]=ipHash ARGV[2]=hourField ARGV[3]=eventJson
+    // ARGV[4]=analyticsTtlSeconds ARGV[5]=queueTtlSeconds
+    private static final RedisScript<Long> RECORD_CLICK_SCRIPT = RedisScript.of(
+            """
+            redis.call('INCR', KEYS[1])
+            if redis.call('TTL', KEYS[1]) < 0 then redis.call('EXPIRE', KEYS[1], ARGV[4]) end
+            redis.call('SADD', KEYS[2], ARGV[1])
+            if redis.call('TTL', KEYS[2]) < 0 then redis.call('EXPIRE', KEYS[2], ARGV[4]) end
+            redis.call('HINCRBY', KEYS[3], ARGV[2], 1)
+            if redis.call('TTL', KEYS[3]) < 0 then redis.call('EXPIRE', KEYS[3], ARGV[4]) end
+            redis.call('LPUSH', KEYS[4], ARGV[3])
+            if redis.call('TTL', KEYS[4]) < 0 then redis.call('EXPIRE', KEYS[4], ARGV[5]) end
+            return 1
+            """,
+            Long.class
+    );
+
+    // Increments all five live-aggregate dimension hashes in a single round-trip.
+    // Each KEYS[i] is a dimension hash and ARGV[i] its field to bump; the TTL is
+    // (re)applied only when the key has none yet (TTL < 0).
+    // KEYS[1..5]=country/device/browser/os/referrer hashes
+    // ARGV[1..5]=field values  ARGV[6]=ttlSeconds
+    private static final RedisScript<Long> RECORD_LIVE_AGGREGATES_SCRIPT = RedisScript.of(
+            """
+            for i = 1, 5 do
+                redis.call('HINCRBY', KEYS[i], ARGV[i], 1)
+                if redis.call('TTL', KEYS[i]) < 0 then redis.call('EXPIRE', KEYS[i], ARGV[6]) end
+            end
+            return 1
+            """,
+            Long.class
+    );
 
     @Qualifier("analyticsRedisTemplate")
     private final StringRedisTemplate redisTemplate;
@@ -22,6 +62,32 @@ public class RedisAnalyticsHelper {
             StringRedisTemplate redisTemplate
     ) {
         this.redisTemplate = redisTemplate;
+    }
+
+    public void recordClickAtomic(
+            String dailyKey,
+            String uniqueKey,
+            String ipHash,
+            String hourlyKey,
+            String hourField,
+            String queueKey,
+            String eventJson,
+            long analyticsTtlSeconds,
+            long queueTtlSeconds
+    ) {
+        try {
+            redisTemplate.execute(
+                    RECORD_CLICK_SCRIPT,
+                    List.of(dailyKey, uniqueKey, hourlyKey, queueKey),
+                    ipHash,
+                    hourField,
+                    eventJson,
+                    String.valueOf(analyticsTtlSeconds),
+                    String.valueOf(queueTtlSeconds)
+            );
+        } catch (Exception e) {
+            log.warn("Failed to record click for dailyKey={}", dailyKey, e);
+        }
     }
 
     public void incrementCounter(String key, long ttlSeconds) {
@@ -77,14 +143,27 @@ public class RedisAnalyticsHelper {
         }
     }
 
-    public void incrementHash(String key, String field, long ttlSeconds) {
+    public void recordLiveAggregatesAtomic(
+            String countryKey, String countryField,
+            String deviceKey, String deviceField,
+            String browserKey, String browserField,
+            String osKey, String osField,
+            String referrerKey, String referrerField,
+            long ttlSeconds
+    ) {
         try {
-            redisTemplate.opsForHash().increment(key, field, 1L);
-            if (ttlSeconds > 0) {
-                redisTemplate.expire(key, Duration.ofSeconds(ttlSeconds));
-            }
+            redisTemplate.execute(
+                    RECORD_LIVE_AGGREGATES_SCRIPT,
+                    List.of(countryKey, deviceKey, browserKey, osKey, referrerKey),
+                    countryField,
+                    deviceField,
+                    browserField,
+                    osField,
+                    referrerField,
+                    String.valueOf(ttlSeconds)
+            );
         } catch (Exception e) {
-            log.warn("Failed to increment hash field: key={} field={}", key, field, e);
+            log.warn("Failed to record live aggregates for countryKey={}", countryKey, e);
         }
     }
 

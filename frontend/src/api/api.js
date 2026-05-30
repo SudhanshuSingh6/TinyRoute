@@ -14,22 +14,39 @@ const api = axios.create({
   },
 });
 
+// Single-flight refresh: concurrent 401s share one refresh request. Firing a
+// refresh per request would replay the already-rotated (now revoked) refresh
+// token, which the backend treats as token reuse and responds to by revoking
+// the user's entire session — logging them out unexpectedly.
+let refreshPromise = null;
+
+const refreshAccessToken = () => {
+  if (!refreshPromise) {
+    refreshPromise = api.post("/api/auth/public/refresh").finally(() => {
+      refreshPromise = null;
+    });
+  }
+
+  return refreshPromise;
+};
+
 api.interceptors.response.use(
   (response) => response,
 
   async (error) => {
     const originalRequest = error.config;
 
-    const isRefreshRequest = originalRequest.url.includes(
-      "/auth/public/refresh",
-    );
+    const url = originalRequest?.url ?? "";
+
+    const isRefreshRequest = url.includes("/auth/public/refresh");
 
     const isAuthRequest =
-      originalRequest.url.includes("/auth/public/login") ||
-      originalRequest.url.includes("/auth/public/register");
+      url.includes("/auth/public/login") ||
+      url.includes("/auth/public/register");
 
     if (
       error.response?.status === 401 &&
+      originalRequest &&
       !originalRequest._retry &&
       !isRefreshRequest &&
       !isAuthRequest
@@ -37,7 +54,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        await api.post("/api/auth/public/refresh");
+        await refreshAccessToken();
 
         return await api(originalRequest);
       } catch (refreshError) {

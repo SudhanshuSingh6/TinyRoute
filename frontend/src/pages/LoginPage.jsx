@@ -1,6 +1,7 @@
 import { API } from "../utils/apiRoutes";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useQueryClient } from "react-query";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import TextField from "../components/Common/TextField";
@@ -11,6 +12,7 @@ import { handleApiError } from "../utils/errorHandler";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [loader, setLoader] = useState(false);
 
@@ -38,6 +40,13 @@ const LoginPage = () => {
       toast.success("Login successful!");
 
       reset();
+
+      // The "profile" query was cached in an error state by the login page's own
+      // auth gate (PrivateRoute publicPage) while logged out. Refetch it (awaited)
+      // so the cache reflects the now-authenticated user before we navigate —
+      // otherwise /dashboard's PrivateRoute reads the stale error and bounces
+      // back to /login.
+      await queryClient.refetchQueries("profile");
 
       navigate("/dashboard", { replace: true });
     } catch (error) {

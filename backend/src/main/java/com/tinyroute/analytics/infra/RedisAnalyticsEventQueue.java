@@ -31,11 +31,9 @@ public class RedisAnalyticsEventQueue {
 
         try {
 
-            String json = objectMapper.writeValueAsString(event);
-
             redisTemplate.opsForList().leftPush(
                     RAW_EVENTS_QUEUE_KEY,
-                    json
+                    serialize(event)
             );
 
             redisTemplate.expire(
@@ -51,6 +49,18 @@ public class RedisAnalyticsEventQueue {
                     e
             );
         }
+    }
+
+    public String serialize(ClickEventData event) throws JsonProcessingException {
+        return objectMapper.writeValueAsString(event);
+    }
+
+    public String queueKey() {
+        return RAW_EVENTS_QUEUE_KEY;
+    }
+
+    public long queueTtlSeconds() {
+        return QUEUE_TTL.getSeconds();
     }
 
     public List<ClickEventData> drainBatch(int maxBatchSize) {

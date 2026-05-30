@@ -127,37 +127,6 @@ const CreateNewShorten = ({ setOpen, refetch }) => {
               />
               <ErrorMessage message={errors.expiresAt?.message} />
             </div>
-
-            <div>
-              <label className="font-semibold text-sm">
-                Max Clicks (optional)
-              </label>
-              <input
-                type="number"
-                min={1}
-                disabled={loading}
-                className={`w-full mt-1 px-2 py-2 border rounded-md outline-none ${
-                  errors.maxClicks ? "border-red-500" : "border-slate-300"
-                }`}
-                {...register("maxClicks", {
-                  valueAsNumber: true,
-                  validate: (value) =>
-                    Number.isNaN(value) ||
-                    value >= 1 ||
-                    "Max clicks must be at least 1",
-                })}
-              />
-              <ErrorMessage message={errors.maxClicks?.message} />
-            </div>
-
-            <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-              <input
-                type="checkbox"
-                disabled={loading}
-                {...register("isPublic")}
-              />
-              Show on bio page
-            </label>
           </div>
         )}
 

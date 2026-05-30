@@ -72,7 +72,7 @@ public class UserService {
                         ErrorMessages.USER_NOT_FOUND
                 ));
 
-        user.setBioPageViews(user.getBioPageViews() + 1);
+        userRepository.incrementBioPageViews(user.getId());
 
         UserProfileDTO profile = userMapper.toUserProfileDTO(user);
 

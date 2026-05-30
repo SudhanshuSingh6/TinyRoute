@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -41,21 +42,32 @@ class RedisAnalyticsServiceTest {
     }
 
     @Test
-    void recordClick_incrementsCountersAndEnqueues() {
+    void recordClick_recordsAtomicallyWithExpectedArgs() throws Exception {
         ClickEventData event = event();
+        when(analyticsEventQueue.serialize(event)).thenReturn("json");
+        when(analyticsEventQueue.queueKey()).thenReturn("analytics:raw_events");
+        when(analyticsEventQueue.queueTtlSeconds()).thenReturn(86_400L);
 
         redisAnalyticsService.recordClick(event);
 
-        verify(redisHelper).incrementCounter(anyString(), eq(RedisAnalyticsConstants.DAILY_COUNTER_TTL_SECONDS));
-        verify(redisHelper).addToSet(anyString(), eq("ip-hash"), eq(RedisAnalyticsConstants.UNIQUE_SET_TTL_SECONDS));
-        verify(redisHelper).incrementHash(anyString(), eq("10"), eq(RedisAnalyticsConstants.LIVE_HASH_TTL_SECONDS));
-        verify(analyticsEventQueue).enqueue(event);
+        verify(redisHelper).recordClickAtomic(
+                anyString(),                 // daily counter key
+                anyString(),                 // unique visitor set key
+                eq("ip-hash"),
+                anyString(),                 // hourly hash key
+                eq("10"),                    // hour field
+                eq("analytics:raw_events"),
+                eq("json"),
+                eq(RedisAnalyticsConstants.DAILY_COUNTER_TTL_SECONDS),
+                eq(86_400L)
+        );
     }
 
     @Test
     void recordClick_redisError_doesNotThrow() {
         doThrow(new RuntimeException("redis down"))
-                .when(redisHelper).incrementCounter(anyString(), anyLong());
+                .when(redisHelper).recordClickAtomic(
+                        any(), any(), any(), any(), any(), any(), any(), anyLong(), anyLong());
 
         assertDoesNotThrow(() -> redisAnalyticsService.recordClick(event()));
     }
@@ -65,8 +77,13 @@ class RedisAnalyticsServiceTest {
         redisAnalyticsService.recordLiveAggregates(
                 1L, "IN", "Mobile", "Chrome", "Android", "Direct", LocalDate.of(2026, 5, 29));
 
-        verify(redisHelper, times(5))
-                .incrementHash(anyString(), anyString(), eq(RedisAnalyticsConstants.LIVE_HASH_TTL_SECONDS));
+        verify(redisHelper).recordLiveAggregatesAtomic(
+                anyString(), eq("IN"),
+                anyString(), eq("Mobile"),
+                anyString(), eq("Chrome"),
+                anyString(), eq("Android"),
+                anyString(), eq("Direct"),
+                eq(RedisAnalyticsConstants.LIVE_HASH_TTL_SECONDS));
     }
 
     @Test
